@@ -40,7 +40,7 @@ A static website: a scroll-driven 3D tour of Taipei centered on Taipei 101. No b
 
 ## Tech
 
-- Vite + React + TypeScript, React Three Fiber v9 + drei v10, drei `CameraControls` for explore, `Html` for hotspots.
+- Vite + React + TypeScript, React Three Fiber v9 + drei v10, drei `CameraControls` for explore. Hotspots are plain DOM buttons positioned each frame by projecting their world point (drei `Html` failed to render on first mount).
 - Damper swing: hand-written damped spring, no physics engine.
 - `@react-three/postprocessing` for bloom in ch4 only.
 - State: zustand store wrapping a pure reducer (`tourReducer`).
