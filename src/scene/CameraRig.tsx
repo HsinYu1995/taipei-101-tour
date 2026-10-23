@@ -3,11 +3,13 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
 import { CHAPTERS } from '../tour/chapters';
-import { easeInOutCubic, lerpPose, poseAt } from '../tour/path';
+import { easeInOutCubic, orbitLerpPose, poseAt } from '../tour/path';
 import { useTour } from '../tour/store';
 import type { ExploreBounds, Pose, Vec3 } from '../tour/types';
 
 const RETURN_MS = 600;
+/** A mouse drag must travel this far before it counts as exploring, so plain clicks stay in tour mode. */
+const DRAG_THRESHOLD_PX = 4;
 const { ACTION } = CameraControlsImpl;
 const UNBOUNDED: ExploreBounds = { minDistance: 0, maxDistance: Infinity, azimuthRange: Infinity, minPolar: 0, maxPolar: Math.PI };
 
@@ -40,8 +42,9 @@ function applyBounds(c: CameraControlsImpl, pose: Pose, b: ExploreBounds) {
 }
 
 /**
- * Owns the camera. Tour mode follows the scroll path; at a stop a mouse drag (or the Explore button)
+ * Owns the camera. Tour mode follows the scroll path; at a stop a left-mouse drag (or the Explore button)
  * hands the camera to bounded CameraControls; leaving explore blends back to the path.
+ * Touch never enters explore implicitly: on phones a swipe must always scroll, and the Explore button is the way in.
  */
 export function CameraRig() {
   const controls = useRef<CameraControlsImpl>(null);
@@ -51,9 +54,15 @@ export function CameraRig() {
   const stopIndex = useTour((s) => (s.segment.kind === 'stop' ? s.segment.chapterIndex : -1));
   const exploring = mode === 'explore';
 
+  const setTouchAction = () => {
+    // camera-controls forces touch-action:none on connect and on every `enabled` change;
+    // outside explore a one-finger vertical swipe must scroll the page.
+    gl.domElement.style.touchAction = useTour.getState().mode === 'explore' ? 'none' : 'pan-y';
+  };
+
   useEffect(() => {
     const c = controls.current!;
-    c.enabled = stopIndex >= 0 && mode !== 'returning';
+    c.enabled = exploring;
     c.mouseButtons.left = ACTION.ROTATE;
     c.mouseButtons.middle = ACTION.NONE;
     c.mouseButtons.right = ACTION.NONE;
@@ -61,9 +70,7 @@ export function CameraRig() {
     c.touches.one = exploring ? ACTION.TOUCH_ROTATE : ACTION.NONE;
     c.touches.two = exploring ? ACTION.TOUCH_DOLLY : ACTION.NONE;
     c.touches.three = ACTION.NONE;
-    // camera-controls forces touch-action:none on connect and on every `enabled` change;
-    // outside explore a one-finger vertical swipe must scroll the page.
-    gl.domElement.style.touchAction = exploring ? 'none' : 'pan-y';
+    setTouchAction();
 
     if (exploring && stopIndex >= 0) {
       const { stop, explore } = CHAPTERS[stopIndex];
@@ -72,6 +79,43 @@ export function CameraRig() {
       applyBounds(c, CHAPTERS[0].stop, UNBOUNDED);
     }
   }, [mode, exploring, stopIndex, gl]);
+
+  // Mouse drag gate. Capture phase runs before camera-controls' own pointerdown listener, so enabling the
+  // controls here lets them pick up this same drag; explore only starts once the drag passes the threshold.
+  useEffect(() => {
+    const el = gl.domElement;
+    let pending: { x: number; y: number } | null = null;
+    const release = () => {
+      pending = null;
+      const c = controls.current;
+      if (c && useTour.getState().mode !== 'explore') {
+        c.enabled = false;
+        setTouchAction();
+      }
+    };
+    const onDown = (e: PointerEvent) => {
+      const { mode, segment } = useTour.getState();
+      if (e.pointerType !== 'mouse' || e.button !== 0 || mode !== 'tour' || segment.kind !== 'stop') return;
+      pending = { x: e.clientX, y: e.clientY };
+      controls.current!.enabled = true;
+      setTouchAction();
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!pending || Math.hypot(e.clientX - pending.x, e.clientY - pending.y) < DRAG_THRESHOLD_PX) return;
+      pending = null;
+      useTour.getState().dispatch({ type: 'exploreStart' });
+    };
+    el.addEventListener('pointerdown', onDown, { capture: true });
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+    return () => {
+      el.removeEventListener('pointerdown', onDown, { capture: true });
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', release);
+      window.removeEventListener('pointercancel', release);
+    };
+  }, [gl]);
 
   useFrame(() => {
     const c = controls.current;
@@ -91,7 +135,7 @@ export function CameraRig() {
         returning.current = { from: { position: toVec3(position), target: toVec3(target) }, start: performance.now() };
       }
       const t = Math.min((performance.now() - returning.current.start) / RETURN_MS, 1);
-      lookAt(c, lerpPose(returning.current.from, poseAt(progress), easeInOutCubic(t)));
+      lookAt(c, orbitLerpPose(returning.current.from, poseAt(progress), easeInOutCubic(t)));
       if (t === 1) dispatch({ type: 'returnDone' });
     }
     c.getPosition(position);
@@ -99,9 +143,7 @@ export function CameraRig() {
     setCamera({ position: toVec3(position), target: toVec3(target) });
   });
 
-  const onControlStart = () => useTour.getState().dispatch({ type: 'exploreStart' });
-
   // Attach to the canvas explicitly (drei defaults to R3F's wrapper div) so the touch-action override above
   // lands on the same element camera-controls modifies.
-  return <CameraControls ref={controls} makeDefault domElement={gl.domElement} onControlStart={onControlStart} />;
+  return <CameraControls ref={controls} makeDefault domElement={gl.domElement} />;
 }

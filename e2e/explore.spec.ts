@@ -32,7 +32,10 @@ async function expectBackOnPath(page: Page, chapterIndex: number) {
     await expect.poll(async () => (await getTour(page)).mode, { timeout: 5000 }).toBe('tour');
   } catch (e) {
     const frames = (await getTour(page)).frame - startFrame;
-    throw new Error(`still returning after ${Date.now() - start} ms; frames rendered meanwhile: ${frames}`, { cause: e });
+    const events = await page.evaluate(() => window.__tour!.getEvents().join('\n'));
+    throw new Error(`still returning after ${Date.now() - start} ms; frames rendered meanwhile: ${frames}\n${events}`, {
+      cause: e,
+    });
   }
   expectNearPose((await getTour(page)).camera, CHAPTERS[chapterIndex].stop);
 }
@@ -69,6 +72,18 @@ test.describe('desktop pointer', () => {
     let delta = azimuth(camera) - azimuth(CHAPTERS[1].stop);
     delta = Math.atan2(Math.sin(delta), Math.cos(delta));
     expect(Math.abs(delta)).toBeLessThanOrEqual(CHAPTERS[1].explore.azimuthRange + 0.02);
+  });
+
+  test('plain left or right click on the canvas at a stop stays in tour', async ({ page }) => {
+    await scrollToProgress(page, stopCenter(1));
+    const { width, height } = page.viewportSize()!;
+    await page.mouse.click(width / 2, height / 2);
+    await page.mouse.click(width / 2, height / 2, { button: 'right' });
+    await nextFrames(page);
+    expect((await getTour(page)).mode).toBe('tour');
+    const before = await page.evaluate(() => window.scrollY);
+    await page.mouse.wheel(0, 300);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before + 100);
   });
 
   test('wheel over canvas scrolls the page in tour mode', async ({ page }) => {
@@ -112,6 +127,17 @@ test.describe('touch', () => {
   test('touch swipe over canvas scrolls page', async ({ page }) => {
     await touchSwipeUp(page, 500);
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(300);
+  });
+
+  test('touch swipes at a stop keep scrolling the page', async ({ page }) => {
+    await scrollToProgress(page, stopCenter(1));
+    for (let i = 0; i < 2; i++) {
+      const before = await page.evaluate(() => window.scrollY);
+      await touchSwipeUp(page, 300);
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before + 100);
+      expect((await getTour(page)).mode).toBe('tour');
+      await scrollToProgress(page, stopCenter(1));
+    }
   });
 
   test('one-finger drag orbits while exploring', async ({ page }) => {

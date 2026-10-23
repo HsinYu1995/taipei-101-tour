@@ -16,6 +16,39 @@ export function lerpPose(a: Pose, b: Pose, t: number): Pose {
   return { position: lerpVec(a.position, b.position, t), target: lerpVec(a.target, b.target, t) };
 }
 
+/**
+ * Interpolates around the target instead of through it: the target moves linearly while the camera's
+ * offset moves in spherical coordinates (radius, polar, shortest-way azimuth).
+ */
+export function orbitLerpPose(a: Pose, b: Pose, t: number): Pose {
+  const target = lerpVec(a.target, b.target, t);
+  const sa = toSpherical(a);
+  const sb = toSpherical(b);
+  let dTheta = sb.theta - sa.theta;
+  dTheta = Math.atan2(Math.sin(dTheta), Math.cos(dTheta));
+  const radius = sa.radius + (sb.radius - sa.radius) * t;
+  const phi = sa.phi + (sb.phi - sa.phi) * t;
+  const theta = sa.theta + dTheta * t;
+  if (t === 1) return b;
+  return {
+    position: [
+      target[0] + radius * Math.sin(phi) * Math.sin(theta),
+      target[1] + radius * Math.cos(phi),
+      target[2] + radius * Math.sin(phi) * Math.cos(theta),
+    ],
+    target,
+  };
+}
+
+/** Same convention as camera-controls: theta is azimuth around +y measured from +z, phi is polar from +y. */
+function toSpherical({ position, target }: Pose) {
+  const x = position[0] - target[0];
+  const y = position[1] - target[1];
+  const z = position[2] - target[2];
+  const radius = Math.hypot(x, y, z);
+  return { radius, theta: Math.atan2(x, z), phi: radius === 0 ? 0 : Math.acos(Math.min(Math.max(y / radius, -1), 1)) };
+}
+
 export function segmentAt(progress: number): Segment {
   const w = Math.min(Math.max(progress, 0), 1) * TOTAL_WEIGHT;
   const chapterIndex = Math.min(Math.floor(w / CHAPTER_WEIGHT), CHAPTERS.length - 1);

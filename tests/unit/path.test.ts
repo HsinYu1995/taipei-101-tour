@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { CHAPTERS, INTRO_POSE, STOP_WEIGHT, TRAVEL_WEIGHT } from '../../src/tour/chapters';
-import { easeInOutCubic, poseAt, segmentAt } from '../../src/tour/path';
+import { easeInOutCubic, orbitLerpPose, poseAt, segmentAt } from '../../src/tour/path';
 import type { Pose } from '../../src/tour/types';
 
 const TOTAL = CHAPTERS.length * (TRAVEL_WEIGHT + STOP_WEIGHT);
@@ -44,6 +44,30 @@ describe('poseAt', () => {
       const b = acc / TOTAL;
       expect(maxDiff(poseAt(b - 1e-9), poseAt(b + 1e-9))).toBeLessThan(1e-3);
     }
+  });
+});
+
+describe('orbitLerpPose', () => {
+  const target = [0, 380, 0] as const;
+  const front: Pose = { position: [0, 386, 9], target };
+  const back: Pose = { position: [0, 386, -9], target };
+  const dist = (p: Pose) => Math.hypot(...[0, 1, 2].map((k) => p.position[k] - p.target[k]));
+
+  test('keeps the orbit radius instead of cutting through the target', () => {
+    for (const t of [0.25, 0.5, 0.75]) expect(dist(orbitLerpPose(back, front, t))).toBeCloseTo(dist(front), 6);
+  });
+  test('keeps the polar angle when both ends share it', () => {
+    const mid = orbitLerpPose(back, front, 0.5);
+    expect(mid.position[1]).toBeCloseTo(386, 6);
+  });
+  test('hits both endpoints exactly', () => {
+    expect(maxDiff(orbitLerpPose(back, front, 0), back)).toBeLessThan(1e-9);
+    expect(maxDiff(orbitLerpPose(back, front, 1), front)).toBeLessThan(1e-9);
+  });
+  test('takes the short way round across the +-pi seam', () => {
+    const a: Pose = { position: [-1, 0, -10], target: [0, 0, 0] };
+    const b: Pose = { position: [1, 0, -10], target: [0, 0, 0] };
+    expect(orbitLerpPose(a, b, 0.5).position[2]).toBeLessThan(-9);
   });
 });
 
