@@ -25,11 +25,13 @@ async function dragAcrossCenter(page: Page, dx = 300) {
 }
 
 async function expectBackOnPath(page: Page, chapterIndex: number) {
-  // The blend is 600 ms; the extra margin is for software WebGL frame rates under parallel test load.
+  // The blend is 600 ms of wall time but needs at least one frame after that. CI's software renderer
+  // was observed stalling ~7 s right after the click (event log: returnDone arrived, just late), so the
+  // ceiling is generous; a genuine hang never logs returnDone and still fails with the event log below.
   const start = Date.now();
   const startFrame = (await getTour(page)).frame;
   try {
-    await expect.poll(async () => (await getTour(page)).mode, { timeout: 5000 }).toBe('tour');
+    await expect.poll(async () => (await getTour(page)).mode, { timeout: 15_000 }).toBe('tour');
   } catch (e) {
     const frames = (await getTour(page)).frame - startFrame;
     const events = await page.evaluate(() => window.__tour!.getEvents().join('\n'));
