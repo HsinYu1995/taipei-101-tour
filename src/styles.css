@@ -1,0 +1,38 @@
+:root {
+  --bg: #cdd6dc;
+  --ink: #1d2a33;
+  --panel: rgb(255 255 255 / 0.85);
+  --accent: #1f6f78;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans TC", sans-serif;
+}
+
+.caption {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: var(--panel);
+  pointer-events: none;
+}
+
+.caption h2 {
+  margin: 0 0 6px;
+  font-size: 1.25rem;
+}
+
+.caption p {
+  margin: 0;
+  line-height: 1.45;
+}
