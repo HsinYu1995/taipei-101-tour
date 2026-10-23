@@ -61,3 +61,53 @@ body {
   outline: 3px solid var(--ink);
   outline-offset: 2px;
 }
+
+.hotspot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: rgb(31 111 120 / 0.85);
+  box-shadow: 0 0 0 6px rgb(31 111 120 / 0.25);
+  cursor: pointer;
+}
+
+.hotspot:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.hotspot-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.hotspot-panel h3 {
+  margin: 0 0 6px;
+}
+
+.hotspot-panel p {
+  margin: 0 0 12px;
+  line-height: 1.45;
+}
+
+.hotspot-panel button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}

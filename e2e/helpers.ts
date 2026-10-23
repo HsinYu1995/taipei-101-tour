@@ -21,10 +21,10 @@ export async function openTour(page: Page) {
   await page.waitForFunction(() => window.__tour !== undefined);
 }
 
+/** Waits until the scene has rendered at least two more frames (browser rAF alone does not guarantee that). */
 export async function nextFrames(page: Page) {
-  await page.evaluate(
-    () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => r())))),
-  );
+  const start = await page.evaluate(() => window.__tour!.getState().frame);
+  await page.waitForFunction((start) => window.__tour!.getState().frame >= start + 2, start);
 }
 
 export async function getTour(page: Page): Promise<TourSnapshot> {

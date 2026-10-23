@@ -6,6 +6,8 @@ import type { Pose } from './types';
 interface TourStore extends TourState {
   /** Pose the camera actually rendered last frame. */
   camera: Pose;
+  /** Count of frames the camera rig has rendered; lets tests wait for real frames. */
+  frame: number;
   dispatch(e: TourEvent): void;
   setCamera(p: Pose): void;
 }
@@ -13,6 +15,7 @@ interface TourStore extends TourState {
 export const useTour = create<TourStore>((set) => ({
   ...initialState,
   camera: INTRO_POSE,
+  frame: 0,
   dispatch: (e) => set((s) => tourReducer(s, e)),
-  setCamera: (camera) => set({ camera }),
+  setCamera: (camera) => set((s) => ({ camera, frame: s.frame + 1 })),
 }));

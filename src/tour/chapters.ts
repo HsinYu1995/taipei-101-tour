@@ -19,7 +19,7 @@ export const CHAPTERS: readonly Chapter[] = [
     id: 'tower',
     stop: { position: [180, 300, 260], target: [0, 280, 0] },
     explore: { minDistance: 150, maxDistance: 600, azimuthRange: 1.2, minPolar: 0.9, maxPolar: 1.9 },
-    hotspot: { id: 'tower-segments', position: [0, 449, 30] },
+    hotspot: { id: 'tower-segments', position: [0, 340, 24] },
   },
   {
     id: 'damper',

@@ -2,7 +2,7 @@ import type { TourState } from '../tour/machine';
 import { useTour } from '../tour/store';
 import type { Pose } from '../tour/types';
 
-export type TourSnapshot = TourState & { camera: Pose };
+export type TourSnapshot = TourState & { camera: Pose; frame: number };
 
 declare global {
   interface Window {
@@ -15,8 +15,8 @@ export function installTestHook() {
   if (import.meta.env.VITE_TEST_HOOK !== 'true') return;
   window.__tour = {
     getState: () => {
-      const { progress, segment, mode, activeHotspot, camera } = useTour.getState();
-      return structuredClone({ progress, segment, mode, activeHotspot, camera });
+      const { progress, segment, mode, activeHotspot, camera, frame } = useTour.getState();
+      return structuredClone({ progress, segment, mode, activeHotspot, camera, frame });
     },
   };
 }

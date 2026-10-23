@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { en } from '../content/en';
 import { CHAPTERS, STOP_WEIGHT, TRAVEL_WEIGHT } from '../tour/chapters';
 import { useTour } from '../tour/store';
+import { HotspotButton } from './HotspotButton';
+import { HotspotPanel } from './HotspotPanel';
 
 /** Scroll length of the tour in vh; one extra viewport so progress spans the full range. */
 const SPACER_VH = CHAPTERS.length * (TRAVEL_WEIGHT + STOP_WEIGHT) * 100 + 100;
@@ -15,7 +17,10 @@ export function Overlay() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') useTour.getState().dispatch({ type: 'exploreEnd' });
+      if (e.key !== 'Escape') return;
+      // An open panel is the innermost layer, so Escape closes it before leaving explore.
+      const { activeHotspot, dispatch } = useTour.getState();
+      dispatch({ type: activeHotspot ? 'closeHotspot' : 'exploreEnd' });
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -40,6 +45,8 @@ export function Overlay() {
           </button>
         )}
       </div>
+      <HotspotButton />
+      <HotspotPanel />
     </>
   );
 }
