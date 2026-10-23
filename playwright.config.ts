@@ -13,12 +13,18 @@ export default defineConfig({
   use: { baseURL: 'http://localhost:4173', trace: 'retain-on-failure' },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'], launchOptions: { args: gpuArgs } } },
-    { name: 'mobile', use: { ...devices['Pixel 7'], launchOptions: { args: gpuArgs } } },
+    {
+      name: 'mobile',
+      // DPR 1 keeps touch, viewport and isMobile but cuts software-rendered pixels ~7x; at DPR 2.6
+      // SwiftShader drops to ~4 fps and time-based camera blends starve.
+      use: { ...devices['Pixel 7'], deviceScaleFactor: 1, launchOptions: { args: gpuArgs } },
+    },
   ],
   webServer: {
     command: 'npm run build:e2e && npx vite preview --port 4173 --strictPort',
     url: 'http://localhost:4173',
-    reuseExistingServer: !process.env.CI,
+    // Always build fresh: a reused server silently serves a stale bundle.
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });

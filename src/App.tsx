@@ -10,6 +10,7 @@ export function App() {
     <>
       <Canvas
         style={{ position: 'fixed', inset: 0 }}
+        dpr={[1, 2]}
         camera={{ fov: 50, near: 0.5, far: 60000 }}
         gl={{ logarithmicDepthBuffer: true }}
       >
