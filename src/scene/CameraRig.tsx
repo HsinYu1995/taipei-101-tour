@@ -71,11 +71,6 @@ export function CameraRig() {
     } else {
       applyBounds(c, CHAPTERS[0].stop, UNBOUNDED);
     }
-    if (mode === 'returning') {
-      c.getPosition(position);
-      c.getTarget(target);
-      returning.current = { from: { position: toVec3(position), target: toVec3(target) }, start: performance.now() };
-    }
   }, [mode, exploring, stopIndex, gl]);
 
   useFrame(() => {
@@ -84,13 +79,20 @@ export function CameraRig() {
     const { mode, progress, dispatch, setCamera } = useTour.getState();
     if (mode === 'tour') {
       lookAt(c, poseAt(progress));
-    } else if (mode === 'returning' && returning.current) {
+    }
+    // The frame loop alone owns the return blend: it starts on the first frame that sees `returning`,
+    // so it cannot depend on when React commits the mode change.
+    if (mode !== 'returning') {
+      returning.current = null;
+    } else {
+      if (!returning.current) {
+        c.getPosition(position);
+        c.getTarget(target);
+        returning.current = { from: { position: toVec3(position), target: toVec3(target) }, start: performance.now() };
+      }
       const t = Math.min((performance.now() - returning.current.start) / RETURN_MS, 1);
       lookAt(c, lerpPose(returning.current.from, poseAt(progress), easeInOutCubic(t)));
-      if (t === 1) {
-        returning.current = null;
-        dispatch({ type: 'returnDone' });
-      }
+      if (t === 1) dispatch({ type: 'returnDone' });
     }
     c.getPosition(position);
     c.getTarget(target);
