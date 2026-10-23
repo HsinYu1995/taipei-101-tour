@@ -26,7 +26,14 @@ async function dragAcrossCenter(page: Page, dx = 300) {
 
 async function expectBackOnPath(page: Page, chapterIndex: number) {
   // The blend is 600 ms; the extra margin is for software WebGL frame rates under parallel test load.
-  await expect.poll(async () => (await getTour(page)).mode, { timeout: 5000 }).toBe('tour');
+  const start = Date.now();
+  const startFrame = (await getTour(page)).frame;
+  try {
+    await expect.poll(async () => (await getTour(page)).mode, { timeout: 5000 }).toBe('tour');
+  } catch (e) {
+    const frames = (await getTour(page)).frame - startFrame;
+    throw new Error(`still returning after ${Date.now() - start} ms; frames rendered meanwhile: ${frames}`, { cause: e });
+  }
   expectNearPose((await getTour(page)).camera, CHAPTERS[chapterIndex].stop);
 }
 
