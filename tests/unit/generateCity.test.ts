@@ -60,14 +60,21 @@ describe('generateCity', () => {
 
   test('no block inside the 101 site', () => {
     const site = PODIUM.outline as P[];
+    // Blocks whose centre is farther from 101 than the site's farthest point plus margin and the largest
+    // half-diagonal cannot touch it; check every other block against the outline itself.
+    const reach = Math.max(...site.map(([x, z]) => Math.hypot(x, z))) + 20 + 45;
+    const violations: string[] = [];
     for (const b of blocks) {
+      if (Math.hypot(b.x, b.z) > reach) continue;
       const corners = blockCorners(b);
       for (const p of [...corners, [b.x, b.z] as P]) {
-        expect(inside(p, site)).toBe(false);
-        expect(distanceToEdges(p, site)).toBeGreaterThan(20);
+        if (inside(p, site) || distanceToEdges(p, site) <= 20) violations.push(`block at ${b.x.toFixed(0)},${b.z.toFixed(0)}`);
       }
-      for (const v of site) expect(inside(v, corners)).toBe(false);
+      if (site.some((v) => inside(v, corners))) violations.push(`block at ${b.x.toFixed(0)},${b.z.toFixed(0)} covers the site`);
     }
+    expect(violations).toEqual([]);
+    // The check above must actually see blocks near the site, or it proves nothing.
+    expect(blocks.filter((b) => Math.hypot(b.x, b.z) <= reach).length).toBeGreaterThan(0);
   });
 
   test('nothing rivals 101', () => {
