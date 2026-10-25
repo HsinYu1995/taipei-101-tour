@@ -83,7 +83,7 @@ export function Terrain({ field }: { field: HeightField }) {
 
   return (
     <group>
-      <mesh ref={ref} geometry={geometry}>
+      <mesh ref={ref} name="terrain" geometry={geometry}>
         <meshStandardMaterial vertexColors flatShading />
       </mesh>
       <mesh rotation-x={-Math.PI / 2} position-y={WATER_LEVEL - field.base}>

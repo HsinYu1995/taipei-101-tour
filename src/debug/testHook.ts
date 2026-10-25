@@ -1,11 +1,17 @@
 import type { TourState } from '../tour/machine';
 import { useTour } from '../tour/store';
-import type { Pose } from '../tour/types';
+import type { Pose, Vec3 } from '../tour/types';
 
 export type TourSnapshot = TourState & { camera: Pose; frame: number };
 
 /** Read-only views into the scene, registered by the components that own them. */
-type Probes = { groundAt?: (x: number, z: number) => number | null };
+type Probes = {
+  groundAt?: (x: number, z: number) => number | null;
+  /** Draw calls and triangles of the last rendered frame. */
+  renderStats?: () => { calls: number; triangles: number };
+  /** First scene hit along a ray; `name` is the nearest non-empty name up the hit object's parents. */
+  castRay?: (origin: Vec3, dir: Vec3) => { point: Vec3; name: string } | null;
+};
 const probes: Probes = {};
 
 declare global {

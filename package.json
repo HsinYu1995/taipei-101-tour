@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "e2e": "playwright test",
-    "bake:terrain": "node scripts/bake-terrain.ts"
+    "bake:terrain": "node scripts/bake-terrain.ts",
+    "shots": "node scripts/screenshots.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

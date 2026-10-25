@@ -2,6 +2,7 @@ import { Basin } from './greybox/Basin';
 import { DamperChamber } from './greybox/DamperChamber';
 import { Tower } from './greybox/Tower';
 import { HotspotProjector } from './HotspotProjector';
+import { RenderStatsProbe } from './RenderStatsProbe';
 
 export function World() {
   return (
@@ -15,6 +16,7 @@ export function World() {
       <Tower />
       <DamperChamber />
       <HotspotProjector />
+      <RenderStatsProbe />
     </>
   );
 }
