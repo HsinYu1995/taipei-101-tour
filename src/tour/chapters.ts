@@ -17,7 +17,8 @@ export const CHAPTERS: readonly Chapter[] = [
   },
   {
     id: 'tower',
-    stop: { position: [180, 300, 260], target: [0, 280, 0] },
+    // South-west of the tower so the golden afternoon sun (west-south-west) lights the faces in view.
+    stop: { position: [-200, 290, 230], target: [0, 280, 0] },
     explore: { minDistance: 150, maxDistance: 600, azimuthRange: 1.2, minPolar: 0.9, maxPolar: 1.9 },
     // On the face of segment 6, a metre proud of the glass (see towerProfile.ts).
     hotspot: { id: 'tower-segments', position: [0, 307.8, 25.75] },

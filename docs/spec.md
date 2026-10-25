@@ -37,7 +37,10 @@ A static website: a scroll-driven 3D tour of Taipei centered on Taipei 101. No b
 - Time-of-day arc: ch1 morning haze, ch2 golden afternoon, ch3 warm gold interior, ch4 dusk to night with bloom.
 - All assets built in code: procedural Taipei 101, mountains from a real elevation model of the Taipei basin, instanced city blocks, CC0 low-poly packs for small props. No Taipei 101 logo or brand marks.
 - World scale: 1 unit = 1 m. Taipei 101 at the origin; roof at 449 m, spire top at 508 m.
-- Terrain (M2): the Ministry of the Interior 20 m DTM (2025), baked by `npm run bake:terrain` into a 241 x 241 grid at 200 m spacing covering 48 km around 101 (`src/scene/terrain/taipei-dtm.bin`, 116 KB). World axes: east is +x, north is -z, y is metres above the ground at 101. Cells with no data (sea, river beds) are sea level; a water plane sits at 1 m. The raw archives cache in `.cache/dtm` and are not committed. Attribution is shown on the page and in `CREDITS.md`.
+- Terrain (M2): the Ministry of the Interior 20 m DTM (2025), baked by `npm run bake:terrain` into a 241 x 241 grid at 200 m spacing covering 48 km around 101 (`src/scene/terrain/taipei-dtm.bin`, 116 KB). World axes: east is +x, north is -z, y is metres above the ground at 101. The origin is the centroid of the OpenStreetMap tower footprint (TWD97 E 306996.97, N 2769625.60). Cells with no data (sea, river beds) are sea level; a water plane sits at 1 m. The raw archives cache in `.cache/dtm` and are not committed. Attribution is shown on the page and in `CREDITS.md`.
+- Taipei 101 (M2): lofted from a double-notched square (`src/scene/tower/towerProfile.ts`): pedestal 0-123 m tapering in, eight 33.6 m segments flaring out to the 91st floor at 391.8 m, three crown setbacks to 449 m, spire to 508 m; gold coins and a ruyi on each face at the pedestal top; floor-banded glass texture drawn in code. Turned 0.97 degrees to match its OSM footprint. The podium is the OSM site outline at the mall's 30 m height.
+- City (M2): 6000 instanced blocks (`src/scene/city/generateCity.ts`) on level dry lowland within 9 km, denser toward 101, aligned to the Xinyi grid, 20 m clear of the 101 complex, mostly 12-60 m, taller within 1.5 km of 101, none above 250 m.
+- Light (M2): `lightingAt(progress)` blends morning haze (sun ESE, 18 degrees) through the basin stop into golden afternoon (sun WSW, 28 degrees) from the tower stop on; gradient sky dome whose horizon matches the fog.
 
 ## Tech
 
@@ -76,7 +79,7 @@ A static website: a scroll-driven 3D tour of Taipei centered on Taipei 101. No b
 ## Milestones
 
 1. **M1 greybox:** all 4 chapters as grey shapes, scroll camera, explore handoff, one placeholder hotspot per chapter, deployed, e2e suite. Done when the whole tour works on the owner's phone without jank.
-2. **M2 city and tower:** real-terrain mountains, instanced city, procedural 101, morning/afternoon lighting.
+2. **M2 city and tower (done 2026-10-25):** real-terrain mountains, instanced city, procedural 101, morning/afternoon lighting.
    - **M2.5 Xinyi street walk:** zoom in from the tower chapter to walk the streets around 101 at eye level. Design: `docs/superpowers/specs/2026-10-25-xinyi-street-walk-design.md`.
 3. **M3 damper:** chamber interior, spring-driven swing, gold lighting.
 4. **M4 view:** dusk-to-night, city lights, 101 nightly colors, bloom.
