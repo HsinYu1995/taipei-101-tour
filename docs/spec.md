@@ -77,6 +77,7 @@ A static website: a scroll-driven 3D tour of Taipei centered on Taipei 101. No b
 
 1. **M1 greybox:** all 4 chapters as grey shapes, scroll camera, explore handoff, one placeholder hotspot per chapter, deployed, e2e suite. Done when the whole tour works on the owner's phone without jank.
 2. **M2 city and tower:** real-terrain mountains, instanced city, procedural 101, morning/afternoon lighting.
+   - **M2.5 Xinyi street walk:** zoom in from the tower chapter to walk the streets around 101 at eye level. Design: `docs/superpowers/specs/2026-10-25-xinyi-street-walk-design.md`.
 3. **M3 damper:** chamber interior, spring-driven swing, gold lighting.
 4. **M4 view:** dusk-to-night, city lights, 101 nightly colors, bloom.
 5. **M5 polish:** bilingual content with sources, audio, fallback, quality tiers, performance pass.
