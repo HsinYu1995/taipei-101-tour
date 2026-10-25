@@ -37,6 +37,7 @@ A static website: a scroll-driven 3D tour of Taipei centered on Taipei 101. No b
 - Time-of-day arc: ch1 morning haze, ch2 golden afternoon, ch3 warm gold interior, ch4 dusk to night with bloom.
 - All assets built in code: procedural Taipei 101, mountains from a real elevation model of the Taipei basin, instanced city blocks, CC0 low-poly packs for small props. No Taipei 101 logo or brand marks.
 - World scale: 1 unit = 1 m. Taipei 101 at the origin; roof at 449 m, spire top at 508 m.
+- Terrain (M2): the Ministry of the Interior 20 m DTM (2025), baked by `npm run bake:terrain` into a 241 x 241 grid at 200 m spacing covering 48 km around 101 (`src/scene/terrain/taipei-dtm.bin`, 116 KB). World axes: east is +x, north is -z, y is metres above the ground at 101. Cells with no data (sea, river beds) are sea level; a water plane sits at 1 m. The raw archives cache in `.cache/dtm` and are not committed. Attribution is shown on the page and in `CREDITS.md`.
 
 ## Tech
 

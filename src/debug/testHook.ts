@@ -4,10 +4,23 @@ import type { Pose } from '../tour/types';
 
 export type TourSnapshot = TourState & { camera: Pose; frame: number };
 
+/** Read-only views into the scene, registered by the components that own them. */
+type Probes = { groundAt?: (x: number, z: number) => number | null };
+const probes: Probes = {};
+
 declare global {
   interface Window {
-    __tour?: { getState(): TourSnapshot; getEvents(): string[] };
+    __tour?: { getState(): TourSnapshot; getEvents(): string[]; probes: Probes };
   }
+}
+
+/** Makes a scene probe available to e2e tests while the component is mounted; returns the cleanup. */
+export function registerProbe<K extends keyof Probes>(name: K, probe: NonNullable<Probes[K]>) {
+  if (import.meta.env.VITE_TEST_HOOK !== 'true') return () => {};
+  probes[name] = probe;
+  return () => {
+    if (probes[name] === probe) delete probes[name];
+  };
 }
 
 /** Exposes tour state to Playwright. Only the e2e build sets VITE_TEST_HOOK. */
@@ -27,6 +40,7 @@ export function installTestHook() {
     },
   });
   window.__tour = {
+    probes,
     getEvents: () => events.slice(-20),
     getState: () => {
       const { progress, segment, mode, activeHotspot, camera, frame } = useTour.getState();

@@ -31,4 +31,8 @@ export const en = {
     backToTour: 'Back to tour',
     close: 'Close',
   },
+  credits: {
+    terrain: 'Terrain: Ministry of the Interior 20 m DTM (2025), ',
+    license: 'Open Government Data License v1',
+  },
 };

@@ -47,6 +47,12 @@ export function Overlay() {
       </div>
       <HotspotButton />
       <HotspotPanel />
+      <p className="credits" data-testid="terrain-credit">
+        {en.credits.terrain}
+        <a href="https://data.gov.tw/license" target="_blank" rel="noreferrer">
+          {en.credits.license}
+        </a>
+      </p>
     </>
   );
 }

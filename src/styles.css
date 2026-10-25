@@ -111,3 +111,17 @@ body {
   font: inherit;
   cursor: pointer;
 }
+
+.credits {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  max-width: calc(100vw - 180px);
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.credits a {
+  color: inherit;
+}
