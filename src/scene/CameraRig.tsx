@@ -2,14 +2,21 @@ import { CameraControls, CameraControlsImpl } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
+import { TRANSITION_MS, isStreetMode } from '../street/api';
+import { useStreetGestures } from '../street/gestures';
 import { CHAPTERS } from '../tour/chapters';
-import { easeInOutCubic, orbitLerpPose, poseAt } from '../tour/path';
+import type { Mode } from '../tour/machine';
+import { easeInOutCubic, lerpPose, orbitLerpPose, poseAt } from '../tour/path';
 import { useTour } from '../tour/store';
 import type { ExploreBounds, Pose, Vec3 } from '../tour/types';
 
 const RETURN_MS = 600;
 /** A mouse drag must travel this far before it counts as exploring, so plain clicks stay in tour mode. */
 const DRAG_THRESHOLD_PX = 4;
+/** Near plane at eye level: the visitor can stand 0.3 m from a wall. */
+const NEAR = { street: 0.1, default: 0.5 };
+/** Longest frame step the street walk takes, so a stalled frame never teleports the visitor. */
+const MAX_STEP = 0.1;
 const { ACTION } = CameraControlsImpl;
 const UNBOUNDED: ExploreBounds = { minDistance: 0, maxDistance: Infinity, azimuthRange: Infinity, minPolar: 0, maxPolar: Math.PI };
 
@@ -48,7 +55,8 @@ function applyBounds(c: CameraControlsImpl, pose: Pose, b: ExploreBounds) {
  */
 export function CameraRig() {
   const controls = useRef<CameraControlsImpl>(null);
-  const returning = useRef<{ from: Pose; start: number } | null>(null);
+  // The blend in progress (return to path, descent or ascent): where it started, when, and for which mode.
+  const blend = useRef<{ mode: Mode; from: Pose; start: number } | null>(null);
   const gl = useThree((s) => s.gl);
   const mode = useTour((s) => s.mode);
   const stopIndex = useTour((s) => (s.segment.kind === 'stop' ? s.segment.chapterIndex : -1));
@@ -57,7 +65,8 @@ export function CameraRig() {
   const setTouchAction = () => {
     // camera-controls forces touch-action:none on connect and on every `enabled` change;
     // outside explore a one-finger vertical swipe must scroll the page.
-    gl.domElement.style.touchAction = useTour.getState().mode === 'explore' ? 'none' : 'pan-y';
+    const { mode } = useTour.getState();
+    gl.domElement.style.touchAction = mode === 'explore' || isStreetMode(mode) ? 'none' : 'pan-y';
   };
 
   useEffect(() => {
@@ -117,26 +126,53 @@ export function CameraRig() {
     };
   }, [gl]);
 
-  useFrame(() => {
+  useStreetGestures(gl.domElement, controls);
+
+  useFrame(({ camera }, delta) => {
     const c = controls.current;
     if (!c) return;
-    const { mode, progress, dispatch, setCamera } = useTour.getState();
-    if (mode === 'tour') {
-      lookAt(c, poseAt(progress));
+    const { mode, progress, street, dispatch, setCamera } = useTour.getState();
+
+    const near = isStreetMode(mode) ? NEAR.street : NEAR.default;
+    if (camera.near !== near) {
+      camera.near = near;
+      camera.updateProjectionMatrix();
     }
-    // The frame loop alone owns the return blend: it starts on the first frame that sees `returning`,
+
+    // The frame loop alone owns the blends: each starts on the first frame that sees its mode,
     // so it cannot depend on when React commits the mode change.
-    if (mode !== 'returning') {
-      returning.current = null;
-    } else {
-      if (!returning.current) {
+    if (blend.current?.mode !== mode) blend.current = null;
+    const progressOf = (ms: number) => {
+      if (!blend.current) {
         c.getPosition(position);
         c.getTarget(target);
-        returning.current = { from: { position: toVec3(position), target: toVec3(target) }, start: performance.now() };
+        blend.current = { mode, from: { position: toVec3(position), target: toVec3(target) }, start: performance.now() };
       }
-      const t = Math.min((performance.now() - returning.current.start) / RETURN_MS, 1);
-      lookAt(c, orbitLerpPose(returning.current.from, poseAt(progress), easeInOutCubic(t)));
+      return Math.min((performance.now() - blend.current.start) / ms, 1);
+    };
+
+    if (mode === 'tour') {
+      lookAt(c, poseAt(progress));
+    } else if (mode === 'returning') {
+      const t = progressOf(RETURN_MS);
+      lookAt(c, orbitLerpPose(blend.current!.from, poseAt(progress), easeInOutCubic(t)));
       if (t === 1) dispatch({ type: 'returnDone' });
+    } else if (mode === 'descending') {
+      // Until the street has loaded, hold still where explore left the camera.
+      if (street) {
+        const t = progressOf(TRANSITION_MS);
+        lookAt(c, lerpPose(blend.current!.from, street.landing(), easeInOutCubic(t)));
+        if (t === 1) {
+          street.reset();
+          dispatch({ type: 'landed' });
+        }
+      }
+    } else if (mode === 'street') {
+      if (street) lookAt(c, street.step(Math.min(delta, MAX_STEP)));
+    } else if (mode === 'ascending') {
+      const t = progressOf(TRANSITION_MS);
+      lookAt(c, lerpPose(blend.current!.from, poseAt(progress), easeInOutCubic(t)));
+      if (t === 1) dispatch({ type: 'ascended' });
     }
     c.getPosition(position);
     c.getTarget(target);

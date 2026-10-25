@@ -29,6 +29,8 @@ export const en = {
   ui: {
     explore: 'Explore',
     backToTour: 'Back to tour',
+    walkStreet: 'Walk the street',
+    streetLoading: 'Loading the street...',
     close: 'Close',
   },
   credits: {

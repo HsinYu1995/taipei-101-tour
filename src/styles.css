@@ -41,8 +41,17 @@ body {
   position: fixed;
   top: 16px;
   right: 16px;
+  z-index: 5;
   display: flex;
   gap: 8px;
+}
+
+/* Phones: stack the buttons so they stay inside the column the credits leave free. */
+@media (max-width: 600px) {
+  .controls {
+    flex-direction: column;
+    align-items: flex-end;
+  }
 }
 
 .controls button {
@@ -128,4 +137,16 @@ body {
 
 .credits a {
   color: inherit;
+}
+
+.street-loading {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--panel);
+  font-size: 0.9rem;
 }

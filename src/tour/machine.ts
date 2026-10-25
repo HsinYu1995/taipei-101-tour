@@ -2,7 +2,8 @@ import { CHAPTERS } from './chapters';
 import { segmentAt } from './path';
 import type { Segment } from './types';
 
-export type Mode = 'tour' | 'explore' | 'returning';
+/** `descending`, `street` and `ascending` are the Xinyi street walk, entered from the tower chapter's explore mode. */
+export type Mode = 'tour' | 'explore' | 'returning' | 'descending' | 'street' | 'ascending';
 
 export interface TourState {
   progress: number;
@@ -17,7 +18,14 @@ export type TourEvent =
   | { type: 'exploreEnd' }
   | { type: 'returnDone' }
   | { type: 'openHotspot'; id: string }
-  | { type: 'closeHotspot' };
+  | { type: 'closeHotspot' }
+  | { type: 'streetEnter' }
+  | { type: 'landed' }
+  | { type: 'streetExit' }
+  | { type: 'ascended' };
+
+/** The chapter whose explore mode leads down to the street. */
+const STREET_CHAPTER = CHAPTERS.findIndex((c) => c.id === 'tower');
 
 export const initialState: TourState = {
   progress: 0,
@@ -30,6 +38,19 @@ const sameStop = (a: Segment, b: Segment) =>
   a.kind === 'stop' && b.kind === 'stop' && a.chapterIndex === b.chapterIndex;
 
 export function tourReducer(s: TourState, e: TourEvent): TourState {
+  // While walking, the page is frozen: only the street's own events apply.
+  if (s.mode === 'descending' || s.mode === 'street' || s.mode === 'ascending') {
+    switch (e.type) {
+      case 'landed':
+        return s.mode === 'descending' ? { ...s, mode: 'street' } : s;
+      case 'streetExit':
+        return s.mode === 'ascending' ? s : { ...s, mode: 'ascending' };
+      case 'ascended':
+        return s.mode === 'ascending' ? { ...s, mode: 'tour' } : s;
+      default:
+        return s;
+    }
+  }
   switch (e.type) {
     case 'scroll': {
       const segment = segmentAt(e.progress);
@@ -54,5 +75,13 @@ export function tourReducer(s: TourState, e: TourEvent): TourState {
         : s;
     case 'closeHotspot':
       return { ...s, activeHotspot: null };
+    case 'streetEnter':
+      return s.mode === 'explore' && s.segment.kind === 'stop' && s.segment.chapterIndex === STREET_CHAPTER
+        ? { ...s, mode: 'descending', activeHotspot: null }
+        : s;
+    case 'landed':
+    case 'streetExit':
+    case 'ascended':
+      return s;
   }
 }

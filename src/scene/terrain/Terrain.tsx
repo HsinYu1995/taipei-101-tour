@@ -1,7 +1,8 @@
 import { use, useEffect, useMemo, useRef } from 'react';
-import { BufferAttribute, Color, Mesh, PlaneGeometry, Raycaster, Vector3 } from 'three';
+import { BufferAttribute, Color, Mesh, MeshStandardMaterial, PlaneGeometry, Raycaster, Vector3, Vector4 } from 'three';
 import { registerProbe } from '../../debug/testHook';
 import dtmUrl from './taipei-dtm.bin?url';
+import type { Rect } from '../../street/types';
 import { GRID, GRID_COUNT, HeightField } from './grid';
 
 let fieldPromise: Promise<HeightField> | undefined;
@@ -66,10 +67,43 @@ function buildGeometry(field: HeightField) {
   return geometry;
 }
 
-export function Terrain({ field }: { field: HeightField }) {
+/** An empty hole: x0 > x1, so no fragment is ever inside it. */
+const NO_HOLE = new Vector4(1, -1, 1, -1);
+
+/**
+ * Vertex-coloured terrain whose fragments inside `uHole` (x0, x1, z0, z1 in world metres) are discarded,
+ * so the street walk's own ground can replace it without z-fighting.
+ */
+function makeMaterial() {
+  const material = new MeshStandardMaterial({ vertexColors: true, flatShading: true });
+  const uHole = { value: NO_HOLE.clone() };
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uHole = uHole;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec2 vHoleXZ;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvHoleXZ = (modelMatrix * vec4(transformed, 1.0)).xz;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform vec4 uHole;\nvarying vec2 vHoleXZ;')
+      .replace(
+        '#include <clipping_planes_fragment>',
+        '#include <clipping_planes_fragment>\nif (vHoleXZ.x > uHole.x && vHoleXZ.x < uHole.y && vHoleXZ.y > uHole.z && vHoleXZ.y < uHole.w) discard;',
+      );
+  };
+  return { material, uHole };
+}
+
+export function Terrain({ field, hole = null }: { field: HeightField; hole?: Rect | null }) {
   const ref = useRef<Mesh>(null);
   const geometry = useMemo(() => buildGeometry(field), [field]);
   useEffect(() => () => geometry.dispose(), [geometry]);
+  const { material, uHole } = useMemo(makeMaterial, []);
+  useEffect(() => () => material.dispose(), [material]);
+  useEffect(() => {
+    if (hole) uHole.value.set(hole.x0, hole.x1, hole.z0, hole.z1);
+    else uHole.value.copy(NO_HOLE);
+    // Raycasts (castRay probe) skip the hole too; the GPU-side discard does not affect them.
+    ref.current!.userData.hole = hole;
+  }, [hole, uHole]);
 
   useEffect(() => {
     const ray = new Raycaster();
@@ -83,9 +117,7 @@ export function Terrain({ field }: { field: HeightField }) {
 
   return (
     <group>
-      <mesh ref={ref} name="terrain" geometry={geometry}>
-        <meshStandardMaterial vertexColors flatShading />
-      </mesh>
+      <mesh ref={ref} name="terrain" geometry={geometry} material={material} />
       <mesh rotation-x={-Math.PI / 2} position-y={WATER_LEVEL - field.base}>
         <planeGeometry args={[200000, 200000]} />
         <meshStandardMaterial color="#7f98a6" />

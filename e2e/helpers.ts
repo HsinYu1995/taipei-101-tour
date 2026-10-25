@@ -56,3 +56,55 @@ export async function touchSwipeUp(page: Page, distance: number) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await cdp.detach();
 }
+
+export async function waitMode(page: Page, mode: TourSnapshot['mode'], timeout = 15_000) {
+  try {
+    await expect.poll(async () => (await getTour(page)).mode, { timeout }).toBe(mode);
+  } catch (e) {
+    const events = await page.evaluate(() => window.__tour!.getEvents().join('\n'));
+    throw new Error(`never reached ${mode}\n${events}`, { cause: e });
+  }
+}
+
+/** Scrolls to the tower stop and enters explore with the button. */
+export async function enterTowerExplore(page: Page) {
+  await scrollToProgress(page, stopCenter(1));
+  await page.getByTestId('explore-button').click();
+  await waitMode(page, 'explore');
+}
+
+/**
+ * Two-finger pinch centred on the viewport using raw CDP touch events: the fingers move apart by `spread`
+ * pixels (negative brings them together).
+ */
+export async function touchPinch(page: Page, spread: number) {
+  const { width, height } = page.viewportSize()!;
+  const x = width / 2;
+  const y = height / 2;
+  const d0 = spread > 0 ? 120 : 120 - spread;
+  const cdp = await page.context().newCDPSession(page);
+  const points = (d: number) => [
+    { x: x - d / 2, y, id: 1 },
+    { x: x + d / 2, y, id: 2 },
+  ];
+  const steps = 20;
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: points(d0) });
+  for (let i = 1; i <= steps; i++) {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: points(d0 + (spread * i) / steps) });
+  }
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await cdp.detach();
+}
+
+/** A real user scroll (wheel on desktop, swipe on touch) over the canvas moves the page. */
+export async function expectPageScrolls(page: Page, isMobile: boolean) {
+  const before = await page.evaluate(() => window.scrollY);
+  if (isMobile) {
+    await touchSwipeUp(page, 300);
+  } else {
+    const { width, height } = page.viewportSize()!;
+    await page.mouse.move(width / 2, height / 2);
+    await page.mouse.wheel(0, 400);
+  }
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before + 100);
+}
