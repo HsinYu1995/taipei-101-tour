@@ -150,3 +150,55 @@ body {
   background: var(--panel);
   font-size: 0.9rem;
 }
+
+.street-hint {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(520px, calc(100vw - 32px));
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: var(--panel);
+  text-align: center;
+  line-height: 1.4;
+  pointer-events: none;
+  transition: opacity 400ms ease;
+}
+
+.street-hint.fading {
+  opacity: 0;
+}
+
+/* Phones: the hint goes below the stacked buttons. */
+@media (max-width: 600px) {
+  .street-hint {
+    top: auto;
+    bottom: 176px;
+  }
+}
+
+.street-stick {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.35);
+  border: 2px solid rgb(255 255 255 / 0.8);
+  touch-action: none;
+}
+
+.street-stick-knob {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgb(31 111 120 / 0.85);
+  pointer-events: none;
+}

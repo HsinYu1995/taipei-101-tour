@@ -31,6 +31,9 @@ export const en = {
     backToTour: 'Back to tour',
     walkStreet: 'Walk the street',
     streetLoading: 'Loading the street...',
+    walkHintDesktop: 'WASD or arrow keys to walk, drag to look around, Shift to hurry. Scroll out or press Esc to leave.',
+    walkHintTouch: 'Use the stick to walk and drag to look around. Pinch or tap Back to tour to leave.',
+    walkStick: 'Walk',
     close: 'Close',
   },
   credits: {

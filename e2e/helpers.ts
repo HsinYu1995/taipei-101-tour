@@ -108,3 +108,57 @@ export async function expectPageScrolls(page: Page, isMobile: boolean) {
   }
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before + 100);
 }
+
+/** Left-button mouse drag from the viewport centre, `dx` pixels right and 40 up. */
+export async function dragAcrossCenter(page: Page, dx = 300) {
+  const { width, height } = page.viewportSize()!;
+  await page.mouse.move(width / 2, height / 2);
+  await page.mouse.down();
+  await page.mouse.move(width / 2 + dx, height / 2 - 40, { steps: 12 });
+  await page.mouse.up();
+  await nextFrames(page);
+}
+
+export async function visitor(page: Page) {
+  return page.evaluate(() => window.__tour!.probes.street!.visitor());
+}
+
+export async function place(page: Page, v: { x: number; z: number; yaw?: number }) {
+  await page.evaluate((v) => window.__tour!.probes.street!.place(v), v);
+  await nextFrames(page);
+}
+
+/** Walk button from tower explore, down to the street. */
+export async function enterStreet(page: Page) {
+  await enterTowerExplore(page);
+  await page.getByTestId('walk-street-button').click();
+  await waitMode(page, 'street');
+  await page.waitForFunction(() => window.__tour!.probes.street !== undefined);
+}
+
+/** Holds a CDP touch on the street thumbstick, pushed (dx, dy) pixels off its centre, for `ms`. */
+export async function stickPush(page: Page, dx: number, dy: number, ms: number) {
+  const box = (await page.getByTestId('street-stick').boundingBox())!;
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y, id: 7 }] });
+  for (let i = 1; i <= 5; i++) {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + (dx * i) / 5, y: y + (dy * i) / 5, id: 7 }] });
+  }
+  await page.waitForTimeout(ms);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await cdp.detach();
+}
+
+/** One-finger CDP drag between two points given as fractions of the viewport. */
+export async function touchDrag(page: Page, { from, to }: { from: [number, number]; to: [number, number] }) {
+  const { width, height } = page.viewportSize()!;
+  const cdp = await page.context().newCDPSession(page);
+  const at = (t: number) => ({ x: (from[0] + (to[0] - from[0]) * t) * width, y: (from[1] + (to[1] - from[1]) * t) * height, id: 3 });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [at(0)] });
+  for (let i = 1; i <= 12; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [at(i / 12)] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await cdp.detach();
+  await nextFrames(page);
+}

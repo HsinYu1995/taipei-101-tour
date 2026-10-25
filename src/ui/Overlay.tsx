@@ -7,7 +7,8 @@ import { HotspotButton } from './HotspotButton';
 import { HotspotPanel } from './HotspotPanel';
 import { StreetErrorBoundary } from './StreetErrorBoundary';
 
-const StreetHud = lazy(() => import('../street/StreetHud'));
+// Same module as the scene's lazy import, so the whole walk arrives as one chunk.
+const StreetHud = lazy(() => import('../street/StreetScene').then((m) => ({ default: m.StreetHud })));
 
 /** Scroll length of the tour in vh; one extra viewport so progress spans the full range. */
 const SPACER_VH = CHAPTERS.length * (TRAVEL_WEIGHT + STOP_WEIGHT) * 100 + 100;

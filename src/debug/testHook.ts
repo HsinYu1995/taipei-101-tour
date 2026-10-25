@@ -13,6 +13,12 @@ type Probes = {
   castRay?: (origin: Vec3, dir: Vec3) => { point: Vec3; name: string } | null;
   /** Scene fog colour as #rrggbb and the unit vector toward the sun. */
   atmosphere?: () => { fogColor: string; sunDirection: Vec3 };
+  /** The street walk's visitor: read and move them, and ask whether a spot is walkable. */
+  street?: {
+    visitor(): { x: number; z: number; yaw: number; pitch: number };
+    place(v: { x: number; z: number; yaw?: number }): void;
+    blocked(x: number, z: number): boolean;
+  };
 };
 const probes: Probes = {};
 

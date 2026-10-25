@@ -3,6 +3,7 @@ import { CHAPTERS } from '../src/tour/chapters';
 import type { Pose } from '../src/tour/types';
 import {
   dist,
+  dragAcrossCenter,
   expectNearPose,
   getTour,
   nextFrames,
@@ -14,15 +15,6 @@ import {
 } from './helpers';
 
 test.beforeEach(async ({ page }) => openTour(page));
-
-async function dragAcrossCenter(page: Page, dx = 300) {
-  const { width, height } = page.viewportSize()!;
-  await page.mouse.move(width / 2, height / 2);
-  await page.mouse.down();
-  await page.mouse.move(width / 2 + dx, height / 2 - 40, { steps: 12 });
-  await page.mouse.up();
-  await nextFrames(page);
-}
 
 async function expectBackOnPath(page: Page, chapterIndex: number) {
   // The blend is 600 ms of wall time but needs at least one frame after that. CI's software renderer
