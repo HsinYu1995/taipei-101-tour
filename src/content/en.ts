@@ -34,5 +34,7 @@ export const en = {
   credits: {
     terrain: 'Terrain: Ministry of the Interior 20 m DTM (2025), ',
     license: 'Open Government Data License v1',
+    buildings: 'Buildings: ',
+    osm: '© OpenStreetMap contributors',
   },
 };

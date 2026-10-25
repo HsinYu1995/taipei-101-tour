@@ -122,6 +122,10 @@ body {
   opacity: 0.7;
 }
 
+.credits p {
+  margin: 0;
+}
+
 .credits a {
   color: inherit;
 }

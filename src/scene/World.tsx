@@ -1,6 +1,6 @@
 import { Basin } from './greybox/Basin';
 import { DamperChamber } from './greybox/DamperChamber';
-import { Tower } from './greybox/Tower';
+import { Tower } from './tower/Tower';
 import { Atmosphere } from './lighting/Atmosphere';
 import { HotspotProjector } from './HotspotProjector';
 import { RenderStatsProbe } from './RenderStatsProbe';

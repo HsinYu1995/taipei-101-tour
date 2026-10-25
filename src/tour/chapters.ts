@@ -13,13 +13,14 @@ export const CHAPTERS: readonly Chapter[] = [
     id: 'basin',
     stop: { position: [2500, 1800, 4500], target: [0, 200, 0] },
     explore: { minDistance: 3000, maxDistance: 9000, azimuthRange: 0.8, minPolar: 0.6, maxPolar: 1.3 },
-    hotspot: { id: 'basin-101', position: [0, 520, 0] },
+    hotspot: { id: 'basin-101', position: [0, 470, 0] },
   },
   {
     id: 'tower',
     stop: { position: [180, 300, 260], target: [0, 280, 0] },
     explore: { minDistance: 150, maxDistance: 600, azimuthRange: 1.2, minPolar: 0.9, maxPolar: 1.9 },
-    hotspot: { id: 'tower-segments', position: [0, 340, 24] },
+    // On the face of segment 6, a metre proud of the glass (see towerProfile.ts).
+    hotspot: { id: 'tower-segments', position: [0, 307.8, 25.75] },
   },
   {
     id: 'damper',

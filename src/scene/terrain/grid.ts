@@ -1,7 +1,8 @@
-import { toTwd97 } from '../../geo/twd97.ts';
-
-/** Taipei 101's position (Wikipedia, 25°02′01″N 121°33′54″E); it sits at the world origin. */
-export const TAIPEI_101 = toTwd97(25.033611, 121.565);
+/**
+ * Taipei 101 sits at the world origin: the centroid of its OpenStreetMap tower footprint (way 198637969) in
+ * TWD97 metres. (Wikipedia's 25°02′01″N 121°33′54″E lands about 20 m east of the tower's centre.)
+ */
+export const TAIPEI_101 = { e: 306996.97, n: 2769625.6 } as const;
 
 /**
  * The baked terrain: a square grid centred on Taipei 101, row 0 at the north edge (-z), column 0 at the
