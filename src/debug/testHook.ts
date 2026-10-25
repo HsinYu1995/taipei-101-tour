@@ -11,6 +11,8 @@ type Probes = {
   renderStats?: () => { calls: number; triangles: number };
   /** First scene hit along a ray; `name` is the nearest non-empty name up the hit object's parents. */
   castRay?: (origin: Vec3, dir: Vec3) => { point: Vec3; name: string } | null;
+  /** Scene fog colour as #rrggbb and the unit vector toward the sun. */
+  atmosphere?: () => { fogColor: string; sunDirection: Vec3 };
 };
 const probes: Probes = {};
 
