@@ -49,6 +49,8 @@ test('zooming in at the minimum distance descends (desktop)', async ({ page, isM
 
 test('pinching out at the minimum distance descends (touch)', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'pinch needs the mobile project');
+  // Under SwiftShader each CDP touch event waits for a frame at a few fps, so one pinch takes several seconds.
+  test.setTimeout(90_000);
   await enterTowerExplore(page);
   // Each spread dollies in; once the dolly sits at minDistance, the next spread goes down to the street.
   await expect
@@ -57,7 +59,7 @@ test('pinching out at the minimum distance descends (touch)', async ({ page, isM
         await touchPinch(page, +160);
         return (await getTour(page)).mode;
       },
-      { timeout: 20_000 },
+      { timeout: 60_000 },
     )
     .toMatch(/descending|street/);
 });

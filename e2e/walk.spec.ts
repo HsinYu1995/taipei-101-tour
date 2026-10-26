@@ -1,6 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
 import { en } from '../src/content/en';
 import { LANDING, WALK_AREA } from '../src/street/api';
+import type { XinyiData } from '../src/street/types';
 import {
   dragAcrossCenter,
   enterStreet,
@@ -49,7 +51,10 @@ test('a building wall stops the visitor', async ({ page, isMobile }) => {
   await place(page, { x: 0, z: 47, yaw: 0 });
   await page.keyboard.down('Shift');
   await page.keyboard.down('w');
-  await page.waitForTimeout(4000);
+  // Hold until the wall is reached: under SwiftShader the street renders at a few fps and the walker's
+  // per-frame step is capped, so the 4 m take a variable time.
+  await expect.poll(async () => (await visitor(page)).z, { timeout: 30_000 }).toBeLessThan(44);
+  await page.waitForTimeout(1000);
   await page.keyboard.up('w');
   await page.keyboard.up('Shift');
   const v = await visitor(page);
@@ -144,4 +149,19 @@ test('window blur releases held keys', async ({ page, isMobile }) => {
   const b = await visitor(page);
   await page.keyboard.up('w');
   expect(Math.hypot(b.x - a.x, b.z - a.z)).toBeLessThan(0.05);
+});
+
+test('a tree trunk stops the visitor', async ({ page }) => {
+  await enterStreet(page);
+  // The first OSM tree well inside the walk area, approached from 3 m south while walking north.
+  const data: XinyiData = JSON.parse(readFileSync('src/street/xinyi.json', 'utf8'));
+  const [x, z] = data.trees.find(([x, z]) => x > WALK_AREA.x0 + 20 && x < WALK_AREA.x1 - 20 && z > WALK_AREA.z0 + 20 && z < WALK_AREA.z1 - 20)!;
+  expect(await blocked(page, x, z)).toBe(true);
+  expect(await blocked(page, x + 1, z)).toBe(false);
+  await place(page, { x, z: z + 3, yaw: 0 });
+  await page.keyboard.down('w');
+  await page.waitForTimeout(4000);
+  await page.keyboard.up('w');
+  // Stopped at trunk radius 0.35 + body 0.3, give or take sliding round it.
+  expect(Math.hypot((await visitor(page)).x - x, (await visitor(page)).z - z)).toBeGreaterThan(0.6);
 });

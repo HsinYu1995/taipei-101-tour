@@ -123,7 +123,7 @@ export async function visitor(page: Page) {
   return page.evaluate(() => window.__tour!.probes.street!.visitor());
 }
 
-export async function place(page: Page, v: { x: number; z: number; yaw?: number }) {
+export async function place(page: Page, v: { x: number; z: number; yaw?: number; pitch?: number }) {
   await page.evaluate((v) => window.__tour!.probes.street!.place(v), v);
   await nextFrames(page);
 }

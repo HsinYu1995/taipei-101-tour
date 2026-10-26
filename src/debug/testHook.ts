@@ -9,14 +9,17 @@ type Probes = {
   groundAt?: (x: number, z: number) => number | null;
   /** Draw calls and triangles of the last rendered frame. */
   renderStats?: () => { calls: number; triangles: number };
-  /** First scene hit along a ray; `name` is the nearest non-empty name up the hit object's parents. */
-  castRay?: (origin: Vec3, dir: Vec3) => { point: Vec3; name: string } | null;
+  /**
+   * First visible scene hit along a ray; `name` is the nearest non-empty name up the hit object's parents and
+   * `emissive` the hit material's emitted luminance.
+   */
+  castRay?: (origin: Vec3, dir: Vec3) => { point: Vec3; name: string; emissive: number } | null;
   /** Scene fog colour as #rrggbb and the unit vector toward the sun. */
   atmosphere?: () => { fogColor: string; sunDirection: Vec3 };
   /** The street walk's visitor: read and move them, and ask whether a spot is walkable. */
   street?: {
     visitor(): { x: number; z: number; yaw: number; pitch: number };
-    place(v: { x: number; z: number; yaw?: number }): void;
+    place(v: { x: number; z: number; yaw?: number; pitch?: number }): void;
     blocked(x: number, z: number): boolean;
   };
 };

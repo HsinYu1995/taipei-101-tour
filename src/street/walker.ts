@@ -63,9 +63,10 @@ export class Walker {
   }
 
   /** Puts the visitor somewhere (test hook and debugging), keeping them out of walls. */
-  place(x: number, z: number, yaw = this.yaw) {
+  place(x: number, z: number, yaw = this.yaw, pitch = this.pitch) {
     this.x = x;
     this.z = z;
     this.yaw = yaw;
+    this.pitch = pitch;
   }
 }

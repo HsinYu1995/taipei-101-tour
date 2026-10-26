@@ -37,7 +37,7 @@ const CELL = 50;
 type P = [number, number];
 
 /** Deterministic pseudo-random sequence so the city is the same on every load. */
-function seeded(seed: number) {
+export function seeded(seed: number) {
   let s = seed;
   return () => (s = (s * 16807) % 2147483647) / 2147483647;
 }

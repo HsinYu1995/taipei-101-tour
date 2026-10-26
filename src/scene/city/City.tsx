@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Color, InstancedMesh, MeshStandardMaterial, Object3D } from 'three';
+import type { Rect } from '../../street/types';
 import type { HeightField } from '../terrain/grid';
 import { TILE_METRES, makeFacadeTexture } from '../tower/facadeTexture';
-import { generateCity } from './generateCity';
+import { blockCorners, generateCity, type Block } from './generateCity';
 
 const OPTIONS = { seed: 101, radius: 9000, count: 6000 };
 const CONCRETE = { top: '#d9dcde', bottom: '#b9bec2', band: '#eceae4', mullion: '#9aa0a4' };
@@ -32,9 +33,25 @@ function makeMaterial() {
   return material;
 }
 
-export function City({ field }: { field: HeightField }) {
+/** True when a block's footprint bounding box reaches into `r`. */
+function overlaps(b: Block, r: Rect) {
+  const corners = blockCorners(b);
+  const xs = corners.map((p) => p[0]);
+  const zs = corners.map((p) => p[1]);
+  return Math.max(...xs) > r.x0 && Math.min(...xs) < r.x1 && Math.max(...zs) > r.z0 && Math.min(...zs) < r.z1;
+}
+
+/**
+ * Procedural blocks across the basin: none inside `hole`, where the street walk's real buildings stand, and
+ * none further than `reach` metres from 101.
+ */
+export function City({ field, hole = null, reach = Infinity }: { field: HeightField; hole?: Rect | null; reach?: number }) {
   const ref = useRef<InstancedMesh>(null);
-  const blocks = useMemo(() => generateCity(field, OPTIONS), [field]);
+  const all = useMemo(() => generateCity(field, OPTIONS), [field]);
+  const blocks = useMemo(
+    () => all.filter((b) => !(hole && overlaps(b, hole)) && Math.hypot(b.x, b.z) <= reach),
+    [all, hole, reach],
+  );
   const material = useMemo(makeMaterial, []);
   useEffect(
     () => () => {

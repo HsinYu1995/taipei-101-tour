@@ -9,7 +9,7 @@ export const EYE_HEIGHT = 1.6;
 /** Length of the descent to the street and of the rise back to the tour. */
 export const TRANSITION_MS = 1500;
 /** On the Xinyi Rd sidewalk south of 101, facing the tower. yaw 0 looks north (-z); +yaw turns left (toward -x). */
-export const LANDING = { x: -20, z: 58, yaw: -0.33, pitch: 0.36 };
+export const LANDING = { x: -20, z: 58, yaw: -0.33, pitch: 0.75 };
 export const STREET_CHAPTER: ChapterId = 'tower';
 
 /** Registered by the lazy street scene once its data is ready; CameraRig drives the camera through it. */
