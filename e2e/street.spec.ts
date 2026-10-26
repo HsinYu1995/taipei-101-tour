@@ -104,6 +104,24 @@ for (const how of ['back', 'escape', 'wheel'] as const) {
   });
 }
 
+for (const scaleFactor of [2, 0.5]) {
+  test(`a trackpad pinch (scale ${scaleFactor}) while walking does not zoom the page`, async ({ page, isMobile }) => {
+    test.skip(isMobile, 'trackpad pinch is a desktop interaction');
+    await enterTowerExplore(page);
+    await page.getByTestId('walk-street-button').click();
+    await waitMode(page, 'street');
+    const { width, height } = page.viewportSize()!;
+    // A trackpad pinch reaches the page as wheel events with Control held; unhandled, the browser zooms the page.
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.synthesizePinchGesture', { x: width / 2, y: height / 2, scaleFactor, gestureSourceType: 'mouse' });
+    await cdp.detach();
+    await nextFrames(page);
+    expect(await page.evaluate(() => window.visualViewport!.scale)).toBe(1);
+    // Pinching in is zooming out, which leaves the street.
+    if (scaleFactor < 1) await waitMode(page, 'tour');
+  });
+}
+
 test('the page does not scroll and the hotspot is hidden while walking', async ({ page }) => {
   await enterTowerExplore(page);
   await page.getByTestId('walk-street-button').click();

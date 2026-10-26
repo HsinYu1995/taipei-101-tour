@@ -2,15 +2,16 @@ import type { CameraControlsImpl } from '@react-three/drei';
 import { useEffect, type RefObject } from 'react';
 import { CHAPTERS } from '../tour/chapters';
 import { useTour } from '../tour/store';
-import { STREET_CHAPTER, canWalk } from './api';
+import { STREET_CHAPTER, canWalk, isStreetMode } from './api';
 
 /** A two-finger spread or pinch must change the finger distance by this much to count. */
 const PINCH_PX = 60;
 
 /**
  * Zooming past the tower chapter's closest explore distance (wheel up, or a two-finger spread) goes down to
- * the street; zooming out while walking (wheel down, or a pinch) comes back up. Passive observers only:
- * camera-controls keeps handling the same events for its own dolly.
+ * the street; zooming out while walking (wheel down, or a pinch) comes back up. Observers only: camera-controls
+ * keeps handling the same events for its own dolly. While walking camera-controls is off, so the wheel is
+ * cancelled here instead: a trackpad pinch arrives as a Control+wheel, which would otherwise zoom the page.
  */
 export function useStreetGestures(el: HTMLElement, controls: RefObject<CameraControlsImpl | null>) {
   useEffect(() => {
@@ -24,6 +25,7 @@ export function useStreetGestures(el: HTMLElement, controls: RefObject<CameraCon
     const dispatch = (type: 'streetEnter' | 'streetExit') => useTour.getState().dispatch({ type });
 
     const onWheel = (e: WheelEvent) => {
+      if (isStreetMode(useTour.getState().mode)) e.preventDefault();
       if (e.deltaY < 0 && atClosest()) dispatch('streetEnter');
       else if (e.deltaY > 0 && useTour.getState().mode === 'street') dispatch('streetExit');
     };
@@ -58,7 +60,7 @@ export function useStreetGestures(el: HTMLElement, controls: RefObject<CameraCon
       startSpread = null;
     };
 
-    el.addEventListener('wheel', onWheel, { capture: true, passive: true });
+    el.addEventListener('wheel', onWheel, { capture: true, passive: false });
     el.addEventListener('pointerdown', onDown, { capture: true });
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
