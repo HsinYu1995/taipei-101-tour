@@ -32,11 +32,11 @@ test('W walks forward; the camera keeps eye height', async ({ page, isMobile }) 
   await enterStreet(page);
   const a = await visitor(page);
   await page.keyboard.down('w');
-  await page.waitForTimeout(1500);
+  // Held until it has walked a stretch: SwiftShader renders the street at a few fps and each frame's step is capped.
+  await expect.poll(async () => Math.hypot((await visitor(page)).x - a.x, (await visitor(page)).z - a.z), { timeout: 20_000 }).toBeGreaterThan(1);
   await page.keyboard.up('w');
   const b = await visitor(page);
   const moved = Math.hypot(b.x - a.x, b.z - a.z);
-  expect(moved).toBeGreaterThan(0.5);
   // Forward is along the facing: yaw 0 is north (-z), +yaw turns toward -x.
   expect(((b.x - a.x) * -Math.sin(a.yaw) + (b.z - a.z) * -Math.cos(a.yaw)) / moved).toBeGreaterThan(0.95);
   const { camera } = await page.evaluate(() => window.__tour!.getState());
@@ -68,7 +68,9 @@ test('the walk area edge stops the visitor', async ({ page, isMobile }) => {
   await enterStreet(page);
   await place(page, { x: -100, z: WALK_AREA.z1 - 2, yaw: Math.PI }); // facing south, 2 m from the Xinyi Rd edge
   await page.keyboard.down('ArrowUp');
-  await page.waitForTimeout(3000);
+  // Held until it reaches the edge, then on for a moment to show it stays there.
+  await expect.poll(async () => (await visitor(page)).z, { timeout: 20_000 }).toBeGreaterThan(WALK_AREA.z1 - 1);
+  await page.waitForTimeout(1000);
   await page.keyboard.up('ArrowUp');
   const v = await visitor(page);
   expect(v.z).toBeGreaterThan(WALK_AREA.z1 - 1);
@@ -105,7 +107,7 @@ test('touch: the thumbstick walks and a drag elsewhere turns', async ({ page, is
   await expect(page.getByTestId('street-stick')).toBeVisible();
   const y = await page.evaluate(() => window.scrollY);
   const a = await visitor(page);
-  await stickPush(page, 0, -40, 1500);
+  await stickPush(page, 0, -40, 4000);
   const b = await visitor(page);
   expect(Math.hypot(b.x - a.x, b.z - a.z)).toBeGreaterThan(0.5);
   await touchDrag(page, { from: [0.7, 0.4], to: [0.4, 0.4] }); // right half of the screen, leftward drag
@@ -160,8 +162,11 @@ test('a tree trunk stops the visitor', async ({ page }) => {
   expect(await blocked(page, x + 1, z)).toBe(false);
   await place(page, { x, z: z + 3, yaw: 0 });
   await page.keyboard.down('w');
-  await page.waitForTimeout(4000);
+  // Held until the visitor has reached the trunk, then on for a moment to show they stay stopped.
+  await expect.poll(async () => (await visitor(page)).z, { timeout: 20_000 }).toBeLessThan(z + 1);
+  await page.waitForTimeout(1000);
   await page.keyboard.up('w');
   // Stopped at trunk radius 0.35 + body 0.3, give or take sliding round it.
-  expect(Math.hypot((await visitor(page)).x - x, (await visitor(page)).z - z)).toBeGreaterThan(0.6);
+  const v = await visitor(page);
+  expect(Math.hypot(v.x - x, v.z - z)).toBeGreaterThan(0.6);
 });
