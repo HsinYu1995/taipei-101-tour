@@ -125,3 +125,9 @@ E2e first, as with the rest of the site:
 ## Scheduling
 
 - **Owner's decision (2026-10-25):** finish M2 first (procedural Taipei 101, city, morning/afternoon lighting), then build the street walk as its own milestone before M3. It depends on M2's tower holding up at street level.
+
+## Errata (2026-10-26)
+
+- **Boundary geography.** The walkable area's edges above guessed Xinyi Road on the north. OpenStreetMap shows Xinyi Rd sec 5 runs about 80 m **south** of 101, Songshou Rd about 245 m north, and Songgao Rd about 605 m north. The square keeps the intent (about 700 m, the landmarks inside, bounded by main roads) and is now Keelung Rd (west), Songren Rd (east), Xinyi Rd (south) and Songgao Rd (north). The landing spot is on the Xinyi Rd sidewalk south of 101.
+- **Where the landmarks really sit.** Shin Kong Mitsukoshi A9 and A11 sit between Songshou and Songgao Rds, A8 just south of Songgao Rd, all inside the walk; A4 sits just north of Songgao Rd, visible across the road. Vieshow (A16) sits south of Songshou Rd, east of Songzhi Rd.
+- **Building data: OpenStreetMap, not NLSC.** NLSC's 3D buildings come by emailed request and their redistribution licence is still unconfirmed, while OSM (ODbL) covers every landmark here with building parts and heights or levels. The bake is `scripts/bake-xinyi.ts`, credited on the page and in `CREDITS.md`.

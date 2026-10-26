@@ -26,6 +26,15 @@ A static website: a scroll-driven 3D tour of Taipei centered on Taipei 101. No b
 | 3 | `damper` | Inside the tuned mass damper chamber (floors 87-92); 660 t gold sphere, 5.5 m diameter | Orbit inside the room; drag/click to swing the damper (M3) |
 | 4 | `view` | Observatory looking out; dusk turns to night, city lights and 101's nightly lighting (M4) | Look around from a fixed spot |
 
+### Street walk (M2.5)
+
+- **Modes:** from the tower chapter's explore mode, `descending` eases the camera down to eye height (1.6 m) over 1.5 s, `street` is walking, and `ascending` rises back to the tower stop. Not offered with reduced motion or if the street download fails.
+- **Getting in and out:** zoom in (wheel, pinch out) at the closest explore distance, or the **Walk the street** button; leave by zooming out (wheel, pinch in), **Back to tour**, or Escape.
+- **Where:** a walkable square bounded by Keelung Rd (west), Songren Rd (east), Xinyi Rd (south) and Songgao Rd (north), with the real buildings drawn a little beyond it. The visitor lands on the Xinyi Rd sidewalk south of 101, facing the tower.
+- **Controls:** desktop WASD or arrow keys, drag to look, Shift to hurry; touch has a thumbstick lower left and drag elsewhere to look. A hint shows on landing.
+- **What's there:** real building footprints and heights, Shin Kong Mitsukoshi A4/A8/A9/A11 and Vieshow with their own palettes (Vieshow's screen face glows), skybridges, roads and zebra crossings, trees and lamps, about 90 pedestrians on the footways and 24 scooters on the roads. Buildings, trunks, the 101 podium and people block the visitor, who slides along them.
+- **Data:** OpenStreetMap (ODbL), baked by `scripts/bake-xinyi.ts` into `src/street/xinyi.json`, and loaded with the street chunk only when the tower chapter's explore mode is first entered.
+
 ### Interaction
 
 - Ambient: scene reacts to scroll and pointer (subtle parallax).
@@ -80,7 +89,7 @@ A static website: a scroll-driven 3D tour of Taipei centered on Taipei 101. No b
 
 1. **M1 greybox:** all 4 chapters as grey shapes, scroll camera, explore handoff, one placeholder hotspot per chapter, deployed, e2e suite. Done when the whole tour works on the owner's phone without jank.
 2. **M2 city and tower (done 2026-10-25):** real-terrain mountains, instanced city, procedural 101, morning/afternoon lighting.
-   - **M2.5 Xinyi street walk:** zoom in from the tower chapter to walk the streets around 101 at eye level. Design: `docs/superpowers/specs/2026-10-25-xinyi-street-walk-design.md`.
+   - **M2.5 Xinyi street walk (done 2026-10-26):** zoom in from the tower chapter to walk the streets around 101 at eye level. Design: `docs/superpowers/specs/2026-10-25-xinyi-street-walk-design.md`; see Street walk above.
 3. **M3 damper:** chamber interior, spring-driven swing, gold lighting.
 4. **M4 view:** dusk-to-night, city lights, 101 nightly colors, bloom.
 5. **M5 polish:** bilingual content with sources, audio, fallback, quality tiers, performance pass.
