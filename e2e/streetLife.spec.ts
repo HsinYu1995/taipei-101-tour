@@ -53,3 +53,14 @@ test('everything on the street compiles and draws', async ({ page }) => {
   await nextFrames(page);
   expect(errors).toEqual([]);
 });
+
+test('scooters ride the roads', async ({ page }) => {
+  await enterStreet(page);
+  const scooters = () => page.evaluate(() => window.__tour!.probes.street!.scooters());
+  const a = await scooters();
+  expect(a.length).toBe(24);
+  // Polled rather than a fixed wait: the software renderer runs the street at a few fps.
+  await expect
+    .poll(async () => (await scooters()).filter((s, i) => Math.hypot(s.x - a[i].x, s.z - a[i].z) > 3).length, { timeout: 20_000 })
+    .toBeGreaterThan(12);
+});

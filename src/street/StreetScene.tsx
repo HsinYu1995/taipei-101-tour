@@ -6,10 +6,12 @@ import { GRID_ROTATION, PODIUM } from '../scene/tower/podium';
 import { SECTIONS } from '../scene/tower/towerProfile';
 import { useTour } from '../tour/store';
 import { isStreetMode, type StreetApi } from './api';
-import { WALK_AREA } from './areas';
+import { SCENE_AREA, WALK_AREA } from './areas';
 import { Colliders, type Circle } from './collide';
 import { buildGraph, Crowd as CrowdModel } from './crowd';
 import { People } from './People';
+import { Scooters } from './Scooters';
+import { buildLanes, Traffic } from './traffic';
 import { Buildings } from './Buildings';
 import { Ground } from './Ground';
 import { groundAt } from './groundAt';
@@ -25,6 +27,8 @@ export { default as StreetHud } from './StreetHud';
 const RADIUS = 0.3;
 /** People in the crowd, and the seed that places them. */
 const CROWD = { count: 90, seed: 101, radius: 0.3 };
+/** Scooters on the car roads, and the seed that places them. */
+const TRAFFIC = { count: 24, seed: 101 };
 /** Tree trunks block like posts. */
 const TRUNK_RADIUS = 0.35;
 /** Footprints this far outside the walk area can still be reached at its edge. */
@@ -57,6 +61,8 @@ export default function StreetScene() {
     () => new CrowdModel(buildGraph([...data.footways, ...data.crossings], WALK_AREA), CROWD.count, CROWD.seed),
     [data],
   );
+  // Scooters ride every car road in the scene area, including the stretches beyond the walkable part.
+  const traffic = useMemo(() => new Traffic(buildLanes(data.roads, SCENE_AREA), TRAFFIC.count, TRAFFIC.seed), [data]);
   // Each person as a circle the visitor slides round; the objects are reused every frame.
   const people = useMemo<Circle[]>(() => crowd.agents.map(() => ({ x: 0, z: 0, r: CROWD.radius })), [crowd]);
   const api = useMemo<StreetApi>(
@@ -87,8 +93,9 @@ export default function StreetScene() {
         place: ({ x, z, yaw, pitch }) => walker.place(x, z, yaw, pitch),
         blocked: (x, z) => colliders.blocked([x, z]),
         people: () => crowd.agents.map(({ x, z, moving }) => ({ x, z, moving })),
+        scooters: () => traffic.scooters.map(({ x, z }) => ({ x, z })),
       }),
-    [walker, colliders, crowd],
+    [walker, colliders, crowd, traffic],
   );
 
   return (
@@ -99,6 +106,7 @@ export default function StreetScene() {
       <group visible={walking}>
         <Props trees={trees} lamps={data.lamps} ground={ground} />
         <People crowd={crowd} ground={ground} visitor={() => [walker.x, walker.z]} />
+        <Scooters traffic={traffic} ground={ground} visitor={() => [walker.x, walker.z]} />
       </group>
     </group>
   );

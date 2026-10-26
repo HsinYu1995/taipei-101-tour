@@ -23,6 +23,8 @@ type Probes = {
     blocked(x: number, z: number): boolean;
     /** Everyone in the crowd, in a stable order. */
     people(): { x: number; z: number; moving: boolean }[];
+    /** Every scooter, in a stable order. */
+    scooters(): { x: number; z: number }[];
   };
 };
 const probes: Probes = {};
