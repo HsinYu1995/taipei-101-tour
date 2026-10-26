@@ -7,7 +7,9 @@ import { SECTIONS } from '../scene/tower/towerProfile';
 import { useTour } from '../tour/store';
 import { isStreetMode, type StreetApi } from './api';
 import { WALK_AREA } from './areas';
-import { Colliders } from './collide';
+import { Colliders, type Circle } from './collide';
+import { buildGraph, Crowd as CrowdModel } from './crowd';
+import { People } from './People';
 import { Buildings } from './Buildings';
 import { Ground } from './Ground';
 import { groundAt } from './groundAt';
@@ -21,6 +23,8 @@ export { default as StreetHud } from './StreetHud';
 
 /** The visitor's body radius. */
 const RADIUS = 0.3;
+/** People in the crowd, and the seed that places them. */
+const CROWD = { count: 90, seed: 101, radius: 0.3 };
 /** Tree trunks block like posts. */
 const TRUNK_RADIUS = 0.35;
 /** Footprints this far outside the walk area can still be reached at its edge. */
@@ -48,14 +52,27 @@ export default function StreetScene() {
   const trees = useMemo(() => placeTrees(data), [data]);
   const colliders = useMemo(() => buildColliders(data, trees), [data, trees]);
   const walker = useMemo(() => new Walker(colliders, ground), [colliders, ground]);
+  // People walk the footways and the zebra crossings that join them across roads.
+  const crowd = useMemo(
+    () => new CrowdModel(buildGraph([...data.footways, ...data.crossings], WALK_AREA), CROWD.count, CROWD.seed),
+    [data],
+  );
+  // Each person as a circle the visitor slides round; the objects are reused every frame.
+  const people = useMemo<Circle[]>(() => crowd.agents.map(() => ({ x: 0, z: 0, r: CROWD.radius })), [crowd]);
   const api = useMemo<StreetApi>(
     () => ({
       // A fresh walker stands at the landing spot.
       landing: () => new Walker(colliders, ground).pose(),
       reset: () => walker.reset(),
-      step: (dt) => walker.step(dt),
+      step: (dt) => {
+        crowd.agents.forEach((a, i) => {
+          people[i].x = a.x;
+          people[i].z = a.z;
+        });
+        return walker.step(dt, people);
+      },
     }),
-    [colliders, ground, walker],
+    [colliders, ground, walker, crowd, people],
   );
 
   useEffect(() => {
@@ -69,8 +86,9 @@ export default function StreetScene() {
         visitor: () => ({ x: walker.x, z: walker.z, yaw: walker.yaw, pitch: walker.pitch }),
         place: ({ x, z, yaw, pitch }) => walker.place(x, z, yaw, pitch),
         blocked: (x, z) => colliders.blocked([x, z]),
+        people: () => crowd.agents.map(({ x, z, moving }) => ({ x, z, moving })),
       }),
-    [walker, colliders],
+    [walker, colliders, crowd],
   );
 
   return (
@@ -80,6 +98,7 @@ export default function StreetScene() {
       {/* Street-level detail: a few pixels from the tour's viewpoints, but tens of thousands of triangles. */}
       <group visible={walking}>
         <Props trees={trees} lamps={data.lamps} ground={ground} />
+        <People crowd={crowd} ground={ground} visitor={() => [walker.x, walker.z]} />
       </group>
     </group>
   );
