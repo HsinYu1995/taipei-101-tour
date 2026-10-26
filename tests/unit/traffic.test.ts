@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
-import { SCENE_AREA } from '../../src/street/areas';
+import { SCENE_AREA, WALK_AREA } from '../../src/street/areas';
+import { buildGraph, Crowd, type Agent } from '../../src/street/crowd';
 import { buildLanes, Traffic, type Lane, type Scooter } from '../../src/street/traffic';
 import type { P, Road, XinyiData } from '../../src/street/types';
 
@@ -157,4 +158,33 @@ describe('Traffic', () => {
     }
     expect(one.scooters).toEqual(two.scooters);
   });
+
+  test('scooters stop for people on the zebra crossings, and no one waits forever', () => {
+    // The scene's own crowd and traffic, for five minutes.
+    const crowd = new Crowd(buildGraph(data.footways, WALK_AREA, data.crossings), 90, 101);
+    const t = new Traffic(lanes, 24, 101);
+    const dt = 1 / 30;
+    let hits = 0;
+    const still = t.scooters.map(() => 0);
+    let longest = 0;
+    for (let i = 0; i < 5 * 60 * 30; i++) {
+      crowd.step(dt, FAR, t.bodies);
+      t.step(dt, FAR, crowd.agents);
+      t.scooters.forEach((s, k) => {
+        // Touching: a person (0.3 m radius) within reach of the scooter's 1.7 m by 0.36 m body.
+        const fx = -Math.sin(s.heading);
+        const fz = -Math.cos(s.heading);
+        const touching = (a: Agent) => {
+          const along = (a.x - s.x) * fx + (a.z - s.z) * fz;
+          const side = (a.x - s.x) * -fz + (a.z - s.z) * fx;
+          return Math.abs(along) < 0.85 + 0.3 && Math.abs(side) < 0.18 + 0.3;
+        };
+        if (crowd.agents.some(touching)) hits++;
+        still[k] = s.speed < 0.1 ? still[k] + dt : 0;
+        longest = Math.max(longest, still[k]);
+      });
+    }
+    expect(hits).toBe(0);
+    expect(longest).toBeLessThan(15);
+  }, 30_000);
 });

@@ -57,8 +57,21 @@ export function makePersonMaterial() {
   return material;
 }
 
-/** The pedestrians: steps the crowd model every frame, yielding to the visitor, and draws it as one instanced mesh. */
-export function People({ crowd, ground, visitor }: { crowd: CrowdModel; ground: Ground; visitor: () => P }) {
+/**
+ * The pedestrians: steps the crowd model every frame, yielding to the visitor and to the `scooters` (points
+ * along their bodies), and draws it as one instanced mesh.
+ */
+export function People({
+  crowd,
+  ground,
+  visitor,
+  scooters,
+}: {
+  crowd: CrowdModel;
+  ground: Ground;
+  visitor: () => P;
+  scooters: readonly P[];
+}) {
   const ref = useRef<InstancedMesh>(null);
   const count = crowd.agents.length;
   const geometry = useMemo(makePersonGeometry, []);
@@ -90,7 +103,7 @@ export function People({ crowd, ground, visitor }: { crowd: CrowdModel; ground: 
   const o = useMemo(() => new Object3D(), []);
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.1);
-    crowd.step(dt, visitor());
+    crowd.step(dt, visitor(), scooters);
     const mesh = ref.current!;
     crowd.agents.forEach((a, i) => {
       const size = 1 + (pick(i, 3) * 2 - 1) * SIZE_SPREAD;

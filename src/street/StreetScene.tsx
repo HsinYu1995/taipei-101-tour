@@ -58,7 +58,7 @@ export default function StreetScene() {
   const walker = useMemo(() => new Walker(colliders, ground), [colliders, ground]);
   // People walk the footways and the zebra crossings that join them across roads.
   const crowd = useMemo(
-    () => new CrowdModel(buildGraph([...data.footways, ...data.crossings], WALK_AREA), CROWD.count, CROWD.seed),
+    () => new CrowdModel(buildGraph(data.footways, WALK_AREA, data.crossings), CROWD.count, CROWD.seed),
     [data],
   );
   // Scooters ride every car road in the scene area, including the stretches beyond the walkable part.
@@ -105,8 +105,8 @@ export default function StreetScene() {
       {/* Street-level detail: a few pixels from the tour's viewpoints, but tens of thousands of triangles. */}
       <group visible={walking}>
         <Props trees={trees} lamps={data.lamps} ground={ground} />
-        <People crowd={crowd} ground={ground} visitor={() => [walker.x, walker.z]} />
-        <Scooters traffic={traffic} ground={ground} visitor={() => [walker.x, walker.z]} />
+        <People crowd={crowd} ground={ground} visitor={() => [walker.x, walker.z]} scooters={traffic.bodies} />
+        <Scooters traffic={traffic} ground={ground} visitor={() => [walker.x, walker.z]} people={crowd.agents} />
       </group>
     </group>
   );

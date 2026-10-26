@@ -4,7 +4,8 @@ import type { P, Rect } from './types';
 
 export interface Graph {
   nodes: P[];
-  edges: { a: number; b: number; length: number }[];
+  /** `crossing`: a zebra crossing over a road, where no one stands about. */
+  edges: { a: number; b: number; length: number; crossing: boolean }[];
   /** Edge indices meeting at each node. */
   adjacent: number[][];
 }
@@ -12,8 +13,11 @@ export interface Graph {
 /** Points closer than this are the same junction. */
 const JOIN = 0.2;
 
-/** Footway lines clipped to the area, joined at shared points (within 0.2 m), largest connected component only. */
-export function buildGraph(lines: readonly P[][], area: Rect): Graph {
+/**
+ * Footway lines, and the zebra `crossings` that join them across roads, clipped to the area, joined at shared
+ * points (within 0.2 m), largest connected component only.
+ */
+export function buildGraph(lines: readonly P[][], area: Rect, crossings: readonly P[][] = []): Graph {
   const nodes: P[] = [];
   const cells = new Map<string, number[]>();
   const nodeAt = ([x, z]: P) => {
@@ -33,8 +37,9 @@ export function buildGraph(lines: readonly P[][], area: Rect): Graph {
   };
 
   const pairs = new Set<string>();
-  const raw: { a: number; b: number }[] = [];
-  for (const line of lines) {
+  const raw: { a: number; b: number; crossing: boolean }[] = [];
+  const all = [...lines.map((line) => ({ line, crossing: false })), ...crossings.map((line) => ({ line, crossing: true }))];
+  for (const { line, crossing } of all) {
     for (let i = 1; i < line.length; i++) {
       const piece = clip(line[i - 1], line[i], area);
       if (!piece) continue;
@@ -43,7 +48,7 @@ export function buildGraph(lines: readonly P[][], area: Rect): Graph {
       const key = a < b ? `${a},${b}` : `${b},${a}`;
       if (a === b || pairs.has(key)) continue;
       pairs.add(key);
-      raw.push({ a, b });
+      raw.push({ a, b, crossing });
     }
   }
 
@@ -83,9 +88,9 @@ export function buildGraph(lines: readonly P[][], area: Rect): Graph {
   });
   const edges = raw
     .filter(({ a }) => component[a] === best)
-    .map(({ a, b }) => {
+    .map(({ a, b, crossing }) => {
       const [na, nb] = [index.get(a)!, index.get(b)!];
-      return { a: na, b: nb, length: Math.hypot(kept[nb][0] - kept[na][0], kept[nb][1] - kept[na][1]) };
+      return { a: na, b: nb, length: Math.hypot(kept[nb][0] - kept[na][0], kept[nb][1] - kept[na][1]), crossing };
     });
   const adjacent: number[][] = kept.map(() => []);
   edges.forEach(({ a, b }, e) => {
@@ -160,6 +165,8 @@ export class Crowd {
       const route: Route = { edge, dir, s: pick, ox: 0, oz: 0, blocked: 0 };
       const [cx, cz, h] = this.centre(route);
       const stands = i < standing;
+      // Standing about on a crossing would be standing in the road, in the way of the scooters for good.
+      if (stands && graph.edges[edge].crossing) continue;
       const side = stands ? (this.rand() < 0.5 ? -STAND_ASIDE : STAND_ASIDE) : KEEP_RIGHT;
       [route.ox, route.oz] = [Math.cos(h) * side, -Math.sin(h) * side];
       const agent: Agent = {
@@ -188,8 +195,8 @@ export class Crowd {
     return [from[0] + dx * t, from[1] + dz * t, Math.atan2(-dx, -dz)];
   }
 
-  /** True when someone (another agent or the visitor) stands within the yield distance ahead of `agent`. */
-  private blockedAhead(i: number, visitor: P) {
+  /** True when someone (another agent, the visitor or a scooter) stands within the yield distance ahead of `agent`. */
+  private blockedAhead(i: number, visitor: P, others: readonly P[]) {
     const me = this.agents[i];
     const fx = -Math.sin(me.heading);
     const fz = -Math.cos(me.heading);
@@ -203,29 +210,31 @@ export class Crowd {
       return d2 === 0 || dx * fx + dz * fz > Math.sqrt(d2) * COS_YIELD_ANGLE;
     };
     if (ahead(visitor[0], visitor[1])) return true;
+    for (const [x, z] of others) if (ahead(x, z)) return true;
     for (let k = 0; k < this.agents.length; k++) if (k !== i && ahead(this.agents[k].x, this.agents[k].z)) return true;
     return false;
   }
 
   /** True when the spot (x, z) is nearer than PERSONAL_SPACE to someone, and nearer to them than `me` is now. */
-  private crowding(i: number, x: number, z: number, visitor: P) {
+  private crowding(i: number, x: number, z: number, visitor: P, others: readonly P[]) {
     const me = this.agents[i];
     const closer = (ox: number, oz: number) => {
       const d2 = (ox - x) ** 2 + (oz - z) ** 2;
       return d2 < PERSONAL_SPACE * PERSONAL_SPACE && d2 < (ox - me.x) ** 2 + (oz - me.z) ** 2;
     };
     if (closer(visitor[0], visitor[1])) return true;
+    for (const [ox, oz] of others) if (closer(ox, oz)) return true;
     for (let k = 0; k < this.agents.length; k++) if (k !== i && closer(this.agents[k].x, this.agents[k].z)) return true;
     return false;
   }
 
-  /** Advance by dt seconds; the visitor is an obstacle everyone yields to. */
-  step(dt: number, visitor: P): void {
+  /** Advance by dt seconds; the visitor and the `others` (the scooters' bodies) are obstacles everyone yields to. */
+  step(dt: number, visitor: P, others: readonly P[] = []): void {
     this.agents.forEach((agent, i) => {
       const route = this.routes[i];
       if (!route) return;
       const before = { ...route };
-      if (!this.blockedAhead(i, visitor)) {
+      if (!this.blockedAhead(i, visitor, others)) {
         let left = agent.speed * dt;
         while (left > 0) {
           const length = this.graph.edges[route.edge].length;
@@ -239,7 +248,7 @@ export class Crowd {
         }
         const [cx, cz, h] = this.place(route, dt);
         // Someone off to the side but already close (a corner, a drift across the path): wait rather than brush past.
-        if (!this.crowding(i, cx, cz, visitor)) {
+        if (!this.crowding(i, cx, cz, visitor, others)) {
           route.blocked = 0;
           agent.moving = true;
           agent.phase += agent.speed * dt * PHASE_PER_M;

@@ -107,6 +107,14 @@ const RESPAWN_CLEAR = 8;
 const PATH_HALF_WIDTH = 1.5;
 /** After a turn into a new lane, the scooter eases onto it at this speed (m/s) instead of jumping. */
 const SETTLE = 3;
+/** A scooter is about 1.7 m long: to people it is three points, its centre and this far ahead and behind. */
+const BODY_REACH = 0.6;
+
+/** Where someone stands. */
+interface Spot {
+  x: number;
+  z: number;
+}
 
 interface Ride {
   cruise: number;
@@ -117,6 +125,8 @@ interface Ride {
 
 export class Traffic {
   readonly scooters: Scooter[] = [];
+  /** Three points along each scooter, for people to keep clear of; refreshed by every `step`. */
+  readonly bodies: P[] = [];
   private readonly rides: Ride[] = [];
   private readonly lanes: Lane[];
   private readonly rand: () => number;
@@ -135,6 +145,21 @@ export class Traffic {
       this.scooters.push({ x, z, heading, lane, s: pick, speed: cruise });
       this.rides.push({ cruise, ox: 0, oz: 0 });
     }
+    for (let i = 0; i < this.scooters.length * 3; i++) this.bodies.push([0, 0]);
+    this.placeBodies();
+  }
+
+  private placeBodies() {
+    // Written in place: this runs every frame.
+    this.scooters.forEach(({ x, z, heading }, i) => {
+      const fx = -Math.sin(heading) * BODY_REACH;
+      const fz = -Math.cos(heading) * BODY_REACH;
+      for (let k = 0; k < 3; k++) {
+        const along = k === 0 ? 0 : k === 1 ? 1 : -1;
+        this.bodies[i * 3 + k][0] = x + fx * along;
+        this.bodies[i * 3 + k][1] = z + fz * along;
+      }
+    });
   }
 
   /** Position and heading `s` metres along a lane. */
@@ -155,8 +180,8 @@ export class Traffic {
     return [x, z, 0];
   }
 
-  /** Distance to the nearest thing in the way: the visitor or a scooter ahead on this lane, the next ones, or the road. */
-  private clearAhead(i: number, visitor: P): number {
+  /** Distance to the nearest thing in the way: the visitor, a person, or a scooter ahead on this lane, the next ones, or the road. */
+  private clearAhead(i: number, visitor: P, people: readonly Spot[]): number {
     const me = this.scooters[i];
     const lane = this.lanes[me.lane];
     const reach = STOP_GAP + SLOW_OVER;
@@ -170,6 +195,8 @@ export class Traffic {
       return along > 0 && along < reach && Math.abs(dx * -fz + dz * fx) < PATH_HALF_WIDTH ? along : Infinity;
     };
     nearest = Math.min(nearest, inPath(visitor[0], visitor[1]));
+    // People only cross the road on the zebra crossings, so anyone in the path is on one.
+    for (const p of people) nearest = Math.min(nearest, inPath(p.x, p.z));
     this.scooters.forEach((o, k) => {
       if (k === i) return;
       if (o.lane === me.lane && o.s > me.s) nearest = Math.min(nearest, o.s - me.s);
@@ -180,11 +207,11 @@ export class Traffic {
     return nearest;
   }
 
-  /** Advance by dt seconds; the visitor stands in the road like any obstacle, and scooters stop for them. */
-  step(dt: number, visitor: P): void {
+  /** Advance by dt seconds; the visitor and the crowd stand in the road like any obstacle, and scooters stop for them. */
+  step(dt: number, visitor: P, people: readonly Spot[] = []): void {
     this.scooters.forEach((me, i) => {
       const ride = this.rides[i];
-      const clear = this.clearAhead(i, visitor);
+      const clear = this.clearAhead(i, visitor, people);
       const target = ride.cruise * Math.max(0, Math.min(1, (clear - STOP_GAP) / SLOW_OVER));
       me.speed = target < me.speed ? target : Math.min(target, me.speed + ACCELERATION * dt);
       me.s += me.speed * dt;
@@ -212,6 +239,7 @@ export class Traffic {
       me.z = z + ride.oz;
       me.heading = heading;
     });
+    this.placeBodies();
   }
 
   /** Back at the start of a random lane far from the visitor with clear road around it. */

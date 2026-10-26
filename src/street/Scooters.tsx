@@ -83,8 +83,21 @@ function makeRiderGeometry(): BufferGeometry {
   return g;
 }
 
-/** The scooters: steps the traffic model every frame and draws scooters and riders, one instanced mesh each. */
-export function Scooters({ traffic, ground, visitor }: { traffic: Traffic; ground: Ground; visitor: () => P }) {
+/**
+ * The scooters: steps the traffic model every frame, stopping for the visitor and for `people` on the
+ * crossings, and draws scooters and riders, one instanced mesh each.
+ */
+export function Scooters({
+  traffic,
+  ground,
+  visitor,
+  people,
+}: {
+  traffic: Traffic;
+  ground: Ground;
+  visitor: () => P;
+  people: readonly { x: number; z: number }[];
+}) {
   const bikes = useRef<InstancedMesh>(null);
   const riders = useRef<InstancedMesh>(null);
   const count = traffic.scooters.length;
@@ -119,7 +132,7 @@ export function Scooters({ traffic, ground, visitor }: { traffic: Traffic; groun
 
   const o = useMemo(() => new Object3D(), []);
   useFrame((_, delta) => {
-    traffic.step(Math.min(delta, 0.1), visitor());
+    traffic.step(Math.min(delta, 0.1), visitor(), people);
     traffic.scooters.forEach((s, i) => {
       o.position.set(s.x, ground(s.x, s.z), s.z);
       o.rotation.set(0, s.heading, 0);
