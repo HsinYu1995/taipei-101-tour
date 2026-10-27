@@ -3,8 +3,9 @@ import { EYE_HEIGHT, LANDING, eyePose } from './api';
 import type { Circle, Colliders } from './collide';
 import { clearInput, input } from './input';
 
-/** Metres per second; Shift doubles it. */
-export const WALK_SPEED = 1.4;
+/** Metres per second, walking and hurrying (Shift). Brisker than real life so the street doesn't drag. */
+export const WALK_SPEED = 4;
+export const HURRY_SPEED = 8;
 /** Radians of turn per pixel dragged. */
 export const LOOK_RAD_PER_PX = 0.004;
 const PITCH = { min: -0.6, max: 1.2 };
@@ -52,7 +53,7 @@ export class Walker {
       right /= amount;
     }
     if (amount > 0) {
-      const step = WALK_SPEED * (input.keys.has('shift') ? 2 : 1) * dt;
+      const step = (input.keys.has('shift') ? HURRY_SPEED : WALK_SPEED) * dt;
       const sin = Math.sin(this.yaw);
       const cos = Math.cos(this.yaw);
       // Forward is (-sin, -cos); right is forward turned clockwise seen from above: (cos, -sin).
