@@ -1,4 +1,11 @@
-/** What the visitor is asking for right now; written by StreetHud, read (and look deltas consumed) by the Walker. */
+/** What the visitor asks for in one step. */
+export interface WalkInput {
+  keys: ReadonlySet<string>;
+  stick: { x: number; y: number };
+  look: { dx: number; dy: number };
+}
+
+/** What the visitor is asking for right now; written by StreetHud, handed to the street simulation each frame. */
 export const input = {
   /** Held keys, lower-cased `KeyboardEvent.key` values ('w', 'arrowup', 'shift', ...). */
   keys: new Set<string>(),

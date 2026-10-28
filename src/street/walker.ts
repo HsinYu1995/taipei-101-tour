@@ -1,7 +1,7 @@
 import type { Pose } from '../tour/types';
 import { EYE_HEIGHT, LANDING, eyePose } from './api';
 import type { Circle, Colliders } from './collide';
-import { clearInput, input } from './input';
+import type { WalkInput } from './input';
 
 /** Metres per second, walking and hurrying (Shift). Brisker than real life so the street doesn't drag. */
 export const WALK_SPEED = 4;
@@ -9,8 +9,6 @@ export const HURRY_SPEED = 8;
 /** Radians of turn per pixel dragged. */
 export const LOOK_RAD_PER_PX = 0.004;
 const PITCH = { min: -0.6, max: 1.2 };
-
-const held = (...keys: string[]) => (keys.some((k) => input.keys.has(k)) ? 1 : 0);
 
 /** The visitor on foot: where they stand, where they look, and how input moves them. */
 export class Walker {
@@ -31,19 +29,22 @@ export class Walker {
     this.z = LANDING.z;
     this.yaw = LANDING.yaw;
     this.pitch = LANDING.pitch;
-    clearInput();
   }
 
   pose(): Pose {
     return eyePose(this.x, this.ground(this.x, this.z) + EYE_HEIGHT, this.z, this.yaw, this.pitch);
   }
 
-  /** Advances by dt seconds of input; `others` are people to walk around. Returns the eye pose. */
-  step(dt: number, others: readonly Circle[] = []): Pose {
+  /**
+   * Advances by dt seconds of `input` (none: stand still); `others` are people to walk around. Reads `input`
+   * without changing it. Returns the eye pose.
+   */
+  step(dt: number, input: WalkInput | undefined, others: readonly Circle[] = []): Pose {
+    if (!input) return this.pose();
+    const held = (...keys: string[]) => (keys.some((k) => input.keys.has(k)) ? 1 : 0);
     // Dragging right turns right (yaw decreases); dragging up looks up.
     this.yaw -= input.look.dx * LOOK_RAD_PER_PX;
     this.pitch = Math.min(Math.max(this.pitch - input.look.dy * LOOK_RAD_PER_PX, PITCH.min), PITCH.max);
-    input.look.dx = input.look.dy = 0;
 
     let forward = held('w', 'arrowup') - held('s', 'arrowdown') - input.stick.y;
     let right = held('d', 'arrowright') - held('a', 'arrowleft') + input.stick.x;

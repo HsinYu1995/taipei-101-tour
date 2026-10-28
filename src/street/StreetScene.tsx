@@ -20,6 +20,7 @@ import { Props } from './Props';
 import { placeTrees } from './trees';
 import type { P, XinyiData } from './types';
 import { Walker } from './walker';
+import { clearInput, input } from './input';
 
 export { default as StreetHud } from './StreetHud';
 
@@ -69,13 +70,18 @@ export default function StreetScene() {
     () => ({
       // A fresh walker stands at the landing spot.
       landing: () => new Walker(colliders, ground).pose(),
-      reset: () => walker.reset(),
+      reset: () => {
+        walker.reset();
+        clearInput();
+      },
       step: (dt) => {
         crowd.agents.forEach((a, i) => {
           people[i].x = a.x;
           people[i].z = a.z;
         });
-        return walker.step(dt, people);
+        const pose = walker.step(dt, input, people);
+        input.look.dx = input.look.dy = 0;
+        return pose;
       },
     }),
     [colliders, ground, walker, crowd, people],
