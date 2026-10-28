@@ -1,8 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Color, InstancedBufferAttribute, InstancedMesh, MeshStandardMaterial, Object3D } from 'three';
-import type { Crowd as CrowdModel } from './crowd';
-import type { P } from './types';
+import type { Agent } from './crowd';
 import { HIP, makePersonGeometry, SHOULDER } from './person';
 
 type Ground = (x: number, z: number) => number;
@@ -57,23 +56,10 @@ export function makePersonMaterial() {
   return material;
 }
 
-/**
- * The pedestrians: steps the crowd model every frame, yielding to the visitor and to the `scooters` (points
- * along their bodies), and draws it as one instanced mesh.
- */
-export function People({
-  crowd,
-  ground,
-  visitor,
-  scooters,
-}: {
-  crowd: CrowdModel;
-  ground: Ground;
-  visitor: () => P;
-  scooters: readonly P[];
-}) {
+/** The crowd, drawn as one instanced mesh where the street simulation has put them. */
+export function People({ people, ground }: { people: readonly Agent[]; ground: Ground }) {
   const ref = useRef<InstancedMesh>(null);
-  const count = crowd.agents.length;
+  const count = people.length;
   const geometry = useMemo(makePersonGeometry, []);
   const material = useMemo(makePersonMaterial, []);
   const swing = useMemo(() => new InstancedBufferAttribute(new Float32Array(count * 2), 2), [count]);
@@ -103,9 +89,8 @@ export function People({
   const o = useMemo(() => new Object3D(), []);
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.1);
-    crowd.step(dt, visitor(), scooters);
     const mesh = ref.current!;
-    crowd.agents.forEach((a, i) => {
+    people.forEach((a, i) => {
       const size = 1 + (pick(i, 3) * 2 - 1) * SIZE_SPREAD;
       o.position.set(a.x, ground(a.x, a.z), a.z);
       o.rotation.set(0, a.heading, 0);

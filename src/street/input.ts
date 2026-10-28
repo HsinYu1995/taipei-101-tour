@@ -22,3 +22,10 @@ export function clearInput() {
   input.stick.x = input.stick.y = 0;
   input.look.dx = input.look.dy = 0;
 }
+
+/** This frame's input for the street simulation: what is held, and the look drag since the last call (then cleared). */
+export function takeInput(): WalkInput {
+  const look = { dx: input.look.dx, dy: input.look.dy };
+  input.look.dx = input.look.dy = 0;
+  return { keys: new Set(input.keys), stick: { ...input.stick }, look };
+}

@@ -17,7 +17,7 @@ const jitter = ([x, z]: P) => {
 };
 
 /** Instances standing on the ground at each point, each turned at random; `place` sets anything more. */
-function useInstances(points: P[], ground: Ground, place?: (o: Object3D, p: P, mesh: InstancedMesh, i: number) => void) {
+function useInstances(points: readonly P[], ground: Ground, place?: (o: Object3D, p: P, mesh: InstancedMesh, i: number) => void) {
   const ref = useRef<InstancedMesh>(null);
   useLayoutEffect(() => {
     const mesh = ref.current!;
@@ -44,7 +44,7 @@ function useOwned<T extends { dispose(): void }>(make: () => T) {
   return value;
 }
 
-function Trees({ points, ground }: { points: P[]; ground: Ground }) {
+function Trees({ points, ground }: { points: readonly P[]; ground: Ground }) {
   const trunk = useOwned(() => new CylinderGeometry(0.15, 0.2, TREE.trunk, 6).translate(0, TREE.trunk / 2, 0));
   // A unit canopy, scaled per tree and lifted so it sits on the trunk whatever its size.
   const canopy = useOwned(() => new IcosahedronGeometry(1, 0).translate(0, 0.8, 0));
@@ -70,7 +70,7 @@ function Trees({ points, ground }: { points: P[]; ground: Ground }) {
   );
 }
 
-function Lamps({ points, ground }: { points: P[]; ground: Ground }) {
+function Lamps({ points, ground }: { points: readonly P[]; ground: Ground }) {
   const geometry = useOwned(() => {
     const pole = new CylinderGeometry(0.07, 0.1, LAMP.height, 6).translate(0, LAMP.height / 2, 0);
     const head = new ConeGeometry(0.35, 0.4, 6).translate(0, LAMP.height, 0);
@@ -84,8 +84,8 @@ function Lamps({ points, ground }: { points: P[]; ground: Ground }) {
   return <instancedMesh name="street-lamps" ref={ref} args={[geometry, material, points.length]} />;
 }
 
-/** Street furniture: trees (OSM's plus the park fill) and OSM lamps. Trunks block the visitor (see StreetScene). */
-export function Props({ trees, lamps, ground }: { trees: P[]; lamps: P[]; ground: Ground }) {
+/** Street furniture: trees (OSM's plus the park fill) and OSM lamps. Trunks block the visitor (see the street simulation). */
+export function Props({ trees, lamps, ground }: { trees: readonly P[]; lamps: readonly P[]; ground: Ground }) {
   return (
     <>
       <Trees points={trees} ground={ground} />

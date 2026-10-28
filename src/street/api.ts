@@ -12,14 +12,14 @@ export const TRANSITION_MS = 1500;
 export const LANDING = { x: -20, z: 58, yaw: -0.33, pitch: 0.75 };
 export const STREET_CHAPTER: ChapterId = 'tower';
 
-/** Registered by the lazy street scene once its data is ready; CameraRig drives the camera through it. */
+/** Registered by the lazy street scene once its data is ready; CameraRig reads the camera pose through it. */
 export interface StreetApi {
   /** Eye pose at the landing spot, on the ground. */
   landing(): Pose;
   /** Put the visitor back at the landing spot and clear held input. */
   reset(): void;
-  /** Advance the visitor by dt seconds of input; returns the eye pose. */
-  step(dt: number): Pose;
+  /** The visitor's eye pose, as the street simulation last left it. */
+  eye(): Pose;
 }
 
 export const isStreetMode = (m: Mode) => m === 'descending' || m === 'street' || m === 'ascending';

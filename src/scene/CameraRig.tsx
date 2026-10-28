@@ -15,8 +15,6 @@ const RETURN_MS = 600;
 const DRAG_THRESHOLD_PX = 4;
 /** Near plane at eye level: the visitor can stand 0.3 m from a wall. */
 const NEAR = { street: 0.1, default: 0.5 };
-/** Longest frame step the street walk takes, so a stalled frame never teleports the visitor. */
-const MAX_STEP = 0.1;
 const { ACTION } = CameraControlsImpl;
 const UNBOUNDED: ExploreBounds = { minDistance: 0, maxDistance: Infinity, azimuthRange: Infinity, minPolar: 0, maxPolar: Math.PI };
 
@@ -128,7 +126,7 @@ export function CameraRig() {
 
   useStreetGestures(gl.domElement, controls);
 
-  useFrame(({ camera }, delta) => {
+  useFrame(({ camera }) => {
     const c = controls.current;
     if (!c) return;
     const { mode, progress, street, dispatch, setCamera } = useTour.getState();
@@ -168,7 +166,7 @@ export function CameraRig() {
         }
       }
     } else if (mode === 'street') {
-      if (street) lookAt(c, street.step(Math.min(delta, MAX_STEP)));
+      if (street) lookAt(c, street.eye());
     } else if (mode === 'ascending') {
       const t = progressOf(TRANSITION_MS);
       lookAt(c, lerpPose(blend.current!.from, poseAt(progress), easeInOutCubic(t)));
