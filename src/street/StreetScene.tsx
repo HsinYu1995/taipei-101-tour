@@ -49,7 +49,6 @@ export default function StreetScene() {
       registerProbe('street', {
         visitor: () => sim.visitor(),
         place: ({ x, z, yaw, pitch }) => sim.place(x, z, yaw, pitch),
-        blocked: (x, z) => sim.blocked(x, z),
         people: () => sim.people.map(({ x, z, moving }) => ({ x, z, moving })),
         scooters: () => sim.scooters.map(({ x, z }) => ({ x, z })),
       }),

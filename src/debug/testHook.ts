@@ -20,7 +20,6 @@ type Probes = {
   street?: {
     visitor(): { x: number; z: number; yaw: number; pitch: number };
     place(v: { x: number; z: number; yaw?: number; pitch?: number }): void;
-    blocked(x: number, z: number): boolean;
     /** Everyone in the crowd, in a stable order. */
     people(): { x: number; z: number; moving: boolean }[];
     /** Every scooter, in a stable order. */
