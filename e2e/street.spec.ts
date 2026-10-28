@@ -178,7 +178,7 @@ test.describe('reduced motion', () => {
 });
 
 // Review Focus 1
-test('resizing while walking stays in street and keeps progress', async ({ page }) => {
+test('resizing while walking stays on the street and keeps progress', async ({ page }) => {
   await enterTowerExplore(page);
   const before = (await getTour(page)).progress;
   await page.getByTestId('walk-street-button').click();

@@ -5,7 +5,7 @@ export interface WalkInput {
   look: { dx: number; dy: number };
 }
 
-/** What the visitor is asking for right now; written by StreetHud, handed to the street simulation each frame. */
+/** What the visitor is asking for right now; written by WalkHud, handed to the place's simulation each frame. */
 export const input = {
   /** Held keys, lower-cased `KeyboardEvent.key` values ('w', 'arrowup', 'shift', ...). */
   keys: new Set<string>(),
