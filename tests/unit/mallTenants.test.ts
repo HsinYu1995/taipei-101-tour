@@ -47,6 +47,16 @@ describe('baked mall tenants', () => {
     }
   });
 
+  test('names stay in Latin script', () => {
+    for (const name of allNames()) expect(name, name).toMatch(/^[\p{Script=Latin}\p{N}\p{P}\p{S}\s]+$/u);
+  });
+
+  test('a shop the feed files oddly gets its real category', () => {
+    const category = (floor: FloorId, name: string) => data.floors[floor].find((t) => t.name === name)?.category;
+    expect(category('B1', 'Läderach')).toBe('souvenir');
+    expect(category('1F', 'SWATCH')).toBe('watch');
+  });
+
   test('the snapshot is dated', () => {
     expect(data.snapshot).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });

@@ -56,6 +56,11 @@ const RENAME: Record<string, string> = {
   'CHUYU Japanese Cuisine CHUYU Teppanyaki': 'CHUYU',
   'NB GREY Image Main Store': 'NB GREY',
 };
+/** Shops the feed files under a group that misdescribes them (`special` means service, `shoes` means accessories). */
+const CATEGORY: Record<string, TenantCategory> = {
+  'Läderach': 'souvenir',
+  SWATCH: 'watch',
+};
 const HAND_ADDED: Tenant[] = [{ name: 'Observatory Tickets', floor: '5F', category: 'service' }];
 
 interface FeedShop { name: string }
@@ -95,6 +100,7 @@ function cleanName(raw: string): string {
 }
 
 function shopCategory(key: string, name: string): TenantCategory {
+  if (CATEGORY[name]) return CATEGORY[name];
   if (JEWELLERY.has(name.toLowerCase())) return 'jewellery';
   const category = SHOP_CATEGORIES[key];
   if (!category) throw new Error(`unknown shop category "${key}" (${name})`);
