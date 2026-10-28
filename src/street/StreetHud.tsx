@@ -14,7 +14,7 @@ const isTouch = () => window.matchMedia('(pointer: coarse)').matches;
 
 /** Street walk controls: keys, look drags, the touch thumbstick, and the landing hint. */
 export default function StreetHud() {
-  const walking = useTour((s) => s.mode === 'street');
+  const walking = useTour((s) => s.mode === 'walking');
   const [hint, setHint] = useState<'shown' | 'fading' | 'gone'>('gone');
   const hideHint = useRef(() => {});
 

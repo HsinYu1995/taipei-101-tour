@@ -3,7 +3,7 @@ import { GRID_ROTATION, PODIUM } from '../scene/tower/podium';
 import { SECTIONS } from '../scene/tower/towerProfile';
 import type { Mode } from '../tour/machine';
 import type { Pose } from '../tour/types';
-import { isStreetMode } from './api';
+import { isWalkMode } from './api';
 import { SCENE_AREA, WALK_AREA } from './areas';
 import { Colliders, type Circle } from './collide';
 import { buildGraph, Crowd, type Agent } from './crowd';
@@ -116,8 +116,8 @@ export class StreetSimulation {
     this.traffic.step(dt, visitor, this.crowd.agents);
   }
 
-  /** One frame of the tour in `mode`: the street moves only during the walk, and the visitor only in street. */
+  /** One frame of the tour in `mode`: the street moves only during the walk, and the visitor only while walking. */
   tick(mode: Mode, dt: number, input?: WalkInput) {
-    if (isStreetMode(mode)) this.step(dt, mode === 'street' ? input : undefined);
+    if (isWalkMode(mode)) this.step(dt, mode === 'walking' ? input : undefined);
   }
 }

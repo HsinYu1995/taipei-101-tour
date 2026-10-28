@@ -48,7 +48,7 @@ for (const [project, options] of Object.entries(PROJECTS)) {
   await page.waitForTimeout(2500);
   await page.getByTestId('explore-button').click();
   await page.getByTestId('walk-street-button').click();
-  await page.waitForFunction(() => window.__tour!.getState().mode === 'street' && window.__tour!.probes.street !== undefined);
+  await page.waitForFunction(() => window.__tour!.getState().mode === 'walking' && window.__tour!.probes.street !== undefined);
   await page.waitForTimeout(2500);
   await shoot('street-landing');
   for (const [name, pose] of STREET_POSES) {

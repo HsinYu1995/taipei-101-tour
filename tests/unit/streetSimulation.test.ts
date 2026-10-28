@@ -136,7 +136,7 @@ describe('street simulation', () => {
 
   test('outside the street walk nothing moves, and it resumes where it left off', () => {
     const sim = street();
-    for (let i = 0; i < 60; i++) sim.tick('street', DT, keys('w'));
+    for (let i = 0; i < 60; i++) sim.tick('walking', DT, keys('w'));
     const v = sim.visitor();
     const people = where(sim.people);
     const scooters = where(sim.scooters);
@@ -152,7 +152,7 @@ describe('street simulation', () => {
     expect(sim.people.some((p, i) => dist(p, people[i]) > 0.1)).toBe(true);
 
     const before = [...where(sim.people), ...where(sim.scooters)];
-    sim.tick('street', DT);
+    sim.tick('walking', DT);
     const after = [...where(sim.people), ...where(sim.scooters)];
     for (let i = 0; i < before.length; i++) expect(dist(after[i], before[i])).toBeLessThanOrEqual(11 * DT + 0.01);
   });

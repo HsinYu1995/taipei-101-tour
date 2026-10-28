@@ -2,14 +2,19 @@ import { CHAPTERS } from './chapters';
 import { segmentAt } from './path';
 import type { Segment } from './types';
 
-/** `descending`, `street` and `ascending` are the Xinyi street walk, entered from the tower chapter's explore mode. */
-export type Mode = 'tour' | 'explore' | 'returning' | 'descending' | 'street' | 'ascending';
+/** Where the walk is. Only the Xinyi street for now. */
+export type PlaceId = 'street';
+
+/** `descending`, `walking` and `ascending` are the walk, entered from the tower chapter's explore mode. */
+export type Mode = 'tour' | 'explore' | 'returning' | 'descending' | 'walking' | 'ascending';
 
 export interface TourState {
   progress: number;
   segment: Segment;
   mode: Mode;
   activeHotspot: string | null;
+  /** The walk's place; kept while not walking, so it only means something in the walk modes. */
+  place: PlaceId;
 }
 
 export type TourEvent =
@@ -19,12 +24,12 @@ export type TourEvent =
   | { type: 'returnDone' }
   | { type: 'openHotspot'; id: string }
   | { type: 'closeHotspot' }
-  | { type: 'streetEnter' }
+  | { type: 'walkEnter' }
   | { type: 'landed' }
-  | { type: 'streetExit' }
+  | { type: 'walkExit' }
   | { type: 'ascended' };
 
-/** The chapter whose explore mode leads down to the street. */
+/** The chapter whose explore mode leads down to the walk. */
 const STREET_CHAPTER = CHAPTERS.findIndex((c) => c.id === 'tower');
 
 export const initialState: TourState = {
@@ -32,18 +37,19 @@ export const initialState: TourState = {
   segment: segmentAt(0),
   mode: 'tour',
   activeHotspot: null,
+  place: 'street',
 };
 
 const sameStop = (a: Segment, b: Segment) =>
   a.kind === 'stop' && b.kind === 'stop' && a.chapterIndex === b.chapterIndex;
 
 export function tourReducer(s: TourState, e: TourEvent): TourState {
-  // While walking, the page is frozen: only the street's own events apply.
-  if (s.mode === 'descending' || s.mode === 'street' || s.mode === 'ascending') {
+  // While walking, the page is frozen: only the walk's own events apply.
+  if (s.mode === 'descending' || s.mode === 'walking' || s.mode === 'ascending') {
     switch (e.type) {
       case 'landed':
-        return s.mode === 'descending' ? { ...s, mode: 'street' } : s;
-      case 'streetExit':
+        return s.mode === 'descending' ? { ...s, mode: 'walking' } : s;
+      case 'walkExit':
         return s.mode === 'ascending' ? s : { ...s, mode: 'ascending' };
       case 'ascended':
         return s.mode === 'ascending' ? { ...s, mode: 'tour' } : s;
@@ -75,12 +81,12 @@ export function tourReducer(s: TourState, e: TourEvent): TourState {
         : s;
     case 'closeHotspot':
       return { ...s, activeHotspot: null };
-    case 'streetEnter':
+    case 'walkEnter':
       return s.mode === 'explore' && s.segment.kind === 'stop' && s.segment.chapterIndex === STREET_CHAPTER
-        ? { ...s, mode: 'descending', activeHotspot: null }
+        ? { ...s, mode: 'descending', activeHotspot: null, place: 'street' }
         : s;
     case 'landed':
-    case 'streetExit':
+    case 'walkExit':
     case 'ascended':
       return s;
   }

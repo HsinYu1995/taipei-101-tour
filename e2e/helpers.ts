@@ -132,7 +132,7 @@ export async function place(page: Page, v: { x: number; z: number; yaw?: number;
 export async function enterStreet(page: Page) {
   await enterTowerExplore(page);
   await page.getByTestId('walk-street-button').click();
-  await waitMode(page, 'street');
+  await waitMode(page, 'walking');
   await page.waitForFunction(() => window.__tour!.probes.street !== undefined);
 }
 

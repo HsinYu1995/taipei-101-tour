@@ -2,7 +2,7 @@ import type { CameraControlsImpl } from '@react-three/drei';
 import { useEffect, type RefObject } from 'react';
 import { CHAPTERS } from '../tour/chapters';
 import { useTour } from '../tour/store';
-import { STREET_CHAPTER, canWalk, isStreetMode } from './api';
+import { STREET_CHAPTER, canWalk, isWalkMode } from './api';
 
 /** A two-finger spread or pinch must change the finger distance by this much to count. */
 const PINCH_PX = 60;
@@ -22,12 +22,12 @@ export function useStreetGestures(el: HTMLElement, controls: RefObject<CameraCon
       const chapter = CHAPTERS[segment.chapterIndex];
       return chapter.id === STREET_CHAPTER && canWalk() && c.distance <= chapter.explore.minDistance + 1;
     };
-    const dispatch = (type: 'streetEnter' | 'streetExit') => useTour.getState().dispatch({ type });
+    const dispatch = (type: 'walkEnter' | 'walkExit') => useTour.getState().dispatch({ type });
 
     const onWheel = (e: WheelEvent) => {
-      if (isStreetMode(useTour.getState().mode)) e.preventDefault();
-      if (e.deltaY < 0 && atClosest()) dispatch('streetEnter');
-      else if (e.deltaY > 0 && useTour.getState().mode === 'street') dispatch('streetExit');
+      if (isWalkMode(useTour.getState().mode)) e.preventDefault();
+      if (e.deltaY < 0 && atClosest()) dispatch('walkEnter');
+      else if (e.deltaY > 0 && useTour.getState().mode === 'walking') dispatch('walkExit');
     };
 
     // Touches that started on the canvas (the street thumbstick sits above it, so its touches never count).
@@ -49,10 +49,10 @@ export function useStreetGestures(el: HTMLElement, controls: RefObject<CameraCon
       const change = spread() - startSpread;
       if (change > PINCH_PX && atClosest()) {
         startSpread = null;
-        dispatch('streetEnter');
-      } else if (change < -PINCH_PX && useTour.getState().mode === 'street') {
+        dispatch('walkEnter');
+      } else if (change < -PINCH_PX && useTour.getState().mode === 'walking') {
         startSpread = null;
-        dispatch('streetExit');
+        dispatch('walkExit');
       }
     };
     const onUp = (e: PointerEvent) => {

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import type { StreetApi } from '../street/api';
+import type { PlaceApi } from '../street/api';
 import { CHAPTERS, INTRO_POSE } from './chapters';
-import { initialState, tourReducer, type TourEvent, type TourState } from './machine';
+import { initialState, tourReducer, type PlaceId, type TourEvent, type TourState } from './machine';
 import type { Pose } from './types';
 
 interface TourStore extends TourState {
@@ -9,15 +9,15 @@ interface TourStore extends TourState {
   camera: Pose;
   /** Count of frames the camera rig has rendered; lets tests wait for real frames. */
   frame: number;
-  /** The street walk, once its lazy scene has loaded and mounted. */
-  street: StreetApi | null;
+  /** Each place of the walk, once its lazy scene has loaded and mounted. */
+  places: Partial<Record<PlaceId, PlaceApi>>;
   /** Sticky: the visitor has explored the tower chapter, so the street chunk should load. */
   streetWanted: boolean;
   /** The street chunk failed to load; the walk is withdrawn. */
   streetFailed: boolean;
   dispatch(e: TourEvent): void;
   setCamera(p: Pose): void;
-  setStreet(api: StreetApi | null): void;
+  setPlace(id: PlaceId, api: PlaceApi | null): void;
   setStreetFailed(): void;
 }
 
@@ -28,7 +28,7 @@ export const useTour = create<TourStore>((set) => ({
   ...initialState,
   camera: INTRO_POSE,
   frame: 0,
-  street: null,
+  places: {},
   streetWanted: false,
   streetFailed: false,
   dispatch: (e) =>
@@ -37,6 +37,6 @@ export const useTour = create<TourStore>((set) => ({
       return !s.streetWanted && wantsStreet(next) ? { ...next, streetWanted: true } : next;
     }),
   setCamera: (camera) => set((s) => ({ camera, frame: s.frame + 1 })),
-  setStreet: (street) => set({ street }),
+  setPlace: (id, api) => set((s) => ({ places: { ...s.places, [id]: api ?? undefined } })),
   setStreetFailed: () => set({ streetFailed: true }),
 }));

@@ -36,7 +36,7 @@ test('dragging the mouse turns the view right', async ({ page, isMobile }) => {
   const a = await visitor(page);
   await dragAcrossCenter(page, 200);
   expect((await visitor(page)).yaw).toBeLessThan(a.yaw - 0.3);
-  expect((await page.evaluate(() => window.__tour!.getState())).mode).toBe('street');
+  expect((await page.evaluate(() => window.__tour!.getState())).mode).toBe('walking');
 });
 
 test('the hint shows on landing and fades on first movement', async ({ page, isMobile }) => {
@@ -66,7 +66,7 @@ test('touch: the thumbstick walks and a drag elsewhere turns', async ({ page, is
   await touchDrag(page, { from: [0.7, 0.4], to: [0.4, 0.4] }); // right half of the screen, leftward drag
   expect((await visitor(page)).yaw).toBeGreaterThan(b.yaw + 0.2);
   expect(await page.evaluate(() => window.scrollY)).toBe(y);
-  expect((await page.evaluate(() => window.__tour!.getState())).mode).toBe('street');
+  expect((await page.evaluate(() => window.__tour!.getState())).mode).toBe('walking');
 });
 
 test('desktop shows no thumbstick', async ({ page, isMobile }) => {
@@ -86,7 +86,7 @@ test('a key held while leaving does not keep walking on the next visit', async (
   await page.keyboard.up('w');
   await page.getByTestId('explore-button').click();
   await page.getByTestId('walk-street-button').click();
-  await waitMode(page, 'street');
+  await waitMode(page, 'walking');
   const a = await visitor(page);
   await page.waitForTimeout(1000);
   const b = await visitor(page);

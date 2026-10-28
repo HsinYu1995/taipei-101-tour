@@ -57,33 +57,42 @@ describe('tourReducer', () => {
   });
 });
 
-describe('street modes', () => {
+describe('walk modes', () => {
   const exploring = (i: number) => tourReducer(at(stopCenter(i)), { type: 'exploreStart' });
 
-  test('streetEnter from tower explore descends and closes the hotspot', () => {
+  test("the tour starts with the street as the walk's place", () => {
+    expect(initialState.place).toBe('street');
+  });
+  test('walkEnter from tower explore puts the visitor on the street', () => {
+    const s = tourReducer(exploring(1), { type: 'walkEnter' });
+    expect(s.mode).toBe('descending');
+    expect(s.place).toBe('street');
+  });
+
+  test('walkEnter from tower explore descends and closes the hotspot', () => {
     let s = tourReducer(at(stopCenter(1)), { type: 'openHotspot', id: CHAPTERS[1].hotspot.id });
-    s = tourReducer(tourReducer(s, { type: 'exploreStart' }), { type: 'streetEnter' });
+    s = tourReducer(tourReducer(s, { type: 'exploreStart' }), { type: 'walkEnter' });
     expect(s.mode).toBe('descending');
     expect(s.activeHotspot).toBeNull();
   });
-  test('streetEnter elsewhere is ignored', () => {
-    expect(tourReducer(exploring(0), { type: 'streetEnter' }).mode).toBe('explore');
-    expect(tourReducer(at(stopCenter(1)), { type: 'streetEnter' }).mode).toBe('tour');
+  test('walkEnter elsewhere is ignored', () => {
+    expect(tourReducer(exploring(0), { type: 'walkEnter' }).mode).toBe('explore');
+    expect(tourReducer(at(stopCenter(1)), { type: 'walkEnter' }).mode).toBe('tour');
   });
-  test('landed, streetExit, ascended walk the cycle back to tour', () => {
-    let s = tourReducer(exploring(1), { type: 'streetEnter' });
+  test('landed, walkExit, ascended walk the cycle back to tour', () => {
+    let s = tourReducer(exploring(1), { type: 'walkEnter' });
     s = tourReducer(s, { type: 'landed' });
-    expect(s.mode).toBe('street');
-    s = tourReducer(s, { type: 'streetExit' });
+    expect(s.mode).toBe('walking');
+    s = tourReducer(s, { type: 'walkExit' });
     expect(s.mode).toBe('ascending');
     s = tourReducer(s, { type: 'ascended' });
     expect(s.mode).toBe('tour');
   });
-  test('streetExit during the descent ascends', () => {
-    expect(tourReducer(tourReducer(exploring(1), { type: 'streetEnter' }), { type: 'streetExit' }).mode).toBe('ascending');
+  test('walkExit during the descent ascends', () => {
+    expect(tourReducer(tourReducer(exploring(1), { type: 'walkEnter' }), { type: 'walkExit' }).mode).toBe('ascending');
   });
-  test('scroll, explore and hotspot events are ignored in street modes', () => {
-    for (const mode of ['descending', 'street', 'ascending'] as const) {
+  test('scroll, explore and hotspot events are ignored while walking', () => {
+    for (const mode of ['descending', 'walking', 'ascending'] as const) {
       const s = { ...exploring(1), mode };
       expect(tourReducer(s, { type: 'scroll', progress: stopCenter(3) })).toBe(s);
       expect(tourReducer(s, { type: 'exploreEnd' })).toBe(s);

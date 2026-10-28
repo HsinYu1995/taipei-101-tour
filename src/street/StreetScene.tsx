@@ -3,7 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { registerProbe } from '../debug/testHook';
 import { useHeightField } from '../scene/terrain/Terrain';
 import { useTour } from '../tour/store';
-import { isStreetMode, type StreetApi } from './api';
+import { isWalkMode, type PlaceApi } from './api';
 import { People } from './People';
 import { Scooters } from './Scooters';
 import { Buildings } from './Buildings';
@@ -20,10 +20,10 @@ export { default as StreetHud } from './StreetHud';
 export default function StreetScene() {
   const field = useHeightField();
   const data = useXinyi();
-  const walking = useTour((s) => isStreetMode(s.mode));
+  const walking = useTour((s) => isWalkMode(s.mode));
   const ground = useMemo(() => groundAt(field), [field]);
   const sim = useMemo(() => new StreetSimulation(data, ground), [data, ground]);
-  const api = useMemo<StreetApi>(
+  const api = useMemo<PlaceApi>(
     () => ({
       landing: () => sim.landing(),
       reset: () => {
@@ -36,8 +36,8 @@ export default function StreetScene() {
   );
 
   useEffect(() => {
-    useTour.getState().setStreet(api);
-    return () => useTour.getState().setStreet(null);
+    useTour.getState().setPlace('street', api);
+    return () => useTour.getState().setPlace('street', null);
   }, [api]);
 
   // Once per frame, before CameraRig reads the eye pose (a negative priority runs earlier without taking over

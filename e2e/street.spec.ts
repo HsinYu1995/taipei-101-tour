@@ -20,7 +20,7 @@ test.beforeEach(async ({ page }) => openTour(page));
 test('walk button lands at eye height on the landing spot', async ({ page }) => {
   await enterTowerExplore(page);
   await page.getByTestId('walk-street-button').click();
-  await waitMode(page, 'street');
+  await waitMode(page, 'walking');
   const { camera } = await getTour(page);
   const ground = await page.evaluate(([x, z]) => window.__tour!.probes.groundAt!(x, z), [LANDING.x, LANDING.z]);
   expect(camera.position[0]).toBeCloseTo(LANDING.x, 0);
@@ -44,7 +44,7 @@ test('zooming in at the minimum distance descends (desktop)', async ({ page, isM
       },
       { timeout: 20_000 },
     )
-    .toMatch(/descending|street/);
+    .toMatch(/descending|walking/);
 });
 
 test('pinching out at the minimum distance descends (touch)', async ({ page, isMobile }) => {
@@ -61,14 +61,14 @@ test('pinching out at the minimum distance descends (touch)', async ({ page, isM
       },
       { timeout: 60_000 },
     )
-    .toMatch(/descending|street/);
+    .toMatch(/descending|walking/);
 });
 
 test('pinching in while walking rises to the tower stop (touch)', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'pinch needs the mobile project');
   await enterTowerExplore(page);
   await page.getByTestId('walk-street-button').click();
-  await waitMode(page, 'street');
+  await waitMode(page, 'walking');
   await touchPinch(page, -160);
   await waitMode(page, 'tour');
   expectNearPose((await getTour(page)).camera, CHAPTERS[1].stop);
@@ -82,7 +82,7 @@ test('the loading indicator shows while the street is still downloading', async 
   await enterTowerExplore(page);
   await page.getByTestId('walk-street-button').click();
   await expect(page.getByTestId('street-loading')).toBeVisible();
-  await waitMode(page, 'street', 25_000);
+  await waitMode(page, 'walking', 25_000);
   await expect(page.getByTestId('street-loading')).toBeHidden();
 });
 
@@ -92,7 +92,7 @@ for (const how of ['back', 'escape', 'wheel'] as const) {
     await enterTowerExplore(page);
     const before = (await getTour(page)).progress;
     await page.getByTestId('walk-street-button').click();
-    await waitMode(page, 'street');
+    await waitMode(page, 'walking');
     if (how === 'back') await page.getByTestId('back-to-tour-button').click();
     if (how === 'escape') await page.keyboard.press('Escape');
     if (how === 'wheel') await page.mouse.wheel(0, 400);
@@ -109,7 +109,7 @@ for (const scaleFactor of [2, 0.5]) {
     test.skip(isMobile, 'trackpad pinch is a desktop interaction');
     await enterTowerExplore(page);
     await page.getByTestId('walk-street-button').click();
-    await waitMode(page, 'street');
+    await waitMode(page, 'walking');
     const { width, height } = page.viewportSize()!;
     // A trackpad pinch reaches the page as wheel events with Control held; unhandled, the browser zooms the page.
     const cdp = await page.context().newCDPSession(page);
@@ -125,7 +125,7 @@ for (const scaleFactor of [2, 0.5]) {
 test('the page does not scroll and the hotspot is hidden while walking', async ({ page }) => {
   await enterTowerExplore(page);
   await page.getByTestId('walk-street-button').click();
-  await waitMode(page, 'street');
+  await waitMode(page, 'walking');
   const y = await page.evaluate(() => window.scrollY);
   await page.keyboard.press('PageDown');
   await page.keyboard.press('Space');
@@ -135,7 +135,7 @@ test('the page does not scroll and the hotspot is hidden while walking', async (
   await page.mouse.wheel(0, -400);
   await nextFrames(page);
   expect(await page.evaluate(() => window.scrollY)).toBe(y);
-  expect((await getTour(page)).mode).toBe('street');
+  expect((await getTour(page)).mode).toBe('walking');
   await expect(page.getByTestId(`hotspot-${CHAPTERS[1].hotspot.id}`)).toHaveCount(0);
   await expect(page.getByTestId('chapter-caption')).toBeHidden();
 });
@@ -181,11 +181,11 @@ test('resizing while walking stays in street and keeps progress', async ({ page 
   await enterTowerExplore(page);
   const before = (await getTour(page)).progress;
   await page.getByTestId('walk-street-button').click();
-  await waitMode(page, 'street');
+  await waitMode(page, 'walking');
   const { width, height } = page.viewportSize()!;
   await page.setViewportSize({ width: height, height: width });
   await nextFrames(page);
-  expect((await getTour(page)).mode).toBe('street');
+  expect((await getTour(page)).mode).toBe('walking');
   await page.keyboard.press('Escape');
   await waitMode(page, 'tour');
   expect((await getTour(page)).progress).toBeCloseTo(before, 6);
@@ -195,7 +195,7 @@ test('resizing while walking stays in street and keeps progress', async ({ page 
 test('reloading while walking comes back in tour at the tower stop', async ({ page }) => {
   await enterTowerExplore(page);
   await page.getByTestId('walk-street-button').click();
-  await waitMode(page, 'street');
+  await waitMode(page, 'walking');
   await page.reload();
   await page.waitForFunction(() => window.__tour !== undefined);
   await nextFrames(page);
@@ -215,7 +215,7 @@ test('escape during the descent and during the ascent both end in tour', async (
   expectNearPose((await getTour(page)).camera, CHAPTERS[1].stop);
   await page.getByTestId('explore-button').click();
   await page.getByTestId('walk-street-button').click();
-  await waitMode(page, 'street');
+  await waitMode(page, 'walking');
   await page.keyboard.press('Escape');
   await waitMode(page, 'ascending', 5_000);
   await page.keyboard.press('Escape');

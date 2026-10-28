@@ -63,8 +63,8 @@ export function installTestHook() {
     probes,
     getEvents: () => events.slice(-20),
     getState: () => {
-      const { progress, segment, mode, activeHotspot, camera, frame } = useTour.getState();
-      return structuredClone({ progress, segment, mode, activeHotspot, camera, frame });
+      const { progress, segment, mode, activeHotspot, place, camera, frame } = useTour.getState();
+      return structuredClone({ progress, segment, mode, activeHotspot, place, camera, frame });
     },
   };
 }

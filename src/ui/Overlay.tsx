@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { en } from '../content/en';
-import { STREET_CHAPTER, canWalk, isStreetMode } from '../street/api';
+import { STREET_CHAPTER, canWalk, isWalkMode } from '../street/api';
 import { CHAPTERS, STOP_WEIGHT, TRAVEL_WEIGHT } from '../tour/chapters';
 import { useTour } from '../tour/store';
 import { HotspotButton } from './HotspotButton';
@@ -19,18 +19,18 @@ export function Overlay() {
   const mode = useTour((s) => s.mode);
   const dispatch = useTour((s) => s.dispatch);
   const streetWanted = useTour((s) => s.streetWanted);
-  const streetLoading = useTour((s) => s.mode === 'descending' && s.street === null);
+  const streetLoading = useTour((s) => s.mode === 'descending' && s.places.street === undefined);
   // Re-render when the walk is withdrawn; canWalk() reads it from the store.
   useTour((s) => s.streetFailed);
   const copy = en.chapters[chapter.id];
-  const walking = isStreetMode(mode);
+  const walking = isWalkMode(mode);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       // An open panel is the innermost layer, so Escape closes it before leaving explore.
       const { activeHotspot, mode, dispatch } = useTour.getState();
-      if (isStreetMode(mode)) dispatch({ type: 'streetExit' });
+      if (isWalkMode(mode)) dispatch({ type: 'walkExit' });
       else dispatch({ type: activeHotspot ? 'closeHotspot' : 'exploreEnd' });
     };
     window.addEventListener('keydown', onKey);
@@ -61,7 +61,7 @@ export function Overlay() {
           </button>
         )}
         {mode === 'explore' && chapter.id === STREET_CHAPTER && canWalk() && (
-          <button data-testid="walk-street-button" onClick={() => dispatch({ type: 'streetEnter' })}>
+          <button data-testid="walk-street-button" onClick={() => dispatch({ type: 'walkEnter' })}>
             {en.ui.walkStreet}
           </button>
         )}
@@ -70,8 +70,8 @@ export function Overlay() {
             {en.ui.backToTour}
           </button>
         )}
-        {(mode === 'descending' || mode === 'street') && (
-          <button data-testid="back-to-tour-button" onClick={() => dispatch({ type: 'streetExit' })}>
+        {(mode === 'descending' || mode === 'walking') && (
+          <button data-testid="back-to-tour-button" onClick={() => dispatch({ type: 'walkExit' })}>
             {en.ui.backToTour}
           </button>
         )}

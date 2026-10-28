@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from 'react';
-import { isStreetMode } from '../street/api';
+import { isWalkMode } from '../street/api';
 import { useTour } from '../tour/store';
 
 /**
@@ -17,7 +17,7 @@ export class StreetErrorBoundary extends Component<{ children: ReactNode }, { fa
     console.warn('street walk unavailable:', error);
     const { mode, dispatch, setStreetFailed } = useTour.getState();
     setStreetFailed();
-    if (isStreetMode(mode)) dispatch({ type: 'streetExit' });
+    if (isWalkMode(mode)) dispatch({ type: 'walkExit' });
   }
 
   render() {

@@ -2,7 +2,7 @@ import { CameraControls, CameraControlsImpl } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
-import { TRANSITION_MS, isStreetMode } from '../street/api';
+import { TRANSITION_MS, isWalkMode } from '../street/api';
 import { useStreetGestures } from '../street/gestures';
 import { CHAPTERS } from '../tour/chapters';
 import type { Mode } from '../tour/machine';
@@ -64,7 +64,7 @@ export function CameraRig() {
     // camera-controls forces touch-action:none on connect and on every `enabled` change;
     // outside explore a one-finger vertical swipe must scroll the page.
     const { mode } = useTour.getState();
-    gl.domElement.style.touchAction = mode === 'explore' || isStreetMode(mode) ? 'none' : 'pan-y';
+    gl.domElement.style.touchAction = mode === 'explore' || isWalkMode(mode) ? 'none' : 'pan-y';
   };
 
   useEffect(() => {
@@ -129,9 +129,10 @@ export function CameraRig() {
   useFrame(({ camera }) => {
     const c = controls.current;
     if (!c) return;
-    const { mode, progress, street, dispatch, setCamera } = useTour.getState();
+    const { mode, progress, place, places, dispatch, setCamera } = useTour.getState();
+    const walk = places[place];
 
-    const near = isStreetMode(mode) ? NEAR.street : NEAR.default;
+    const near = isWalkMode(mode) ? NEAR.street : NEAR.default;
     if (camera.near !== near) {
       camera.near = near;
       camera.updateProjectionMatrix();
@@ -156,17 +157,17 @@ export function CameraRig() {
       lookAt(c, orbitLerpPose(blend.current!.from, poseAt(progress), easeInOutCubic(t)));
       if (t === 1) dispatch({ type: 'returnDone' });
     } else if (mode === 'descending') {
-      // Until the street has loaded, hold still where explore left the camera.
-      if (street) {
+      // Until the place has loaded, hold still where explore left the camera.
+      if (walk) {
         const t = progressOf(TRANSITION_MS);
-        lookAt(c, lerpPose(blend.current!.from, street.landing(), easeInOutCubic(t)));
+        lookAt(c, lerpPose(blend.current!.from, walk.landing(), easeInOutCubic(t)));
         if (t === 1) {
-          street.reset();
+          walk.reset();
           dispatch({ type: 'landed' });
         }
       }
-    } else if (mode === 'street') {
-      if (street) lookAt(c, street.eye());
+    } else if (mode === 'walking') {
+      if (walk) lookAt(c, walk.eye());
     } else if (mode === 'ascending') {
       const t = progressOf(TRANSITION_MS);
       lookAt(c, lerpPose(blend.current!.from, poseAt(progress), easeInOutCubic(t)));
