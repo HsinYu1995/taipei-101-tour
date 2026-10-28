@@ -1,17 +1,17 @@
 import { footprint } from '../scene/tower/loft';
 import { GRID_ROTATION, PODIUM } from '../scene/tower/podium';
 import { SECTIONS } from '../scene/tower/towerProfile';
-import type { Mode } from '../tour/machine';
 import type { Pose } from '../tour/types';
-import { isWalkMode } from './api';
+import type { Phase } from '../walk/api';
+import { Colliders, type Circle } from '../walk/collide';
+import type { WalkInput } from '../walk/input';
+import { Walker } from '../walk/walker';
+import { LANDING } from './api';
 import { SCENE_AREA, WALK_AREA } from './areas';
-import { Colliders, type Circle } from './collide';
 import { buildGraph, Crowd, type Agent } from './crowd';
-import type { WalkInput } from './input';
 import { buildLanes, Traffic, type Scooter } from './traffic';
 import { placeTrees } from './trees';
 import type { P, XinyiData } from './types';
-import { Walker } from './walker';
 
 /** The visitor's body radius. */
 const RADIUS = 0.3;
@@ -63,7 +63,7 @@ export class StreetSimulation {
     this.trees = trees;
     this.ground = ground;
     this.colliders = buildColliders(data, trees);
-    this.walker = new Walker(this.colliders, ground);
+    this.walker = new Walker(this.colliders, ground, LANDING);
     // People walk the footways and the zebra crossings that join them across roads.
     this.crowd = new Crowd(buildGraph(data.footways, WALK_AREA, data.crossings), CROWD.count, CROWD.seed);
     // Scooters ride every car road in the scene area, including the stretches beyond the walkable part.
@@ -85,7 +85,7 @@ export class StreetSimulation {
 
   /** Eye pose at the landing spot, on the ground. */
   landing(): Pose {
-    return new Walker(this.colliders, this.ground).pose();
+    return new Walker(this.colliders, this.ground, LANDING).pose();
   }
 
   /** Puts the visitor back at the landing spot. */
@@ -116,8 +116,8 @@ export class StreetSimulation {
     this.traffic.step(dt, visitor, this.crowd.agents);
   }
 
-  /** One frame of the tour in `mode`: the street moves only during the walk, and the visitor only while walking. */
-  tick(mode: Mode, dt: number, input?: WalkInput) {
-    if (isWalkMode(mode)) this.step(dt, mode === 'walking' ? input : undefined);
+  /** One frame in `phase`: paused, nothing moves; still, everyone but the visitor; walking, the visitor too. */
+  tick(phase: Phase, dt: number, input?: WalkInput) {
+    if (phase !== 'paused') this.step(dt, phase === 'walking' ? input : undefined);
   }
 }

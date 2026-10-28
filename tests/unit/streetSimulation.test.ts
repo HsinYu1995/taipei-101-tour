@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { HeightField } from '../../src/scene/terrain/grid';
 import { LANDING, WALK_AREA } from '../../src/street/api';
 import { groundAt } from '../../src/street/groundAt';
-import type { WalkInput } from '../../src/street/input';
+import type { WalkInput } from '../../src/walk/input';
 import { StreetSimulation } from '../../src/street/simulation';
 import type { XinyiData } from '../../src/street/types';
 
@@ -134,20 +134,18 @@ describe('street simulation', () => {
     expect(hits).toBe(0);
   }, 30_000);
 
-  test('outside the street walk nothing moves, and it resumes where it left off', () => {
+  test('paused nothing moves, and it resumes where it left off', () => {
     const sim = street();
     for (let i = 0; i < 60; i++) sim.tick('walking', DT, keys('w'));
     const v = sim.visitor();
     const people = where(sim.people);
     const scooters = where(sim.scooters);
-    for (const mode of ['tour', 'explore', 'returning'] as const) {
-      for (let i = 0; i < 60; i++) sim.tick(mode, DT, keys('w'));
-    }
+    for (let i = 0; i < 180; i++) sim.tick('paused', DT, keys('w'));
     expect(sim.visitor()).toEqual(v);
     expect(where(sim.people)).toEqual(people);
     expect(where(sim.scooters)).toEqual(scooters);
 
-    for (let i = 0; i < 30; i++) sim.tick('descending', DT, keys('w'));
+    for (let i = 0; i < 30; i++) sim.tick('still', DT, keys('w'));
     expect(sim.visitor()).toEqual(v);
     expect(sim.people.some((p, i) => dist(p, people[i]) > 0.1)).toBe(true);
 

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from 'vitest';
-import { clearInput, input, takeInput } from '../../src/street/input';
+import { clearInput, input, takeInput } from '../../src/walk/input';
 
 afterEach(clearInput);
 

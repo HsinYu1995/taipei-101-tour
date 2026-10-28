@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
-import { SCENE_AREA, isWalkMode } from '../../street/api';
+import { SCENE_AREA } from '../../street/api';
+import { isWalkMode } from '../../walk/api';
 import { useTour } from '../../tour/store';
 import { City } from '../city/City';
 import { Terrain, useHeightField } from '../terrain/Terrain';

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { EYE_HEIGHT, LANDING } from '../src/street/api';
+import { LANDING } from '../src/street/api';
+import { EYE_HEIGHT } from '../src/walk/api';
 import { CHAPTERS } from '../src/tour/chapters';
 import {
   dist,

@@ -3,18 +3,18 @@ import { useEffect, useMemo } from 'react';
 import { registerProbe } from '../debug/testHook';
 import { useHeightField } from '../scene/terrain/Terrain';
 import { useTour } from '../tour/store';
-import { isWalkMode, type PlaceApi } from './api';
+import { isWalkMode, phaseOf, type PlaceApi } from '../walk/api';
+import { clearInput, takeInput } from '../walk/input';
 import { People } from './People';
 import { Scooters } from './Scooters';
 import { Buildings } from './Buildings';
 import { Ground } from './Ground';
 import { groundAt } from './groundAt';
 import { useXinyi } from './data';
-import { clearInput, takeInput } from './input';
 import { Props } from './Props';
 import { StreetSimulation } from './simulation';
 
-export { default as StreetHud } from './StreetHud';
+export { default as WalkHud } from '../walk/WalkHud';
 
 /** The Xinyi street walk: loaded lazily the first time the visitor explores the tower chapter. */
 export default function StreetScene() {
@@ -41,8 +41,8 @@ export default function StreetScene() {
   }, [api]);
 
   // Once per frame, before CameraRig reads the eye pose (a negative priority runs earlier without taking over
-  // rendering). The simulation itself decides what moves in which mode.
-  useFrame((_, delta) => sim.tick(useTour.getState().mode, delta, takeInput()), -1);
+  // rendering). The walk's phase decides what moves.
+  useFrame((_, delta) => sim.tick(phaseOf(useTour.getState(), 'street'), delta, takeInput()), -1);
 
   useEffect(
     () =>

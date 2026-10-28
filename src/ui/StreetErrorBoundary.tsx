@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from 'react';
-import { isWalkMode } from '../street/api';
+import { isWalkMode } from '../walk/api';
 import { useTour } from '../tour/store';
 
 /**

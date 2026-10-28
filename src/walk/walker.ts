@@ -1,5 +1,5 @@
 import type { Pose } from '../tour/types';
-import { EYE_HEIGHT, LANDING, eyePose } from './api';
+import { EYE_HEIGHT, eyePose, type Spot } from './api';
 import type { Circle, Colliders } from './collide';
 import type { WalkInput } from './input';
 
@@ -12,23 +12,24 @@ const PITCH = { min: -0.6, max: 1.2 };
 
 /** The visitor on foot: where they stand, where they look, and how input moves them. */
 export class Walker {
-  x = LANDING.x;
-  z = LANDING.z;
-  yaw = LANDING.yaw;
-  pitch = LANDING.pitch;
+  x: number;
+  z: number;
+  yaw: number;
+  pitch: number;
   private readonly colliders: Colliders;
   private readonly ground: (x: number, z: number) => number;
+  private readonly home: Spot;
 
-  constructor(colliders: Colliders, ground: (x: number, z: number) => number) {
+  /** `home` is where the visitor lands and where `reset` puts them back. */
+  constructor(colliders: Colliders, ground: (x: number, z: number) => number, home: Spot) {
     this.colliders = colliders;
     this.ground = ground;
+    this.home = home;
+    ({ x: this.x, z: this.z, yaw: this.yaw, pitch: this.pitch } = home);
   }
 
   reset() {
-    this.x = LANDING.x;
-    this.z = LANDING.z;
-    this.yaw = LANDING.yaw;
-    this.pitch = LANDING.pitch;
+    ({ x: this.x, z: this.z, yaw: this.yaw, pitch: this.pitch } = this.home);
   }
 
   pose(): Pose {

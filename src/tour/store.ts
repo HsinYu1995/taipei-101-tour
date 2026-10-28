@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { PlaceApi } from '../street/api';
+import type { PlaceApi } from '../walk/api';
 import { CHAPTERS, INTRO_POSE } from './chapters';
 import { initialState, tourReducer, type PlaceId, type TourEvent, type TourState } from './machine';
 import type { Pose } from './types';

@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { en } from '../content/en';
-import { STREET_CHAPTER, canWalk, isWalkMode } from '../street/api';
+import { STREET_CHAPTER } from '../street/api';
+import { canWalk, isWalkMode } from '../walk/api';
 import { CHAPTERS, STOP_WEIGHT, TRAVEL_WEIGHT } from '../tour/chapters';
 import { useTour } from '../tour/store';
 import { HotspotButton } from './HotspotButton';
@@ -8,7 +9,7 @@ import { HotspotPanel } from './HotspotPanel';
 import { StreetErrorBoundary } from './StreetErrorBoundary';
 
 // Same module as the scene's lazy import, so the whole walk arrives as one chunk.
-const StreetHud = lazy(() => import('../street/StreetScene').then((m) => ({ default: m.StreetHud })));
+const WalkHud = lazy(() => import('../street/StreetScene').then((m) => ({ default: m.WalkHud })));
 
 /** Scroll length of the tour in vh; one extra viewport so progress spans the full range. */
 const SPACER_VH = CHAPTERS.length * (TRAVEL_WEIGHT + STOP_WEIGHT) * 100 + 100;
@@ -84,7 +85,7 @@ export function Overlay() {
       {streetWanted && (
         <StreetErrorBoundary>
           <Suspense fallback={null}>
-            <StreetHud />
+            <WalkHud />
           </Suspense>
         </StreetErrorBoundary>
       )}

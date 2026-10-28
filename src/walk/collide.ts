@@ -1,4 +1,4 @@
-import type { P, Rect } from './types';
+import type { P, Rect } from '../street/types';
 
 export interface Circle {
   x: number;

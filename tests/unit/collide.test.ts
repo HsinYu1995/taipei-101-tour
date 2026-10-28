@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { Colliders } from '../../src/street/collide';
+import { Colliders } from '../../src/walk/collide';
 import type { P, Rect } from '../../src/street/types';
 
 const bounds: Rect = { x0: -50, x1: 50, z0: -50, z1: 50 };

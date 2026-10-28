@@ -2,7 +2,8 @@ import type { CameraControlsImpl } from '@react-three/drei';
 import { useEffect, type RefObject } from 'react';
 import { CHAPTERS } from '../tour/chapters';
 import { useTour } from '../tour/store';
-import { STREET_CHAPTER, canWalk, isWalkMode } from './api';
+import { STREET_CHAPTER } from '../street/api';
+import { canWalk, isWalkMode } from './api';
 
 /** A two-finger spread or pinch must change the finger distance by this much to count. */
 const PINCH_PX = 60;

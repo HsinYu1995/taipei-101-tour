@@ -1,5 +1,5 @@
 import { en } from '../content/en';
-import { isWalkMode } from '../street/api';
+import { isWalkMode } from '../walk/api';
 import { CHAPTERS } from '../tour/chapters';
 import { useTour } from '../tour/store';
 import { hotspotAnchor } from './hotspotAnchor';
