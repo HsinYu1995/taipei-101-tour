@@ -1,6 +1,5 @@
 import { buildGraph, Crowd, type Agent } from '../street/crowd';
 import type { P } from '../street/types';
-import { easeInOutCubic, lerpPose } from '../tour/path';
 import type { Pose } from '../tour/types';
 import { EYE_HEIGHT, eyePose, type Phase, type Spot } from '../walk/api';
 import type { Circle, Colliders } from '../walk/collide';
@@ -10,8 +9,10 @@ import { CHARACTER, FLOOR_Y } from './floors';
 import { buildFloor, floorColliders, MALL_BOUNDS, MALL_ENTRY, type FloorPlan } from './layout';
 import { FLOOR_IDS, type FloorId, type MallTenants } from './types';
 
-/** Seconds a floor button's glide to that floor's lobby takes. */
-export const GLIDE_S = 1;
+/** Seconds a floor button's change takes: fade to black, switch floor, fade up at that floor's lobby. */
+export const CHANGE_S = 1;
+/** Summed frame steps fall just short of round numbers (30 frames of 1/30 s make 0.9999999999999999). */
+const EPS = 1e-9;
 /** The visitor's body radius, as on the street. */
 const RADIUS = 0.3;
 /** The seed that places each floor's crowd, and a shopper's radius. */
@@ -32,23 +33,27 @@ interface FloorWalk {
   circles: Circle[];
 }
 
-/** A floor button's glide: from the eye pose when it was pressed to `to`'s lobby. */
-interface Glide {
-  from: Pose;
+/**
+ * A floor button's change to `to`'s lobby: the black overlay's opacity `fade`, rising until black, where the
+ * visitor switches floor, then falling.
+ */
+interface Change {
   to: FloorId;
-  t: number;
+  fade: number;
+  rising: boolean;
 }
 
 /**
- * The mall's floors B1 to 5F, each with its own visitor walk and crowd, and the floor panel's glide between them.
- * Every floor's crowd steps every frame; the visitor walks only the current floor, and changes floor only by a glide.
+ * The mall's floors B1 to 5F, each with its own visitor walk and crowd, and the floor panel's change between them.
+ * Every floor's crowd steps every frame; the visitor walks only the current floor, and changes floor only at a
+ * change's midpoint, in black. The camera never travels between floors.
  */
 export class MallSimulation {
   readonly plans: Record<FloorId, FloorPlan>;
   private readonly base: number;
   private readonly floors: Record<FloorId, FloorWalk>;
   private current: FloorId = '1F';
-  private glide: Glide | null = null;
+  private change: Change | null = null;
 
   /** `base` is the world y of the 1F floor. */
   constructor(tenants: MallTenants, base: number) {
@@ -74,7 +79,7 @@ export class MallSimulation {
     this.floors = floors;
   }
 
-  /** The floor the visitor stands on; during a glide, the one they left. */
+  /** The floor the visitor stands on; during a change, the one they left until the midpoint. */
   floor(): FloorId {
     return this.current;
   }
@@ -94,11 +99,9 @@ export class MallSimulation {
     return { x, z, yaw, pitch };
   }
 
-  /** The visitor's eye pose; mid-glide, the glide's. */
+  /** The visitor's eye pose, always where they stand on the current floor. */
   eye(): Pose {
-    if (!this.glide) return this.floors[this.current].walker.pose();
-    const { from, to, t } = this.glide;
-    return lerpPose(from, this.eyeAt(this.plans[to].lobby, to), easeInOutCubic(t / GLIDE_S));
+    return this.floors[this.current].walker.pose();
   }
 
   /** Eye pose where the street's door fades in: MALL_ENTRY on 1F. */
@@ -106,15 +109,16 @@ export class MallSimulation {
     return this.eyeAt(MALL_ENTRY, '1F');
   }
 
-  /** Puts the visitor back at MALL_ENTRY on 1F, ending any glide. */
+  /** Puts the visitor back at MALL_ENTRY on 1F, ending any change. */
   reset() {
-    this.glide = null;
+    this.change = null;
     this.current = '1F';
     this.floors['1F'].walker.reset();
   }
 
-  /** Puts the visitor somewhere on the current floor (test hook and debugging). */
+  /** Puts the visitor somewhere on the current floor, ending any change (test hook and debugging). */
   place(x: number, z: number, yaw?: number, pitch?: number) {
+    this.change = null;
     this.floors[this.current].walker.place(x, z, yaw, pitch);
   }
 
@@ -123,21 +127,41 @@ export class MallSimulation {
     return this.floors[this.current].colliders.blocked([x, z]);
   }
 
-  /** Glides to `floor`'s lobby over GLIDE_S, from wherever the eye is now (mid-glide too, so it never jumps). */
+  /**
+   * Changes to `floor`'s lobby over CHANGE_S. The fade rises from where it is, so a press mid-change never flashes
+   * clear: before black it only retargets, after it the view darkens again.
+   */
   goTo(floor: FloorId) {
-    this.glide = { from: this.eye(), to: floor, t: 0 };
+    this.change = { to: floor, fade: this.fade(), rising: true };
   }
 
-  gliding() {
-    return this.glide !== null;
+  changing() {
+    return this.change !== null;
   }
 
-  /** Advances everyone by dt seconds (at most 0.1); without `input`, or mid-glide, the visitor stands still. */
+  /** The black overlay's opacity: 0 to 1 over a change's first half, 1 to 0 over its second. */
+  fade(): number {
+    return this.change?.fade ?? 0;
+  }
+
+  /** Advances everyone by dt seconds (at most 0.1); without `input`, or mid-change, the visitor stands still. */
   step(dt: number, input?: WalkInput) {
     dt = Math.min(dt, MAX_STEP);
-    if (this.glide) {
-      this.glide.t += dt;
-      if (this.glide.t >= GLIDE_S) this.land(this.glide.to);
+    const change = this.change;
+    if (change) {
+      const by = dt / (CHANGE_S / 2);
+      if (change.rising) {
+        change.fade += by;
+        if (change.fade >= 1 - EPS) {
+          // Black: switch floor, and spend the rest of this frame fading up.
+          change.rising = false;
+          change.fade = Math.min(1, 2 - change.fade);
+          this.land(change.to);
+        }
+      } else {
+        change.fade -= by;
+        if (change.fade <= EPS) this.change = null;
+      }
     } else {
       const here = this.floors[this.current];
       here.crowd.agents.forEach((a, i) => {
@@ -148,7 +172,7 @@ export class MallSimulation {
     }
     for (const f of FLOOR_IDS) {
       const { crowd, walker } = this.floors[f];
-      crowd.step(dt, f === this.current && !this.glide ? [walker.x, walker.z] : AWAY);
+      crowd.step(dt, f === this.current ? [walker.x, walker.z] : AWAY);
     }
   }
 
@@ -159,7 +183,6 @@ export class MallSimulation {
 
   private land(floor: FloorId) {
     const { x, z, yaw, pitch } = this.plans[floor].lobby;
-    this.glide = null;
     this.current = floor;
     this.floors[floor].walker.place(x, z, yaw, pitch);
   }

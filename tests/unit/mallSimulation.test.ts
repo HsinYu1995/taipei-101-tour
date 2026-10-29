@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { FLOOR_Y } from '../../src/mall/floors';
-import { MALL_ENTRY } from '../../src/mall/layout';
+import { MALL_BOUNDS, MALL_ENTRY } from '../../src/mall/layout';
 import { MallSimulation } from '../../src/mall/simulation';
 import { FLOOR_IDS, type FloorId, type MallTenants } from '../../src/mall/types';
 import type { P } from '../../src/street/types';
@@ -73,14 +73,32 @@ function mall() {
   return sim;
 }
 
-/** A mall simulation with the visitor glided to `floor` and the glide over. */
+/** A mall simulation with the visitor taken to `floor` and the floor change over. */
 function on(floor: FloorId) {
   const sim = mall();
   sim.goTo(floor);
   run(sim, 1.1);
   expect(sim.floor()).toBe(floor);
-  expect(sim.gliding()).toBe(false);
+  expect(sim.changing()).toBe(false);
   return sim;
+}
+
+/** The open spot on the current floor farthest from `from`, on a 1 m grid. */
+function farthest(sim: MallSimulation, from: { x: number; z: number }): P {
+  let best: P = [from.x, from.z];
+  for (let x = Math.ceil(MALL_BOUNDS.x0); x <= MALL_BOUNDS.x1; x++) {
+    for (let z = Math.ceil(MALL_BOUNDS.z0); z <= MALL_BOUNDS.z1; z++) {
+      if (!sim.blocked(x, z) && dist({ x, z }, from) > dist({ x: best[0], z: best[1] }, from)) best = [x, z];
+    }
+  }
+  return best;
+}
+
+/** Fades that rise without a dip until they peak, near black. */
+function risesToBlack(fades: readonly number[]) {
+  const peak = fades.indexOf(Math.max(...fades));
+  expect(fades[peak]).toBeGreaterThan(0.9);
+  for (let i = 1; i <= peak; i++) expect(fades[i], `frame ${i}`).toBeGreaterThanOrEqual(fades[i - 1]);
 }
 
 describe('mall simulation', () => {
@@ -88,7 +106,7 @@ describe('mall simulation', () => {
     const sim = on('4F');
     sim.reset();
     expect(sim.floor()).toBe('1F');
-    expect(sim.gliding()).toBe(false);
+    expect(sim.changing()).toBe(false);
     expect(sim.visitor()).toEqual(MALL_ENTRY);
     expect(sim.eye().position[1]).toBeCloseTo(10 + 1.6, 9);
     expect(sim.landing()).toEqual(sim.eye());
@@ -145,62 +163,122 @@ describe('mall simulation', () => {
     expect(toOutline([v.x, v.z], plan.void)).toBeLessThan(1);
   });
 
-  test("a floor button glides to that floor's lobby in about a second", () => {
+  test('a floor button changes floor in about a second, through black', () => {
     const sim = mall();
+    const eye = sim.eye();
     sim.goTo('4F');
-    run(sim, 0.5);
-    const y = sim.eye().position[1];
-    expect(y).toBeGreaterThan(eyeY('1F'));
-    expect(y).toBeLessThan(eyeY('4F'));
-    expect(sim.gliding()).toBe(true);
-    run(sim, 0.6);
+    run(sim, 0.25);
+    expect(sim.fade()).toBeCloseTo(0.5, 1);
+    expect(sim.floor()).toBe('1F');
+    expect(sim.eye()).toEqual(eye);
+    run(sim, 0.25);
+    // 16 frames: just past the midpoint.
     expect(sim.floor()).toBe('4F');
-    expect(sim.gliding()).toBe(false);
+    expect(sim.fade()).toBeGreaterThan(0.9);
     expect(sim.visitor()).toEqual(sim.plans['4F'].lobby);
     expect(sim.eye().position[1]).toBeCloseTo(eyeY('4F'), 9);
+    run(sim, 14 * DT);
+    // 30 frames: 1.0 s.
+    expect(sim.fade()).toBe(0);
+    expect(sim.changing()).toBe(false);
   });
 
-  test('input is ignored while gliding', () => {
-    // Holds w for as long as the glide lasts: none of it may move the visitor off the lobby it lands on.
+  test('the camera never travels between floors', () => {
+    for (const [from, to] of [['1F', '5F'], ['B1', '4F']] as const) {
+      const sim = on(from);
+      const [x, z] = farthest(sim, sim.plans[to].lobby);
+      sim.place(x, z);
+      sim.goTo(to);
+      const seen: FloorId[] = [];
+      const check = () => {
+        const [ex, ey, ez] = sim.eye().position;
+        const f = FLOOR_IDS.find((g) => ey === eyeY(g));
+        const at = `${from} to ${to}: eye at ${ex},${ey},${ez}`;
+        expect(f, at).toBe(sim.floor());
+        expect(sim.blocked(ex, ez), at).toBe(false);
+        if (seen.at(-1) !== f) seen.push(f!);
+      };
+      check();
+      run(sim, 1.1, undefined, check);
+      expect(seen).toEqual([from, to]);
+      expect(sim.changing()).toBe(false);
+    }
+  });
+
+  test('input is ignored during a floor change', () => {
+    // Holds w for as long as the change lasts: none of it may move the visitor on either floor.
     const sim = mall();
-    const v = sim.visitor();
     sim.goTo('2F');
+    let floor = sim.floor();
+    let v = sim.visitor();
     let frames = 0;
-    while (sim.gliding() && frames < Math.round(1.1 / DT)) {
+    while (sim.changing() && frames < Math.round(1.1 / DT)) {
       sim.step(DT, { keys: new Set(['w', 'shift']), stick: { x: 1, y: -1 }, look: { dx: 50, dy: 50 } });
-      if (sim.gliding()) expect(sim.visitor()).toEqual(v);
+      expect(sim.visitor()).toEqual(sim.floor() === floor ? v : sim.plans['2F'].lobby);
+      floor = sim.floor();
+      v = sim.visitor();
       frames++;
     }
-    expect(sim.gliding()).toBe(false);
+    expect(sim.changing()).toBe(false);
     expect(sim.floor()).toBe('2F');
     expect(sim.visitor()).toEqual(sim.plans['2F'].lobby);
   });
 
-  test('pressing another floor mid-glide goes there from where the glide is', () => {
+  test('pressing another floor mid-change goes there without a flash', () => {
+    // Before black: the fade keeps rising, now toward B1, and the change still ends a second after the first press.
+    let sim = mall();
+    let fades: number[] = [];
+    let floors: FloorId[] = [];
+    const track = () => {
+      fades.push(sim.fade());
+      if (floors.at(-1) !== sim.floor()) floors.push(sim.floor());
+    };
+    sim.goTo('4F');
+    track();
+    run(sim, 0.25, undefined, track);
+    sim.goTo('B1');
+    track();
+    run(sim, 0.75, undefined, track);
+    risesToBlack(fades);
+    expect(floors).toEqual(['1F', 'B1']);
+    expect(sim.changing()).toBe(false);
+    expect(sim.visitor()).toEqual(sim.plans.B1.lobby);
+
+    // After black: the fade turns and rises again from where it was, so 4F never shows clear.
+    sim = mall();
+    sim.goTo('4F');
+    run(sim, 0.75);
+    expect(sim.floor()).toBe('4F');
+    fades = [sim.fade()];
+    floors = ['4F'];
+    sim.goTo('2F');
+    expect(sim.fade()).toBeCloseTo(fades[0], 9);
+    run(sim, 1, undefined, track);
+    risesToBlack(fades);
+    expect(floors).toEqual(['4F', '2F']);
+    expect(sim.changing()).toBe(false);
+    expect(sim.visitor()).toEqual(sim.plans['2F'].lobby);
+  });
+
+  test('placing the visitor cancels a floor change', () => {
     const sim = mall();
     sim.goTo('4F');
-    let last = sim.eye().position;
-    let jump = 0;
-    const track = () => {
-      const p = sim.eye().position;
-      jump = Math.max(jump, Math.hypot(p[0] - last[0], p[1] - last[1], p[2] - last[2]));
-      last = p;
-    };
-    run(sim, 0.5, undefined, track);
-    const mid = sim.eye();
-    sim.goTo('B1');
-    expect(sim.eye()).toEqual(mid);
-    sim.step(DT);
-    expect(Math.hypot(...sim.eye().position.map((v, k) => v - mid.position[k]))).toBeLessThan(0.1);
-    track();
-    run(sim, 1.1, undefined, track);
-    // A glide frame moves the eye up to 1.8 m here (easeInOutCubic peaks at three times the mean speed, over the
-    // 18.9 m from the entry to the 4F lobby); restarting from either end instead would jump 8 m or more.
-    expect(jump).toBeLessThanOrEqual(2);
-    expect(sim.floor()).toBe('B1');
-    expect(sim.gliding()).toBe(false);
-    expect(sim.visitor()).toEqual(sim.plans.B1.lobby);
-    expect(sim.eye().position[1]).toBeCloseTo(eyeY('B1'), 9);
+    run(sim, 0.25);
+    sim.place(-82, 6, 0, 0);
+    expect(sim.changing()).toBe(false);
+    expect(sim.fade()).toBe(0);
+    run(sim, 1);
+    expect(sim.floor()).toBe('1F');
+    expect(sim.visitor()).toEqual({ x: -82, z: 6, yaw: 0, pitch: 0 });
+
+    sim.goTo('4F');
+    run(sim, 0.75);
+    sim.reset();
+    expect(sim.changing()).toBe(false);
+    expect(sim.fade()).toBe(0);
+    run(sim, 1);
+    expect(sim.floor()).toBe('1F');
+    expect(sim.visitor()).toEqual(MALL_ENTRY);
   });
 
   test('shoppers walk every floor and yield to the visitor', () => {
@@ -309,10 +387,10 @@ describe('mall simulation', () => {
       const y = eyeY(f);
       let touching = 0;
       let atRail = 0;
-      for (let run = 0; run < 8; run++) {
+      for (let trial = 0; trial < 8; trial++) {
         const sim = on(f);
         const plan = sim.plans[f];
-        let seed = 1 + run;
+        let seed = 1 + trial;
         const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
         let input = keys();
         for (let i = 0; i < 1800; i++) {
@@ -325,7 +403,7 @@ describe('mall simulation', () => {
           steps++;
           const v = sim.visitor();
           const p: P = [v.x, v.z];
-          const at = `${f} run ${run} step ${i} at ${p}`;
+          const at = `${f} run ${trial} step ${i} at ${p}`;
           if (sim.blocked(v.x, v.z)) expect.unreachable(`${at}: blocked`);
           if (!inside(p, plan.area)) expect.unreachable(`${at}: outside the walk area`);
           if (plan.solids.some((s) => inside(p, s))) expect.unreachable(`${at}: inside a solid`);
