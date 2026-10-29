@@ -3,9 +3,8 @@ import { describe, expect, test } from 'vitest';
 import { ATRIUM_FLOORS, CHARACTER, visibleFloors } from '../../src/mall/floors';
 import { buildFloor, floorColliders, MALL_BOUNDS, MALL_ENTRY, type FloorPlan } from '../../src/mall/layout';
 import { FLOOR_IDS, type FloorId, type MallTenants } from '../../src/mall/types';
-import { footprint } from '../../src/scene/tower/loft';
-import { GRID_ROTATION, PODIUM } from '../../src/scene/tower/podium';
-import { SECTIONS } from '../../src/scene/tower/towerProfile';
+import { PODIUM } from '../../src/scene/tower/podium';
+import { TOWER_BASE } from '../../src/scene/tower/towerBase';
 import { buildGraph, Crowd } from '../../src/street/crowd';
 import type { P } from '../../src/street/types';
 
@@ -14,10 +13,6 @@ const plans = Object.fromEntries(FLOOR_IDS.map((f) => [f, buildFloor(f, data.flo
   FloorId,
   FloorPlan
 >;
-
-const cos = Math.cos(GRID_ROTATION);
-const sin = Math.sin(GRID_ROTATION);
-const tower = footprint(SECTIONS[0].half0).map(([x, z]): P => [x * cos + z * sin, -x * sin + z * cos]);
 
 function inside([x, z]: P, poly: readonly P[]) {
   let hit = false;
@@ -34,6 +29,13 @@ function toSegment([x, z]: P, [ax, az]: P, [bx, bz]: P) {
   const dz = bz - az;
   const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz)));
   return Math.hypot(x - ax - t * dx, z - az - t * dz);
+}
+
+/** The least distance between segments ab and cd: 0 where they cross. */
+function segments(a: P, b: P, c: P, d: P) {
+  const side = (p: P, q: P, r: P) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]));
+  if (side(a, b, c) * side(a, b, d) < 0 && side(c, d, a) * side(c, d, b) < 0) return 0;
+  return Math.min(toSegment(a, c, d), toSegment(b, c, d), toSegment(c, a, b), toSegment(d, a, b));
 }
 
 const edges = (poly: readonly P[]) => poly.map((a, i): [P, P] => [a, poly[(i + 1) % poly.length]]);
@@ -96,7 +98,7 @@ describe('mall floor layout', () => {
     for (const f of FLOOR_IDS) {
       for (const p of plans[f].area) {
         expect(inside(p, PODIUM.outline), `${f} ${p} in the podium`).toBe(true);
-        expect(toRegion(p, tower), `${f} ${p} off the tower`).toBeGreaterThanOrEqual(1);
+        expect(toRegion(p, TOWER_BASE), `${f} ${p} off the tower`).toBeGreaterThanOrEqual(1);
       }
     }
   });
@@ -106,11 +108,55 @@ describe('mall floor layout', () => {
       const { lobby } = plans[f];
       expect(floorColliders(plans[f], 0.3).blocked([lobby.x, lobby.z]), f).toBe(false);
     }
-    expect(floorColliders(plans['1F'], 0.3).blocked([MALL_ENTRY.x, MALL_ENTRY.z])).toBe(false);
-    expect(MALL_ENTRY.x).toBeGreaterThan(-6.5);
-    expect(MALL_ENTRY.x).toBeLessThan(5.5);
-    expect(MALL_ENTRY.z).toBeGreaterThan(30);
-    expect(MALL_ENTRY.z).toBeLessThan(42.8);
+    const plan = plans['1F'];
+    const entry: P = [MALL_ENTRY.x, MALL_ENTRY.z];
+    expect(floorColliders(plan, 0.3).blocked(entry)).toBe(false);
+    expect(toOutline(entry, plan.void), 'in the hall by the atrium').toBeLessThanOrEqual(15);
+    const [cx, cz] = centroid(plan.void);
+    const toAtrium = Math.atan2(MALL_ENTRY.x - cx, MALL_ENTRY.z - cz);
+    const off = Math.abs(Math.atan2(Math.sin(MALL_ENTRY.yaw - toAtrium), Math.cos(MALL_ENTRY.yaw - toAtrium)));
+    expect(off, 'facing the atrium').toBeLessThanOrEqual(0.3);
+    const gaze: P = [-Math.sin(MALL_ENTRY.yaw), -Math.cos(MALL_ENTRY.yaw)];
+    const sight = floorColliders(plan, 0.01);
+    const inView = plan.shopfronts.filter((s) => {
+      const [mx, mz] = mid(s);
+      const [dx, dz] = [mx - entry[0], mz - entry[1]];
+      const d = Math.hypot(dx, dz);
+      if ((dx * gaze[0] + dz * gaze[1]) / d < Math.cos(Math.PI / 4)) return false;
+      for (let t = 0; t < d - 0.3; t += 0.25) {
+        if (sight.blocked([entry[0] + (dx * t) / d, entry[1] + (dz * t) / d])) return false;
+      }
+      return true;
+    });
+    expect(inView.length, 'shopfronts in view').toBeGreaterThanOrEqual(3);
+  });
+
+  test('no gap a visitor could wedge into', () => {
+    for (const f of FLOOR_IDS) {
+      const { area, solids, seats, queue } = plans[f];
+      const sides = edges(area);
+      const apart = (p: readonly P[], q: readonly [P, P][]) =>
+        Math.min(...edges(p).flatMap(([a, b]) => q.map(([c, d]) => segments(a, b, c, d))));
+      const ok = (d: number) => d < 1e-6 || d >= 0.7;
+      for (let i = 0; i < solids.length; i++) {
+        const d = apart(solids[i], sides);
+        expect(ok(d), `${f} solid ${i} / area ${d}`).toBe(true);
+        for (let k = i + 1; k < solids.length; k++) {
+          const e = apart(solids[i], edges(solids[k]));
+          expect(ok(e), `${f} solid ${i} / solid ${k} ${e}`).toBe(true);
+        }
+      }
+      area.forEach((p, i) => {
+        sides.forEach(([a, b], k) => {
+          if (k === i || (k + 1) % area.length === i) return;
+          expect(toSegment(p, a, b), `${f} corner ${p} / side ${k}`).toBeGreaterThanOrEqual(1);
+        });
+      });
+      for (const { x, z } of [...seats, ...queue]) {
+        const held = solids.some((s) => inside([x, z], s) && toOutline([x, z], s) >= 0.3);
+        expect(held, `${f} person at ${x},${z} inside a solid`).toBe(true);
+      }
+    }
   });
 
   test('the atrium is a void on 2F to 4F and floor on 1F', () => {
@@ -206,15 +252,21 @@ describe('mall floor layout', () => {
   });
 
   test('no two floors share a look', () => {
+    const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    const apart = (p: string, q: string) => Math.hypot(...rgb(p).map((c, i) => c - rgb(q)[i]));
     for (let i = 0; i < FLOOR_IDS.length; i++) {
       for (let k = i + 1; k < FLOOR_IDS.length; k++) {
         const [p, q] = [CHARACTER[FLOOR_IDS[i]].palette, CHARACTER[FLOOR_IDS[k]].palette];
-        for (const key of ['floor', 'wall', 'shopfront'] as const) {
-          expect(p[key], `${FLOOR_IDS[i]}/${FLOOR_IDS[k]} ${key}`).not.toBe(q[key]);
-        }
+        const d = (['floor', 'wall', 'shopfront'] as const).reduce((s, key) => s + apart(p[key], q[key]), 0);
+        expect(d, `${FLOOR_IDS[i]}/${FLOOR_IDS[k]}`).toBeGreaterThanOrEqual(40);
       }
     }
     expect(new Set(FLOOR_IDS.map((f) => CHARACTER[f].centrepiece)).size).toBe(6);
+  });
+
+  test('a floor with more tenants than its walls can front refuses to lay out', () => {
+    const crowded = Array.from({ length: 200 }, (_, i) => ({ ...data.floors['5F'][0], name: `Shop ${i}` }));
+    expect(() => buildFloor('5F', crowded)).toThrow(/fit/);
   });
 
   test('atrium floors see each other; B1 and 5F stand alone', () => {

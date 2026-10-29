@@ -1,6 +1,5 @@
-import { footprint } from '../scene/tower/loft';
-import { GRID_ROTATION, PODIUM } from '../scene/tower/podium';
-import { SECTIONS } from '../scene/tower/towerProfile';
+import { PODIUM } from '../scene/tower/podium';
+import { TOWER_BASE } from '../scene/tower/towerBase';
 import type { P, Rect } from '../street/types';
 import { Colliders } from '../walk/collide';
 import type { Spot } from '../walk/api';
@@ -51,9 +50,6 @@ export interface FloorPlan {
   /** The elevator lobby the floor panel lands on. */
   lobby: Spot;
 }
-
-/** Just inside the south entrance on 1F, facing north into the mall. */
-export const MALL_ENTRY: Spot = { x: -0.5, z: 37, yaw: 0, pitch: 0 };
 
 /** The podium's bounding box: every floor's colliders and crowd graph live in it. */
 export const MALL_BOUNDS: Rect = {
@@ -156,11 +152,6 @@ const WALKWAYS: Record<FloorId, P[][]> = {
   '5F': ROUND,
 };
 
-const cos = Math.cos(GRID_ROTATION);
-const sin = Math.sin(GRID_ROTATION);
-/** The tower's ground footprint, turned like the Tower group, as the street's colliders turn it. */
-const CORE = footprint(SECTIONS[0].half0).map(([x, z]): P => [x * cos + z * sin, -x * sin + z * cos]);
-
 type Piece = [kind: SolidKind, outline: P[]];
 interface Furnishing {
   pieces: Piece[];
@@ -195,6 +186,12 @@ const facing = ([x, z]: P, [px, pz]: P): Spot => ({ x, z, yaw: Math.atan2(x - px
 
 /** In the hall's south-east corner by the tower core, looking at the atrium (or B1's food hall, 5F's ticket hall). */
 const LOBBY = facing([-40, 4], HALL);
+
+/**
+ * Where the street's south door fades in: 1F's hall by the passage's mouth, looking across the atrium. The
+ * vestibule itself faces a blank wall at the head of a 50 m corridor.
+ */
+export const MALL_ENTRY: Spot = facing([-47, 4], HALL);
 
 // Furniture either touches or leaves room to walk between. The visitor squeezed into a gap narrower than itself
 // is pushed back and forth between the two sides and can end a step overlapping one, so seated and queuing people
@@ -291,6 +288,8 @@ const furnish: Record<Character['centrepiece'], () => Furnishing> = {
 /** Bare wall kept at each corner, and between neighbouring shopfronts. */
 const MARGIN = 1.5;
 const GAP = 0.5;
+/** The narrowest frontage a shop gets before its floor is declared too full to lay out. */
+const MIN_FRONT = 3;
 /** Frontage before the floor's frontages are scaled to fit its walls. */
 const FLAGSHIP_WIDTH = 14;
 const WIDTH: Partial<Record<TenantCategory, number>> = { restaurant: 10, cafe: 8, 'food-court': 4.5 };
@@ -321,13 +320,17 @@ function runs(corners: readonly Corner[], wall: Wall): Run[] {
 
 /**
  * Shopfronts for `tenants` along `walls`, in order, each as near as it can to an even share of the wall and never
- * across a corner. Frontages shrink together until they all fit.
+ * across a corner. Frontages shrink together until they all fit, and the floor is refused once one would fall under
+ * MIN_FRONT.
  */
 function allot(walls: readonly Run[], tenants: readonly Tenant[], widths: readonly number[]): Shopfront[] {
   if (tenants.length === 0) return [];
   const total = walls.reduce((s, r) => s + r.length, 0);
   for (let scale = 1; ; scale *= 0.97) {
     const w = widths.map((x) => x * scale);
+    if (Math.min(...w) < MIN_FRONT) {
+      throw new Error(`${tenants.length} shopfronts do not fit ${total.toFixed(1)} m of wall`);
+    }
     const spare = (total - w.reduce((s, x) => s + x, 0)) / tenants.length;
     if (spare < GAP) continue;
     const fronts = lay(walls, tenants, w, spare);
@@ -381,7 +384,7 @@ function shopfronts(floor: FloorId, tenants: readonly Tenant[]): Shopfront[] {
 export function buildFloor(floor: FloorId, tenants: readonly Tenant[]): FloorPlan {
   const { pieces, seats, queue } = furnish[CHARACTER[floor].centrepiece]();
   const gallery: Piece[] = VOID_FLOORS.includes(floor) ? [['void', ATRIUM]] : [];
-  const all: Piece[] = [['core', CORE], ...gallery, ...ESCALATORS[floor], ...pieces];
+  const all: Piece[] = [['core', TOWER_BASE], ...gallery, ...ESCALATORS[floor], ...pieces];
   return {
     floor,
     area: AREA[floor].map(([x, z]): P => [x, z]),
