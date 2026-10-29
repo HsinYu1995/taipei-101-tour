@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { en } from '../content/en';
+import type { PlaceId } from '../tour/machine';
 import { useTour } from '../tour/store';
 import { clearInput, input } from './input';
 
@@ -12,9 +13,16 @@ const STICK_RANGE_PX = 50;
 
 const isTouch = () => window.matchMedia('(pointer: coarse)').matches;
 
+/** Each place says how to leave it: the street rises to the tour, the mall goes back to the street. */
+const HINTS: Record<PlaceId, { desktop: string; touch: string }> = {
+  street: { desktop: en.ui.walkHintDesktop, touch: en.ui.walkHintTouch },
+  mall: { desktop: en.ui.mallHintDesktop, touch: en.ui.mallHintTouch },
+};
+
 /** Walk controls: keys, look drags, the touch thumbstick, and the landing hint. */
 export default function WalkHud() {
   const walking = useTour((s) => s.mode === 'walking');
+  const place = useTour((s) => s.place);
   const [hint, setHint] = useState<'shown' | 'fading' | 'gone'>('gone');
   const hideHint = useRef(() => {});
 
@@ -97,7 +105,7 @@ export default function WalkHud() {
     <>
       {hint !== 'gone' && (
         <p className={`street-hint${hint === 'fading' ? ' fading' : ''}`} data-testid="street-hint">
-          {isTouch() ? en.ui.walkHintTouch : en.ui.walkHintDesktop}
+          {isTouch() ? HINTS[place].touch : HINTS[place].desktop}
         </p>
       )}
       {isTouch() && <Thumbstick onMove={() => hideHint.current()} />}

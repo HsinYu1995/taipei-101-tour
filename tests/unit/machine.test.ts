@@ -140,6 +140,24 @@ describe('crossing', () => {
     expect(s.segment).toMatchObject({ kind: 'stop', chapterIndex: DAMPER });
     expect(s.progress).toBeCloseTo(stopCenter(DAMPER), 9);
   });
+  test('walkAbort ends the walk from anywhere in it', () => {
+    const descending = tourReducer(tourReducer(at(stopCenter(1)), { type: 'exploreStart' }), { type: 'walkEnter' });
+    const toMall = tourReducer(onStreet(), { type: 'cross', to: 'mall' });
+    const toStreet = tourReducer(inMall(), { type: 'walkExit' });
+    const toDamper = tourReducer(inMall(), { type: 'cross', to: 'damper' });
+    for (const s of [descending, onStreet(), inMall(), toMall, toStreet, toDamper]) {
+      const aborted = tourReducer(s, { type: 'walkAbort' });
+      expect(aborted).toMatchObject({ mode: 'ascending', place: 'street', crossingTo: null, progress: s.progress });
+      expect(tourReducer(aborted, { type: 'ascended' })).toMatchObject({ mode: 'tour', place: 'street', crossingTo: null });
+    }
+  });
+  test('walkAbort outside the walk is ignored', () => {
+    const ascending = tourReducer(onStreet(), { type: 'walkExit' });
+    const returning = tourReducer(tourReducer(at(stopCenter(1)), { type: 'exploreStart' }), { type: 'exploreEnd' });
+    for (const s of [at(stopCenter(1)), tourReducer(at(stopCenter(1)), { type: 'exploreStart' }), returning, ascending]) {
+      expect(tourReducer(s, { type: 'walkAbort' })).toBe(s);
+    }
+  });
   test('cross outside walking is ignored', () => {
     const descending = tourReducer(tourReducer(at(stopCenter(1)), { type: 'exploreStart' }), { type: 'walkEnter' });
     const ascending = tourReducer(onStreet(), { type: 'walkExit' });

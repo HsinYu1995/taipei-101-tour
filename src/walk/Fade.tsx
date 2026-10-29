@@ -34,7 +34,8 @@ export function Fade() {
       if (crossingTo === 'damper') {
         dispatch({ type: 'crossed' });
         // Overlay unfreezes the page once React commits the tour mode; scroll after that, to the stop crossed to.
-        requestAnimationFrame(() => window.scrollTo(0, useTour.getState().progress * maxScroll()));
+        const progress = useTour.getState().progress;
+        requestAnimationFrame(() => window.scrollTo(0, progress * maxScroll()));
         return;
       }
       const next = places[crossingTo];
@@ -49,7 +50,11 @@ export function Fade() {
   // Hidden by visibility rather than display, so the opacity transition runs from the frame it is shown.
   const dark = stage === 'darkening' || stage === 'black';
   return (
-    <div className="walk-fade" data-testid="walk-fade" style={{ opacity: dark ? 1 : 0, visibility: stage === 'clear' ? 'hidden' : 'visible' }}>
+    <div
+      className="walk-fade"
+      data-testid="walk-fade"
+      style={{ opacity: dark ? 1 : 0, visibility: stage === 'clear' ? 'hidden' : 'visible', transition: `opacity ${FADE_MS}ms ease` }}
+    >
       {loading && (
         <p className="walk-loading" data-testid="walk-loading" role="status">
           {en.ui.mallLoading}

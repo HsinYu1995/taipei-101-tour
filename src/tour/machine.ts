@@ -32,6 +32,7 @@ export type TourEvent =
   | { type: 'walkEnter' }
   | { type: 'landed' }
   | { type: 'walkExit' }
+  | { type: 'walkAbort' }
   | { type: 'ascended' }
   | { type: 'cross'; to: PlaceId | 'damper' }
   | { type: 'crossed' };
@@ -61,6 +62,8 @@ export function tourReducer(s: TourState, e: TourEvent): TourState {
         return e.to === s.crossingTo ? s : { ...s, crossingTo: e.to };
       case 'crossed':
         return crossed(s);
+      case 'walkAbort':
+        return abort(s);
       default:
         return s;
     }
@@ -74,6 +77,8 @@ export function tourReducer(s: TourState, e: TourEvent): TourState {
         // The street is left by rising back to the tour; the mall is left through its door to the street.
         if (s.mode === 'walking' && s.place === 'mall') return { ...s, mode: 'crossing', crossingTo: 'street' };
         return { ...s, mode: 'ascending' };
+      case 'walkAbort':
+        return s.mode === 'ascending' ? s : abort(s);
       case 'ascended':
         return s.mode === 'ascending' ? { ...s, mode: 'tour' } : s;
       case 'cross':
@@ -112,11 +117,17 @@ export function tourReducer(s: TourState, e: TourEvent): TourState {
         : s;
     case 'landed':
     case 'walkExit':
+    case 'walkAbort':
     case 'ascended':
     case 'cross':
     case 'crossed':
       return s;
   }
+}
+
+/** A place became unusable mid-walk: rise straight back to the tour from wherever the walk is. */
+function abort(s: TourState): TourState {
+  return { ...s, mode: 'ascending', place: 'street', crossingTo: null };
 }
 
 /** The end of a crossing: walking in the new place, or back on the tour at the damper chapter's stop. */

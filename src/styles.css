@@ -159,7 +159,6 @@ body {
   z-index: 30;
   background: #000;
   pointer-events: none;
-  transition: opacity 350ms ease;
 }
 
 .street-hint {

@@ -1,11 +1,11 @@
 import { Component, type ReactNode } from 'react';
 import type { PlaceId } from '../tour/machine';
-import { isWalkMode } from '../walk/api';
 import { useTour } from '../tour/store';
 
 /**
  * If a place's chunk fails to load, withdraw it and bring the visitor somewhere they can be, rather than leaving
- * the walk waiting forever: the street rises back to the tour, the mall returns to the street outside its door.
+ * the walk waiting forever: losing the street ends the walk wherever it is (the mall is only reached through the
+ * street), the mall returns to the street outside its door.
  */
 export class PlaceErrorBoundary extends Component<{ place: PlaceId; children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -20,7 +20,7 @@ export class PlaceErrorBoundary extends Component<{ place: PlaceId; children: Re
     const tour = useTour.getState();
     if (place === 'street') {
       tour.setStreetFailed();
-      if (isWalkMode(tour.mode)) tour.dispatch({ type: 'walkExit' });
+      tour.dispatch({ type: 'walkAbort' });
       return;
     }
     tour.setMallFailed();

@@ -35,6 +35,8 @@ export const en = {
     mallLoading: 'Loading the mall...',
     walkHintDesktop: 'WASD or arrow keys to walk, drag to look around, Shift to hurry. Scroll out or press Esc to leave.',
     walkHintTouch: 'Use the stick to walk and drag to look around. Pinch or tap Back to tour to leave.',
+    mallHintDesktop: 'WASD or arrow keys to walk, drag to look around, Shift to hurry. Scroll out or press Esc to go back to the street.',
+    mallHintTouch: 'Use the stick to walk and drag to look around. Pinch or tap Back to the street to leave.',
     walkStick: 'Walk',
     close: 'Close',
   },
