@@ -20,6 +20,7 @@ Domain language for the Taipei 101 tour. Use these words in code, docs and conve
 
 - **Walk**: walking at eye level with the walk controls (keys or thumbstick, drag to look). One lifecycle, used by every place.
 - **Place**: somewhere the visitor can walk: the street (Xinyi) or the mall (inside 101). Each has its own simulation and its own exits.
+- **Crossing**: moving the visitor between places, or from the mall to the damper chapter, behind a short fade to black.
 - **Mall**: the 101 shopping mall, floors B1 to 5F, entered on foot from the street through 101's south entrance.
 - **Floor**: one mall level, with its real tenants and its own character (centrepiece, mood, crowd).
 - **Floor panel**: the on-screen buttons that move the visitor between floors, or on to the damper chapter.

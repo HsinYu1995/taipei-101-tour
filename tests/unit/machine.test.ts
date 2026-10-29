@@ -100,3 +100,52 @@ describe('walk modes', () => {
     }
   });
 });
+
+describe('crossing', () => {
+  const DAMPER = CHAPTERS.findIndex((c) => c.id === 'damper');
+  /** Walking on the street, landed from the tower chapter's explore. */
+  const onStreet = () =>
+    tourReducer(tourReducer(tourReducer(at(stopCenter(1)), { type: 'exploreStart' }), { type: 'walkEnter' }), { type: 'landed' });
+  /** Walking in the mall, after a finished crossing from the street. */
+  const inMall = () => tourReducer(tourReducer(onStreet(), { type: 'cross', to: 'mall' }), { type: 'crossed' });
+
+  test('walking into the mall crosses, then walks there', () => {
+    const s = tourReducer(onStreet(), { type: 'cross', to: 'mall' });
+    expect(s).toMatchObject({ mode: 'crossing', place: 'street', crossingTo: 'mall' });
+    expect(tourReducer(s, { type: 'crossed' })).toMatchObject({ mode: 'walking', place: 'mall', crossingTo: null });
+  });
+  test('cross to the place you are in is ignored', () => {
+    const s = onStreet();
+    expect(tourReducer(s, { type: 'cross', to: 'street' })).toBe(s);
+    const m = inMall();
+    expect(tourReducer(m, { type: 'cross', to: 'mall' })).toBe(m);
+  });
+  test('walkExit in the mall crosses to the street', () => {
+    const s = tourReducer(inMall(), { type: 'walkExit' });
+    expect(s).toMatchObject({ mode: 'crossing', place: 'mall', crossingTo: 'street' });
+  });
+  test('during a crossing only crossed and a retarget apply', () => {
+    const s = tourReducer(onStreet(), { type: 'cross', to: 'mall' });
+    expect(tourReducer(s, { type: 'walkExit' })).toBe(s);
+    expect(tourReducer(s, { type: 'scroll', progress: stopCenter(3) })).toBe(s);
+    expect(tourReducer(s, { type: 'exploreEnd' })).toBe(s);
+    expect(tourReducer(s, { type: 'openHotspot', id: CHAPTERS[1].hotspot.id })).toBe(s);
+    const back = tourReducer(s, { type: 'cross', to: 'street' });
+    expect(back).toMatchObject({ mode: 'crossing', crossingTo: 'street' });
+    expect(tourReducer(back, { type: 'crossed' })).toMatchObject({ mode: 'walking', place: 'street', crossingTo: null });
+  });
+  test('crossing to the damper ends in tour at the damper stop', () => {
+    const s = tourReducer(tourReducer(inMall(), { type: 'cross', to: 'damper' }), { type: 'crossed' });
+    expect(s).toMatchObject({ mode: 'tour', place: 'street', crossingTo: null, activeHotspot: null });
+    expect(s.segment).toMatchObject({ kind: 'stop', chapterIndex: DAMPER });
+    expect(s.progress).toBeCloseTo(stopCenter(DAMPER), 9);
+  });
+  test('cross outside walking is ignored', () => {
+    const descending = tourReducer(tourReducer(at(stopCenter(1)), { type: 'exploreStart' }), { type: 'walkEnter' });
+    const ascending = tourReducer(onStreet(), { type: 'walkExit' });
+    for (const s of [at(stopCenter(1)), tourReducer(at(stopCenter(1)), { type: 'exploreStart' }), descending, ascending]) {
+      expect(tourReducer(s, { type: 'cross', to: 'mall' })).toBe(s);
+      expect(tourReducer(s, { type: 'crossed' })).toBe(s);
+    }
+  });
+});

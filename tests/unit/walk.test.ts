@@ -1,5 +1,4 @@
 import { describe, expect, test } from 'vitest';
-import type { PlaceId } from '../../src/tour/machine';
 import { phaseOf } from '../../src/walk/api';
 
 describe('phaseOf', () => {
@@ -16,6 +15,11 @@ describe('phaseOf', () => {
 
   test('walking gives the visitor control of their place only', () => {
     expect(phaseOf({ mode: 'walking', place: 'street' }, 'street')).toBe('walking');
-    expect(phaseOf({ mode: 'walking', place: 'mall' as PlaceId }, 'street')).toBe('paused');
+    expect(phaseOf({ mode: 'walking', place: 'mall' }, 'street')).toBe('paused');
+  });
+
+  test('a crossing holds the place being left still', () => {
+    expect(phaseOf({ mode: 'crossing', place: 'street' }, 'street')).toBe('still');
+    expect(phaseOf({ mode: 'crossing', place: 'street' }, 'mall')).toBe('paused');
   });
 });

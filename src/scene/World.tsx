@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { StreetErrorBoundary } from '../ui/StreetErrorBoundary';
+import { PlaceErrorBoundary } from '../ui/PlaceErrorBoundary';
 import { useTour } from '../tour/store';
 import { Basin } from './greybox/Basin';
 import { DamperChamber } from './greybox/DamperChamber';
@@ -20,11 +20,11 @@ export function World() {
       <Tower />
       <DamperChamber />
       {streetWanted && (
-        <StreetErrorBoundary>
+        <PlaceErrorBoundary place="street">
           <Suspense fallback={null}>
             <StreetScene />
           </Suspense>
-        </StreetErrorBoundary>
+        </PlaceErrorBoundary>
       )}
       <HotspotProjector />
       <RenderStatsProbe />

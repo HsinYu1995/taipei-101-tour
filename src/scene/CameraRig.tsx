@@ -166,7 +166,8 @@ export function CameraRig() {
           dispatch({ type: 'landed' });
         }
       }
-    } else if (mode === 'walking') {
+    } else if (mode === 'walking' || mode === 'crossing') {
+      // A crossing holds the place being left until the hand-over, then follows the place crossed to.
       if (walk) lookAt(c, walk.eye());
     } else if (mode === 'ascending') {
       const t = progressOf(TRANSITION_MS);

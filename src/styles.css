@@ -139,7 +139,8 @@ body {
   color: inherit;
 }
 
-.street-loading {
+.street-loading,
+.walk-loading {
   position: fixed;
   top: 72px;
   left: 50%;
@@ -149,6 +150,16 @@ body {
   border-radius: 999px;
   background: var(--panel);
   font-size: 0.9rem;
+}
+
+/* A crossing's fade to black, over everything; it never takes a tap from the controls beneath. */
+.walk-fade {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: #000;
+  pointer-events: none;
+  transition: opacity 350ms ease;
 }
 
 .street-hint {

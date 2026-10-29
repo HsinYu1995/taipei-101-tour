@@ -24,14 +24,22 @@ export interface PlaceApi {
   reset(): void;
   /** The visitor's eye pose, as the place's simulation last left it. */
   eye(): Pose;
+  /** Put the visitor at this place's door from `from` and clear held input. */
+  arrive(from: PlaceId): void;
 }
 
-export const isWalkMode = (m: Mode) => m === 'descending' || m === 'walking' || m === 'ascending';
+/** Each half of a crossing's fade: to black, then back from it. */
+export const FADE_MS = 350;
+
+export const isWalkMode = (m: Mode) => m === 'descending' || m === 'walking' || m === 'crossing' || m === 'ascending';
 
 /** How a place's simulation runs this frame. */
 export type Phase = 'paused' | 'still' | 'walking';
 
-/** paused unless the walk is in `place`; still during the descent and ascent; walking when the visitor has control. */
+/**
+ * paused unless the walk is in `place`; still during the descent, ascent and a crossing out of it; walking when
+ * the visitor has control.
+ */
 export function phaseOf(state: { mode: Mode; place: PlaceId }, place: PlaceId): Phase {
   if (!isWalkMode(state.mode) || state.place !== place) return 'paused';
   return state.mode === 'walking' ? 'walking' : 'still';

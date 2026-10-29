@@ -1,12 +1,15 @@
 import { CHAPTERS } from './chapters';
-import { segmentAt } from './path';
+import { segmentAt, stopProgress } from './path';
 import type { Segment } from './types';
 
-/** Where the walk is. Only the Xinyi street for now. */
-export type PlaceId = 'street';
+/** Where the walk is: the Xinyi street or the mall inside 101. */
+export type PlaceId = 'street' | 'mall';
 
-/** `descending`, `walking` and `ascending` are the walk, entered from the tower chapter's explore mode. */
-export type Mode = 'tour' | 'explore' | 'returning' | 'descending' | 'walking' | 'ascending';
+/**
+ * `descending`, `walking`, `crossing` and `ascending` are the walk, entered from the tower chapter's explore mode.
+ * `crossing` moves the visitor to another place, or from the mall to the damper chapter, behind a fade.
+ */
+export type Mode = 'tour' | 'explore' | 'returning' | 'descending' | 'walking' | 'crossing' | 'ascending';
 
 export interface TourState {
   progress: number;
@@ -15,6 +18,8 @@ export interface TourState {
   activeHotspot: string | null;
   /** The walk's place; kept while not walking, so it only means something in the walk modes. */
   place: PlaceId;
+  /** Where a crossing is going; null outside `crossing`. */
+  crossingTo: PlaceId | 'damper' | null;
 }
 
 export type TourEvent =
@@ -27,10 +32,14 @@ export type TourEvent =
   | { type: 'walkEnter' }
   | { type: 'landed' }
   | { type: 'walkExit' }
-  | { type: 'ascended' };
+  | { type: 'ascended' }
+  | { type: 'cross'; to: PlaceId | 'damper' }
+  | { type: 'crossed' };
 
 /** The chapter whose explore mode leads down to the walk. */
 const STREET_CHAPTER = CHAPTERS.findIndex((c) => c.id === 'tower');
+/** The chapter the mall's floor panel hands over to. */
+const DAMPER_CHAPTER = CHAPTERS.findIndex((c) => c.id === 'damper');
 
 export const initialState: TourState = {
   progress: 0,
@@ -38,6 +47,7 @@ export const initialState: TourState = {
   mode: 'tour',
   activeHotspot: null,
   place: 'street',
+  crossingTo: null,
 };
 
 const sameStop = (a: Segment, b: Segment) =>
@@ -45,14 +55,29 @@ const sameStop = (a: Segment, b: Segment) =>
 
 export function tourReducer(s: TourState, e: TourEvent): TourState {
   // While walking, the page is frozen: only the walk's own events apply.
+  if (s.mode === 'crossing') {
+    switch (e.type) {
+      case 'cross':
+        return e.to === s.crossingTo ? s : { ...s, crossingTo: e.to };
+      case 'crossed':
+        return crossed(s);
+      default:
+        return s;
+    }
+  }
   if (s.mode === 'descending' || s.mode === 'walking' || s.mode === 'ascending') {
     switch (e.type) {
       case 'landed':
         return s.mode === 'descending' ? { ...s, mode: 'walking' } : s;
       case 'walkExit':
-        return s.mode === 'ascending' ? s : { ...s, mode: 'ascending' };
+        if (s.mode === 'ascending') return s;
+        // The street is left by rising back to the tour; the mall is left through its door to the street.
+        if (s.mode === 'walking' && s.place === 'mall') return { ...s, mode: 'crossing', crossingTo: 'street' };
+        return { ...s, mode: 'ascending' };
       case 'ascended':
         return s.mode === 'ascending' ? { ...s, mode: 'tour' } : s;
+      case 'cross':
+        return s.mode === 'walking' && e.to !== s.place ? { ...s, mode: 'crossing', crossingTo: e.to } : s;
       default:
         return s;
     }
@@ -88,6 +113,17 @@ export function tourReducer(s: TourState, e: TourEvent): TourState {
     case 'landed':
     case 'walkExit':
     case 'ascended':
+    case 'cross':
+    case 'crossed':
       return s;
   }
+}
+
+/** The end of a crossing: walking in the new place, or back on the tour at the damper chapter's stop. */
+function crossed(s: TourState): TourState {
+  if (s.crossingTo === 'damper') {
+    const progress = stopProgress(DAMPER_CHAPTER);
+    return { ...s, mode: 'tour', place: 'street', progress, segment: segmentAt(progress), activeHotspot: null, crossingTo: null };
+  }
+  return { ...s, mode: 'walking', place: s.crossingTo ?? s.place, crossingTo: null };
 }

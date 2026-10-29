@@ -5,7 +5,7 @@ import type { Phase } from '../walk/api';
 import { Colliders, type Circle } from '../walk/collide';
 import type { WalkInput } from '../walk/input';
 import { Walker } from '../walk/walker';
-import { LANDING } from './api';
+import { ENTRANCE, LANDING, OUTSIDE_ENTRANCE } from './api';
 import { SCENE_AREA, WALK_AREA } from './areas';
 import { buildGraph, Crowd, type Agent } from './crowd';
 import { buildLanes, Traffic, type Scooter } from './traffic';
@@ -86,6 +86,18 @@ export class StreetSimulation {
   /** Puts the visitor back at the landing spot. */
   reset() {
     this.walker.reset();
+  }
+
+  /** Puts the visitor outside the south entrance, facing out: where leaving the mall lands. */
+  arrive() {
+    const { x, z, yaw, pitch } = OUTSIDE_ENTRANCE;
+    this.walker.place(x, z, yaw, pitch);
+  }
+
+  /** Whether the visitor has walked into 101's south entrance. */
+  atEntrance() {
+    const { x, z } = this.walker;
+    return x >= ENTRANCE.x0 && x <= ENTRANCE.x1 && z >= ENTRANCE.z0 && z <= ENTRANCE.z1;
   }
 
   /** Puts the visitor somewhere (test hook and debugging). */
