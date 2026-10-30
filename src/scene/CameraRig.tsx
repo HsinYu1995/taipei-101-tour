@@ -14,7 +14,7 @@ const RETURN_MS = 600;
 /** A mouse drag must travel this far before it counts as exploring, so plain clicks stay in tour mode. */
 const DRAG_THRESHOLD_PX = 4;
 /** Near plane at eye level: the visitor can stand 0.3 m from a wall. */
-const NEAR = { street: 0.1, default: 0.5 };
+const NEAR = { walk: 0.1, default: 0.5 };
 const { ACTION } = CameraControlsImpl;
 const UNBOUNDED: ExploreBounds = { minDistance: 0, maxDistance: Infinity, azimuthRange: Infinity, minPolar: 0, maxPolar: Math.PI };
 
@@ -132,7 +132,7 @@ export function CameraRig() {
     const { mode, progress, place, places, dispatch, setCamera } = useTour.getState();
     const walk = places[place];
 
-    const near = isWalkMode(mode) ? NEAR.street : NEAR.default;
+    const near = isWalkMode(mode) ? NEAR.walk : NEAR.default;
     if (camera.near !== near) {
       camera.near = near;
       camera.updateProjectionMatrix();

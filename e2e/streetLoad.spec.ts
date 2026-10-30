@@ -3,8 +3,8 @@ import { gzipSync } from 'node:zlib';
 import { test, expect } from '@playwright/test';
 import { enterTowerExplore, expectPageScrolls, openTour, scrollToProgress, stopCenter, waitMode } from './helpers';
 
-const STREET = /\/assets\/(Street|xinyi)[^/]*\.(js|json)$/;
-const MALL = /\/assets\/(MallScene|tenants)[^/]*\.(js|json)$/;
+const STREET = /\/assets\/(Street|xinyi|walkShared)[^/]*\.(js|json)$/;
+const MALL = /\/assets\/(MallScene|tenants|walkShared)[^/]*\.(js|json)$/;
 
 test('first load and a full tour without explore never fetch the street or the mall', async ({ page }) => {
   const urls: string[] = [];
@@ -47,7 +47,7 @@ test('a failed street download returns to the tour and withdraws the walk', asyn
 
 test('the street chunks stay under 1.5 MB gzipped', async ({}, info) => {
   test.skip(info.project.name !== 'desktop', 'one build, checked once');
-  const files = readdirSync('dist/assets').filter((f) => /^(Street|xinyi)/.test(f));
+  const files = readdirSync('dist/assets').filter((f) => /^(Street|xinyi|walkShared)/.test(f));
   expect(files.length).toBeGreaterThan(0);
   const gz = files.reduce((n, f) => n + gzipSync(readFileSync(`dist/assets/${f}`)).length, 0);
   expect(gz).toBeLessThan(1.5 * 1024 * 1024);
@@ -55,7 +55,7 @@ test('the street chunks stay under 1.5 MB gzipped', async ({}, info) => {
 
 test('the mall chunks stay under 1 MB gzipped', async ({}, info) => {
   test.skip(info.project.name !== 'desktop', 'one build, checked once');
-  const files = readdirSync('dist/assets').filter((f) => /^(MallScene|tenants)/.test(f));
+  const files = readdirSync('dist/assets').filter((f) => /^(MallScene|tenants|walkShared)/.test(f));
   expect(files.length).toBeGreaterThan(0);
   const gz = files.reduce((n, f) => n + gzipSync(readFileSync(`dist/assets/${f}`)).length, 0);
   expect(gz).toBeLessThan(1024 * 1024);

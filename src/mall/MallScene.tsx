@@ -6,7 +6,7 @@ import { useHeightField } from '../scene/terrain/Terrain';
 import { groundAt } from '../street/groundAt';
 import { useTour } from '../tour/store';
 import { phaseOf, type PlaceApi } from '../walk/api';
-import { clearInput, takeInput } from '../walk/input';
+import { clearInput, inputFor } from '../walk/input';
 import { useMallTenants } from './data';
 import { Floor } from './FloorScene';
 import { CHARACTER, FLOOR_Y, visibleFloors } from './floors';
@@ -81,7 +81,7 @@ export default function MallScene() {
   // mall, so walking in and out never changes the light count every material is compiled for.
   useFrame((_, delta) => {
     const phase = phaseOf(useTour.getState(), 'mall');
-    sim.tick(phase, delta, phase === 'walking' ? takeInput() : undefined);
+    sim.tick(phase, delta, inputFor(phase));
     const floor = sim.floor();
     const shown = visibleFloors(floor);
     for (const f of FLOOR_IDS) floors.current[f]!.visible = shown.includes(f);

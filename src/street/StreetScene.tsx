@@ -4,7 +4,7 @@ import { registerProbe } from '../debug/testHook';
 import { useHeightField } from '../scene/terrain/Terrain';
 import { useTour } from '../tour/store';
 import { isWalkMode, phaseOf, type PlaceApi } from '../walk/api';
-import { clearInput, takeInput } from '../walk/input';
+import { clearInput, inputFor } from '../walk/input';
 import { People } from './People';
 import { Scooters } from './Scooters';
 import { Buildings } from './Buildings';
@@ -50,8 +50,8 @@ export default function StreetScene() {
   useFrame((_, delta) => {
     const tour = useTour.getState();
     const phase = phaseOf(tour, 'street');
-    // Input is taken only by the place being walked, so the other place never swallows a look drag.
-    sim.tick(phase, delta, phase === 'walking' ? takeInput() : undefined);
+    // Input is taken only by the place being walked (even while still), so the other place never swallows a drag.
+    sim.tick(phase, delta, inputFor(phase));
     if (phase === 'walking' && sim.atEntrance() && !tour.mallFailed) tour.dispatch({ type: 'cross', to: 'mall' });
   }, -1);
 
