@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
-import { BRAND_STYLES, packSigns, signStyle } from '../../src/mall/signs';
+import { BRAND_STYLES, fitSigns, packSigns, signStyle } from '../../src/mall/signs';
 import { FLOOR_IDS, type FloorId, type MallTenants } from '../../src/mall/types';
 import { LATIN_SIGNED } from '../../scripts/latinSigned';
 
@@ -86,5 +86,28 @@ describe('shop signs', () => {
   test('a set too big for the atlas is refused', () => {
     expect(packSigns(Array(100).fill(CELL), 2048)).toBeNull();
     expect(packSigns([{ w: 4096, h: 10 }], 2048)).toBeNull();
+  });
+
+  test('a floor that fits keeps full-size cells', () => {
+    for (const f of FLOOR_IDS) expect(fitSigns(data.floors[f].length, CELL, 2048).cell, f).toEqual(CELL);
+  });
+
+  test('a floor too big for full-size cells still packs, in smaller cells of the same shape', () => {
+    const doubled = [...data.floors.B1, ...data.floors.B1];
+    expect(packSigns(doubled.map(() => CELL), 2048)).toBeNull();
+    const { cell, at } = fitSigns(doubled.length, CELL, 2048);
+    expect(cell.w).toBeLessThan(CELL.w);
+    // As big as will go: one pixel wider would not fit.
+    expect(packSigns(doubled.map(() => ({ w: cell.w + 1, h: Math.round(((cell.w + 1) * CELL.h) / CELL.w) })), 2048)).toBeNull();
+    expect(Math.abs(cell.w / cell.h - CELL.w / CELL.h)).toBeLessThan(0.05);
+    expect(at).toHaveLength(doubled.length);
+    at.forEach(({ x, y }, i) => {
+      expect(x >= 0 && y >= 0 && x + cell.w <= 2048 && y + cell.h <= 2048, `${i} inside`).toBe(true);
+      for (let j = 0; j < i; j++) {
+        const o = at[j];
+        const apart = x >= o.x + cell.w || o.x >= x + cell.w || y >= o.y + cell.h || o.y >= y + cell.h;
+        expect(apart, `${i} overlaps ${j}`).toBe(true);
+      }
+    });
   });
 });

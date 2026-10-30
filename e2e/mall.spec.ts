@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
+import { visibleFloors } from '../src/mall/floors';
 import { buildFloor, MALL_ENTRY } from '../src/mall/layout';
 import { FLOOR_IDS, type FloorId, type MallTenants } from '../src/mall/types';
 import type { P } from '../src/street/types';
@@ -121,6 +122,37 @@ test('shopfronts carry their names', async ({ page }) => {
   const sign = y - EYE_HEIGHT + 3.2;
   const hit = await castRay(page, [v.x, y, v.z], [mid[0] - v.x, sign - y, mid[1] - v.z]);
   expect(hit?.name).toBe('mall-signs-1F');
+
+  // Only the floors in view have signs built, and they are there on every frame the screen is not black: a
+  // floor change swaps them in its black.
+  const signs = () => page.evaluate(() => window.__tour!.probes.mall!.signs().sort());
+  expect(await signs()).toEqual([...visibleFloors('1F')].sort());
+  const inView = Object.fromEntries(FLOOR_IDS.map((f) => [f, visibleFloors(f)])) as Record<FloorId, FloorId[]>;
+  await page.evaluate((inView) => {
+    const w = window as unknown as { __signGaps: string[]; __signRaf: number; __signFrames: number };
+    w.__signGaps = [];
+    w.__signFrames = 0;
+    const sample = () => {
+      const m = window.__tour!.probes.mall!;
+      const floor = m.floor();
+      const built = m.signs();
+      if (m.fade() < 1 && !inView[floor].every((f) => built.includes(f))) w.__signGaps.push(`${floor} fade ${m.fade()} signs ${built}`);
+      w.__signFrames++;
+      w.__signRaf = requestAnimationFrame(sample);
+    };
+    sample();
+  }, inView);
+  for (const floor of ['B1', '3F'] as const) {
+    await goToFloor(page, floor);
+    expect(await signs(), floor).toEqual([...visibleFloors(floor)].sort());
+  }
+  const { gaps, frames } = await page.evaluate(() => {
+    const w = window as unknown as { __signGaps: string[]; __signRaf: number; __signFrames: number };
+    cancelAnimationFrame(w.__signRaf);
+    return { gaps: w.__signGaps, frames: w.__signFrames };
+  });
+  expect(frames).toBeGreaterThan(10);
+  expect(gaps).toEqual([]);
 });
 
 test('leaving the mall returns to the street outside the entrance, facing out', async ({ page, isMobile }) => {
@@ -132,6 +164,8 @@ test('leaving the mall returns to the street outside the entrance, facing out', 
   const v = await visitor(page);
   expect(Math.hypot(v.x - OUTSIDE_ENTRANCE.x, v.z - OUTSIDE_ENTRANCE.z)).toBeLessThan(0.5);
   expect(Math.abs(v.yaw - Math.PI)).toBeLessThan(0.1);
+  // Out of the mall, its sign atlases are freed.
+  await expect.poll(() => page.evaluate(() => window.__tour!.probes.mall!.signs())).toEqual([]);
   // One step further back, the way each visitor has: a phone has no Escape key.
   if (isMobile) await page.getByTestId('back-to-tour-button').click();
   else await page.keyboard.press('Escape');

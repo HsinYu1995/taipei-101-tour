@@ -126,3 +126,16 @@ export function packSigns(sizes: readonly { w: number; h: number }[], atlas: num
   }
   return out;
 }
+
+/**
+ * `count` cells of `cell`'s shape packed into an `atlas`-square texture: at full size if they fit, else at the
+ * largest size, in whole pixels and keeping the shape, at which they do.
+ */
+export function fitSigns(count: number, cell: { w: number; h: number }, atlas: number) {
+  for (let w = Math.min(cell.w, atlas); w > 0; w--) {
+    const size = { w, h: Math.max(1, Math.round((w * cell.h) / cell.w)) };
+    const at = packSigns(Array(count).fill(size), atlas);
+    if (at) return { cell: size, at };
+  }
+  throw new Error(`${count} signs do not fit a ${atlas} atlas at any size`);
+}

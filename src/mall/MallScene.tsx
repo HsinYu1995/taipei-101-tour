@@ -1,4 +1,4 @@
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import { AmbientLight, DirectionalLight, Group, Mesh, PlaneGeometry, ShaderMaterial } from 'three';
 import { registerProbe } from '../debug/testHook';
@@ -11,7 +11,7 @@ import { useMallTenants } from './data';
 import { Floor } from './FloorScene';
 import { CHARACTER, FLOOR_Y, visibleFloors } from './floors';
 import { MallPeople } from './MallPeople';
-import { Signs } from './SignScene';
+import { MallSigns } from './SignScene';
 import { MallSimulation } from './simulation';
 import { useMall } from './store';
 import { FLOOR_IDS, type FloorId } from './types';
@@ -46,7 +46,10 @@ export default function MallScene() {
   const base = useMemo(() => groundAt(field)(...DOOR), [field]);
   const sim = useMemo(() => new MallSimulation(tenants, base), [tenants, base]);
   const inside = useTour((s) => phaseOf(s, 'mall') !== 'paused');
+  const gl = useThree((s) => s.gl);
   const floors = useRef<Partial<Record<FloorId, Group>>>({});
+  const signs = useMemo(() => new MallSigns(sim.plans, base, (f) => floors.current[f]!, gl), [sim, base, gl]);
+  useEffect(() => () => signs.show([]), [signs]);
   const ambient = useRef<AmbientLight>(null);
   const key = useRef<DirectionalLight>(null);
   const fade = useRef<Mesh>(null);
@@ -68,13 +71,15 @@ export default function MallScene() {
         clearInput();
       },
       eye: () => sim.eye(),
-      // The street's south door is the only way in, and it opens on MALL_ENTRY.
+      // The street's south door is the only way in, and it opens on MALL_ENTRY. The signs in view are drawn in the
+      // crossing's black.
       arrive: () => {
         sim.reset();
         clearInput();
+        signs.show(visibleFloors(sim.floor()));
       },
     }),
-    [sim],
+    [sim, signs],
   );
 
   useEffect(() => {
@@ -98,6 +103,11 @@ export default function MallScene() {
     if (panel.floor !== floor || panel.changing !== changing) useMall.setState({ floor, changing });
     const shown = visibleFloors(floor);
     for (const f of FLOOR_IDS) floors.current[f]!.visible = shown.includes(f);
+    // Signs only for the floors in view, swapped in the frame a floor change reaches black, and freed once the walk
+    // is out of the mall (kept while a crossing in waits, which arrive built them for).
+    const tour = useTour.getState();
+    if (phase !== 'paused') signs.show(shown);
+    else if (tour.mode !== 'crossing' || tour.crossingTo !== 'mall') signs.show([]);
     const light = CHARACTER[floor].light;
     const on = phase !== 'paused';
     ambient.current!.color.set(light.ambient);
@@ -116,6 +126,8 @@ export default function MallScene() {
         floor: () => sim.floor(),
         goTo: (floor) => sim.goTo(floor),
         changing: () => sim.changing(),
+        fade: () => sim.fade(),
+        signs: () => signs.floors(),
         blocked: (x, z) => sim.blocked(x, z),
         eyeY: () => sim.eye().position[1],
         people: () => sim.people(sim.floor()).map(({ x, z, moving }) => ({ x, z, moving })),
@@ -128,7 +140,7 @@ export default function MallScene() {
           return [ring.reduce((s, p) => s + p[0], 0) / ring.length, ring.reduce((s, p) => s + p[1], 0) / ring.length];
         },
       }),
-    [sim],
+    [sim, signs],
   );
 
   return (
@@ -139,7 +151,6 @@ export default function MallScene() {
         {FLOOR_IDS.map((f) => (
           <group key={f} ref={(g) => void (floors.current[f] = g ?? undefined)}>
             <Floor plan={sim.plans[f]} base={base} />
-            <Signs plan={sim.plans[f]} base={base} />
             <MallPeople plan={sim.plans[f]} crowd={sim.people(f)} y={base + FLOOR_Y[f]} />
           </group>
         ))}
