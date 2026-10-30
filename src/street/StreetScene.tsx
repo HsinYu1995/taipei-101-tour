@@ -50,7 +50,8 @@ export default function StreetScene() {
   useFrame((_, delta) => {
     const tour = useTour.getState();
     const phase = phaseOf(tour, 'street');
-    sim.tick(phase, delta, takeInput());
+    // Input is taken only by the place being walked, so the other place never swallows a look drag.
+    sim.tick(phase, delta, phase === 'walking' ? takeInput() : undefined);
     if (phase === 'walking' && sim.atEntrance() && !tour.mallFailed) tour.dispatch({ type: 'cross', to: 'mall' });
   }, -1);
 

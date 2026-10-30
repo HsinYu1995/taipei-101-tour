@@ -4,13 +4,14 @@ import { test, expect } from '@playwright/test';
 import { enterTowerExplore, expectPageScrolls, openTour, scrollToProgress, stopCenter, waitMode } from './helpers';
 
 const STREET = /\/assets\/(Street|xinyi)[^/]*\.(js|json)$/;
+const MALL = /\/assets\/(MallScene|tenants)[^/]*\.(js|json)$/;
 
-test('first load and a full tour without explore never fetch the street', async ({ page }) => {
+test('first load and a full tour without explore never fetch the street or the mall', async ({ page }) => {
   const urls: string[] = [];
   page.on('request', (r) => urls.push(r.url()));
   await openTour(page);
   for (let i = 0; i < 4; i++) await scrollToProgress(page, stopCenter(i));
-  expect(urls.filter((u) => STREET.test(u))).toEqual([]);
+  expect(urls.filter((u) => STREET.test(u) || MALL.test(u))).toEqual([]);
 });
 
 test('entering tower explore fetches the street', async ({ page }) => {
@@ -50,4 +51,12 @@ test('the street chunks stay under 1.5 MB gzipped', async ({}, info) => {
   expect(files.length).toBeGreaterThan(0);
   const gz = files.reduce((n, f) => n + gzipSync(readFileSync(`dist/assets/${f}`)).length, 0);
   expect(gz).toBeLessThan(1.5 * 1024 * 1024);
+});
+
+test('the mall chunks stay under 1 MB gzipped', async ({}, info) => {
+  test.skip(info.project.name !== 'desktop', 'one build, checked once');
+  const files = readdirSync('dist/assets').filter((f) => /^(MallScene|tenants)/.test(f));
+  expect(files.length).toBeGreaterThan(0);
+  const gz = files.reduce((n, f) => n + gzipSync(readFileSync(`dist/assets/${f}`)).length, 0);
+  expect(gz).toBeLessThan(1024 * 1024);
 });

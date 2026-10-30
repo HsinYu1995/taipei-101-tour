@@ -56,13 +56,37 @@ export function makePersonMaterial() {
   return material;
 }
 
-/** The crowd, drawn as one instanced mesh where the street simulation has put them. */
-export function People({ people, ground }: { people: readonly Agent[]; ground: Ground }) {
+/** Someone who never moves: standing at (x, z) facing `heading`, `drop` metres lower when seated. */
+export interface Still {
+  x: number;
+  z: number;
+  heading: number;
+  drop: number;
+}
+
+const NO_ONE: readonly Still[] = [];
+
+/**
+ * The crowd, drawn as one instanced mesh where the simulation has put them, with the people who never move
+ * (`still`) after them.
+ */
+export function People({
+  people,
+  ground,
+  name = 'street-people',
+  still = NO_ONE,
+}: {
+  people: readonly Agent[];
+  ground: Ground;
+  name?: string;
+  still?: readonly Still[];
+}) {
   const ref = useRef<InstancedMesh>(null);
-  const count = people.length;
+  const count = people.length + still.length;
   const geometry = useMemo(makePersonGeometry, []);
   const material = useMemo(makePersonMaterial, []);
   const swing = useMemo(() => new InstancedBufferAttribute(new Float32Array(count * 2), 2), [count]);
+  const o = useMemo(() => new Object3D(), []);
   useEffect(
     () => () => {
       geometry.dispose();
@@ -84,9 +108,15 @@ export function People({ people, ground }: { people: readonly Agent[]; ground: G
     geometry.setAttribute('aTrousers', new InstancedBufferAttribute(trousers, 3));
     geometry.setAttribute('aSwing', swing);
     mesh.count = count;
-  }, [count, geometry, swing]);
-
-  const o = useMemo(() => new Object3D(), []);
+    still.forEach((s, k) => {
+      const i = people.length + k;
+      o.position.set(s.x, ground(s.x, s.z) - s.drop, s.z);
+      o.rotation.set(0, s.heading, 0);
+      o.scale.setScalar(1 + (pick(i, 3) * 2 - 1) * SIZE_SPREAD);
+      o.updateMatrix();
+      mesh.setMatrixAt(i, o.matrix);
+    });
+  }, [count, geometry, swing, people.length, still, ground, o]);
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.1);
     const mesh = ref.current!;
@@ -106,5 +136,5 @@ export function People({ people, ground }: { people: readonly Agent[]; ground: G
     mesh.computeBoundingSphere();
   });
 
-  return <instancedMesh ref={ref} name="street-people" args={[geometry, material, count]} />;
+  return <instancedMesh ref={ref} name={name} args={[geometry, material, count]} />;
 }
