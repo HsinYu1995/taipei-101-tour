@@ -13,8 +13,9 @@ const StreetScene = lazy(() => import('../street/StreetScene'));
 const MallScene = lazy(() => import('../mall/MallScene'));
 
 export function World() {
-  const streetWanted = useTour((s) => s.streetWanted);
-  const mallWanted = useTour((s) => s.mallWanted);
+  // A place given up on (its download failed or never came) is dropped, so a late arrival never mounts it.
+  const streetWanted = useTour((s) => s.streetWanted && !s.streetFailed);
+  const mallWanted = useTour((s) => s.mallWanted && !s.mallFailed);
   // Inside the mall the outdoor world is hidden (Atmosphere drops the sky, sun and fog itself).
   const inMall = useTour((s) => phaseOf(s, 'mall') !== 'paused');
   return (

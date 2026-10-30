@@ -55,9 +55,12 @@ type Probes = {
 };
 const probes: Probes = {};
 
+/** Timings e2e tests may shorten through window.__tour.timings; untouched outside the e2e build. */
+export const testTimings: { crossingTimeoutMs?: number } = {};
+
 declare global {
   interface Window {
-    __tour?: { getState(): TourSnapshot; getEvents(): string[]; probes: Probes };
+    __tour?: { getState(): TourSnapshot; getEvents(): string[]; probes: Probes; timings: typeof testTimings };
   }
 }
 
@@ -88,6 +91,7 @@ export function installTestHook() {
   });
   window.__tour = {
     probes,
+    timings: testTimings,
     getEvents: () => events.slice(-20),
     getState: () => {
       const { progress, segment, mode, activeHotspot, place, crossingTo, camera, frame } = useTour.getState();

@@ -347,6 +347,29 @@ test('a failed mall download returns to the street and withdraws the mall', asyn
   expect(await whereNow(page)).toBe('walking street');
 });
 
+test('a mall download that never arrives is given up on, back on the street', async ({ page }) => {
+  test.setTimeout(90_000);
+  // The download hangs for good; the crossing gives up after its timeout, shortened here from 20 s.
+  await page.route(MALL, () => new Promise<void>(() => {}));
+  await page.evaluate(() => (window.__tour!.timings.crossingTimeoutMs = 3000));
+  await enterStreet(page);
+  await place(page, { x: 0, z: 46, yaw: 0, pitch: 0 });
+  await page.keyboard.down('w');
+  await expect(page.getByTestId('walk-loading')).toBeVisible({ timeout: 15_000 });
+  await page.keyboard.up('w');
+  await expect.poll(() => whereNow(page), { timeout: 15_000 }).toBe('walking street');
+  await expect(page.getByTestId('walk-loading')).toHaveCount(0);
+  const v = await visitor(page);
+  expect(Math.hypot(v.x - OUTSIDE_ENTRANCE.x, v.z - OUTSIDE_ENTRANCE.z)).toBeLessThan(0.5);
+  // The door no longer leads in.
+  await place(page, { x: 0, z: 46, yaw: 0, pitch: 0 });
+  await page.keyboard.down('w');
+  await page.waitForTimeout(2000);
+  await page.keyboard.up('w');
+  expect(await whereNow(page)).toBe('walking street');
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
+});
+
 /** Taps a floor button and waits until the change has ended on that floor. */
 async function pressFloor(page: Page, floor: FloorId) {
   await page.getByTestId(`floor-${floor}`).click();

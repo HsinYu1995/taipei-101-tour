@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import { en } from '../content/en';
+import { testTimings } from '../debug/testHook';
+import type { PlaceId } from '../tour/machine';
 import { useTour } from '../tour/store';
 import { maxScroll } from '../tour/useScrollProgress';
-import { FADE_MS } from './api';
+import { CROSSING_TIMEOUT_MS, FADE_MS, placeFailed } from './api';
 
 type Stage = 'clear' | 'darkening' | 'black' | 'lightening';
 
 /**
  * The crossing's fade. Fades to black when a crossing starts; once black, hands the visitor over as soon as where
- * they are going is ready (holding black with a loading line while the mall downloads), then fades back.
+ * they are going is ready (holding black with a loading line while the mall downloads), then fades back. A place
+ * that has not loaded after CROSSING_TIMEOUT_MS is given up on, as if its download had failed.
  */
 export function Fade() {
   const crossing = useTour((s) => s.mode === 'crossing');
@@ -28,13 +31,19 @@ export function Fade() {
     }
     if (stage !== 'black') return;
     let live = true;
+    // The place being waited for, and when to give up on it.
+    let waiting: { to: PlaceId; timer: number } | null = null;
+    const stopWaiting = () => {
+      if (waiting) window.clearTimeout(waiting.timer);
+      waiting = null;
+    };
     // Set while a place readies itself after arrive; the store changes every frame meanwhile.
     let arriving = false;
     // Read where the crossing goes at hand-over time: a failed download retargets it to the street meanwhile.
     const handOver = () => {
       if (!live || arriving) return;
       const { mode, place, crossingTo, places, dispatch } = useTour.getState();
-      if (mode !== 'crossing' || crossingTo === null) return;
+      if (mode !== 'crossing' || crossingTo === null) return stopWaiting();
       if (crossingTo === 'damper') {
         dispatch({ type: 'crossed' });
         // Overlay unfreezes the page once React commits the tour mode; scroll after that, to the stop crossed to.
@@ -43,7 +52,15 @@ export function Fade() {
         return;
       }
       const next = places[crossingTo];
-      if (!next) return;
+      if (!next) {
+        if (waiting?.to !== crossingTo) {
+          stopWaiting();
+          const ms = testTimings.crossingTimeoutMs ?? CROSSING_TIMEOUT_MS;
+          waiting = { to: crossingTo, timer: window.setTimeout(() => live && placeFailed(crossingTo), ms) };
+        }
+        return;
+      }
+      stopWaiting();
       arriving = true;
       // Still black until the place is ready to be seen (or failed to ready itself, which its first frame then
       // makes up for); it crosses only if nothing retargeted it meanwhile.
@@ -59,6 +76,7 @@ export function Fade() {
     const unsubscribe = useTour.subscribe(handOver);
     return () => {
       live = false;
+      stopWaiting();
       unsubscribe();
     };
   }, [stage]);
