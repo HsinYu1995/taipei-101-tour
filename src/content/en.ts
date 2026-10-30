@@ -33,8 +33,10 @@ export const en = {
     streetLoading: 'Loading the street...',
     backToStreet: 'Back to the street',
     mallLoading: 'Loading the mall...',
-    walkHintDesktop: 'WASD or arrow keys to walk, drag to look around, Shift to hurry. Scroll out or press Esc to leave.',
-    walkHintTouch: 'Use the stick to walk and drag to look around. Pinch or tap Back to tour to leave.',
+    walkHintDesktop:
+      "WASD or arrow keys to walk, drag to look around, Shift to hurry. The mall's doors are on the south side of the tower. Scroll out or press Esc to leave.",
+    walkHintTouch:
+      "Use the stick to walk and drag to look around. The mall's doors are on the south side of the tower. Pinch or tap Back to tour to leave.",
     mallHintDesktop: 'WASD or arrow keys to walk, drag to look around, Shift to hurry. Scroll out or press Esc to go back to the street.',
     mallHintTouch: 'Use the stick to walk and drag to look around. Pinch or tap Back to the street to leave.',
     walkStick: 'Walk',

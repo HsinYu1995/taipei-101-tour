@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { PODIUM } from '../src/scene/tower/podium';
+import { ENTRANCE } from '../src/street/api';
 import { halfWidthAt } from '../src/scene/tower/towerProfile';
 import { CHAPTERS } from '../src/tour/chapters';
 import type { Vec3 } from '../src/tour/types';
@@ -43,6 +44,22 @@ test('podium is at street level', async ({ page }) => {
   const hit = await castRay(page, [-70, 100, -60], [0, -1, 0]);
   expect(hit?.name).toBe('tower-podium');
   expect(hit!.point[1]).toBeCloseTo(PODIUM.height, 0);
+});
+
+test('the south entrance shows on the podium wall where the street walk crosses into the mall', async ({ page }) => {
+  // Walking north into the door at eye height, anywhere across it, the doors' glass is the wall the visitor meets.
+  for (const x of [ENTRANCE.x0 + 0.5, (ENTRANCE.x0 + ENTRANCE.x1) / 2, ENTRANCE.x1 - 0.5]) {
+    const hit = await castRay(page, [x, 1.6, 50], [0, 0, -1]);
+    expect(hit?.name, `x ${x}`).toBe('tower-entrance-glass');
+    expect(Math.abs(hit!.point[2] - ENTRANCE.z0), `x ${x}`).toBeLessThan(0.2);
+  }
+  // Beside it the wall is blank.
+  const wall = await castRay(page, [ENTRANCE.x1 + 2, 1.6, 50], [0, 0, -1]);
+  expect(wall?.name).toBe('tower-podium');
+  // A canopy over the pavement in front of it, above head height.
+  const canopy = await castRay(page, [(ENTRANCE.x0 + ENTRANCE.x1) / 2, 20, ENTRANCE.z1 + 1], [0, -1, 0]);
+  expect(canopy?.name).toBe('tower-entrance-frame');
+  expect(canopy!.point[1]).toBeGreaterThan(3);
 });
 
 test('building credit links the OpenStreetMap copyright page', async ({ page }) => {
