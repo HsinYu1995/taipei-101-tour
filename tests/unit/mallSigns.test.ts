@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { BRAND_STYLES, packSigns, signStyle } from '../../src/mall/signs';
-import { FLOOR_IDS, type MallTenants } from '../../src/mall/types';
+import { FLOOR_IDS, type FloorId, type MallTenants } from '../../src/mall/types';
+import { LATIN_SIGNED } from '../../scripts/latinSigned';
 
 const data: MallTenants = JSON.parse(readFileSync('src/mall/tenants.json', 'utf8'));
 const all = FLOOR_IDS.flatMap((f) => data.floors[f]);
@@ -42,11 +43,23 @@ describe('shop signs', () => {
     expect(stall.sign).toMatch(HAN);
     expect(stall.sign).not.toMatch(/\p{Script=Latin}/u);
     expect(signStyle(stall).font).toMatch(/Microsoft JhengHei/);
-    // A sign is the Latin name as baked, or a Chinese name with no Latin letters in it.
+    for (const t of all) if (HAN.test(t.sign)) expect(signStyle(t).font, t.name).toMatch(/PingFang TC/);
+  });
+
+  test("signs never carry the English feed's translation", () => {
+    // A sign is part of the shop's Chinese listing, or the baked name of a shop whose Chinese listing is in Latin
+    // only (its own name), or the baked name of an official Latin name the bake keeps on purpose.
     for (const t of all) {
-      if (t.sign !== t.name) expect(t.sign, t.name).toMatch(/^[\p{Script=Han}\p{N}\s]+$/u);
-      if (HAN.test(t.sign)) expect(signStyle(t).font, t.name).toMatch(/PingFang TC/);
+      const ownLatin = t.sign === t.name && !HAN.test(t.zh);
+      const kept = t.sign === t.name && LATIN_SIGNED.has(t.name);
+      expect(t.zh.includes(t.sign) || ownLatin || kept, `${t.name}: "${t.sign}" from "${t.zh}"`).toBe(true);
     }
+    const sign = (floor: FloorId, name: string) => data.floors[floor].find((t) => t.name === name)!.sign;
+    // A mixed listing gives its Latin brand name, unless that is only a generic word.
+    expect(sign('B1', 'Gift Shop RIVON')).toBe('RIVON');
+    expect(sign('B1', '31 Ice Cream Baskin Robbins')).toBe('Baskin Robbins');
+    expect(sign('B1', 'Bashi Roast Meat Mini')).toBe('八色烤肉mini');
+    expect(sign('4F', 'Shi Ling Shabu')).toBe('食令shabu');
     // Global brands keep their Latin names even where the Chinese feed lists them in Chinese only.
     for (const name of ['Rolex', "McDonald's", 'Din Tai Fung', 'A. Lange & Söhne']) {
       expect(all.find((t) => t.name === name)!.sign, name).toBe(name);

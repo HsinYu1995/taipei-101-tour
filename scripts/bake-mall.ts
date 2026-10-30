@@ -12,6 +12,7 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { LATIN_SIGNED } from './latinSigned.ts';
 import { FLOOR_IDS, type FloorId, type MallTenants, type Tenant, type TenantCategory } from '../src/mall/types.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -67,18 +68,9 @@ const CATEGORY: Record<string, TenantCategory> = {
   'Läderach': 'souvenir',
   SWATCH: 'watch',
 };
-const HAND_ADDED: Tenant[] = [{ name: 'Observatory Tickets', sign: 'Observatory Tickets', floor: '5F', category: 'service' }];
+const HAND_ADDED: Tenant[] = [{ name: 'Observatory Tickets', sign: 'Observatory Tickets', zh: '', floor: '5F', category: 'service' }];
 /** Chinese store-name suffixes, longest first. */
 const ZH_SUFFIXES = ['台北101旗艦店', '台北101專賣店', '台北101店', '101旗艦店', '101店', '台北101', '旗艦店', '專賣店'];
-/**
- * Shops with an official Latin name whose Chinese listing has none, so signFor would sign them in Chinese; keyed by
- * the baked name.
- */
-const LATIN_SIGNED = new Set([
-  'Rolex', 'Tudor', 'CHANEL Watches & Fine Jewelry', 'A. Lange & Söhne', 'Taipei Fubon Bank', "McDonald's",
-  'Din Tai Fung', 'KAVALAN', 'SunnyHills', 'FamilyMart', 'TAO TAO TEA', 'CHUYU', 'Fujin Tree Taiwanese Champagne',
-  'Kuo Yuan Ye', 'Hsin Tung Yang',
-]);
 
 interface FeedShop { id: string; name: string }
 type FeedShops = Record<string, FeedShop[]>;
@@ -116,7 +108,11 @@ function cleanName(raw: string): string {
   return RENAME[name] ?? name;
 }
 
-const LATIN = /\p{Script=Latin}/u;
+const HAN = /\p{Script=Han}/u;
+/** Runs of Latin script in a Chinese listing, with the digits, spaces and marks inside a brand name. */
+const LATIN_RUN = /\p{Script=Latin}(?:[\p{Script=Latin}\p{N}&'.\- ]*[\p{Script=Latin}\p{N}.])?/gu;
+/** Latin words a Chinese listing carries that are not a brand name, lower case. */
+const GENERIC = new Set(['mini', 'shabu']);
 
 /** The feed's Chinese name, trimmed of its store-name suffix. */
 function cleanZh(raw: string): string {
@@ -127,17 +123,22 @@ function cleanZh(raw: string): string {
 }
 
 /**
- * What the shop's sign says: its Latin name, unless its Chinese listing has no Latin letters at all, which means
- * it has no official Latin name and the English feed's is a translation; then its Chinese name.
+ * What the shop's sign says, from its cleaned Chinese listing `zh`. The English feed translates names a shop does
+ * not use, so the Chinese listing decides: one in Latin script only is the shop's own name, and the sign is the
+ * baked name; one in Han only means the shop has no Latin name, and the sign is the Chinese; a mixed one carries
+ * the brand's Latin name, which is the sign, unless its Latin is only a generic word (mini, shabu), when the sign is
+ * the listing as written.
  */
-function signFor(name: string, zh: string | undefined): string {
+function signFor(name: string, zh: string): string {
   if (LATIN_SIGNED.has(name)) return name;
-  if (zh === undefined) {
+  if (!zh) {
     console.warn(`no Chinese listing for "${name}"; signed with its Latin name`);
     return name;
   }
-  const z = cleanZh(zh);
-  return z && !LATIN.test(z) ? z : name;
+  if (!HAN.test(zh)) return name;
+  const runs = zh.match(LATIN_RUN) ?? [];
+  const brand = runs.filter((r) => !GENERIC.has(r.toLowerCase())).sort((a, b) => b.length - a.length)[0];
+  return brand ?? zh;
 }
 
 function shopCategory(key: string, name: string): TenantCategory {
@@ -182,7 +183,8 @@ async function main() {
     for (const [key, list] of Object.entries(shops.en[floor])) {
       for (const shop of list) {
         const name = cleanName(shop.name);
-        listings.push({ name, sign: signFor(name, zhName.get(shop.id)), floor, category: shopCategory(key, name) });
+        const zh = cleanZh(zhName.get(shop.id) ?? '');
+        listings.push({ name, sign: signFor(name, zh), zh, floor, category: shopCategory(key, name) });
       }
     }
   }
@@ -191,8 +193,9 @@ async function main() {
     if (floors.length === 0) continue;
     const name = cleanName(r.title);
     const category = foodCategory(r.category, name);
-    const sign = signFor(name, zhName.get(r.id));
-    for (const floor of floors) listings.push({ name, sign, floor, category });
+    const zh = cleanZh(zhName.get(r.id) ?? '');
+    const sign = signFor(name, zh);
+    for (const floor of floors) listings.push({ name, sign, zh, floor, category });
   }
   listings.push(...HAND_ADDED);
 
