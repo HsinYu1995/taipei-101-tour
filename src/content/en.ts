@@ -38,6 +38,8 @@ export const en = {
     mallHintDesktop: 'WASD or arrow keys to walk, drag to look around, Shift to hurry. Scroll out or press Esc to go back to the street.',
     mallHintTouch: 'Use the stick to walk and drag to look around. Pinch or tap Back to the street to leave.',
     walkStick: 'Walk',
+    floors: 'Floors',
+    lift: 'Lift to 89F',
     close: 'Close',
   },
   credits: {

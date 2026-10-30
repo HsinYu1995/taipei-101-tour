@@ -13,12 +13,16 @@ import { CHARACTER, FLOOR_Y, visibleFloors } from './floors';
 import { MallPeople } from './MallPeople';
 import { Signs } from './SignScene';
 import { MallSimulation } from './simulation';
+import { useMall } from './store';
 import { FLOOR_IDS, type FloorId } from './types';
 
 /** The mall stands on the ground just inside 101's south door. */
 const DOOR: [number, number] = [0, 44];
 /** Where the key light comes from, relative to what it lights. */
 const KEY_FROM: [number, number, number] = [30, 80, 45];
+
+// Same module as the scene's lazy import, so the panel arrives with the mall.
+export { FloorPanel } from './FloorPanel';
 
 /** A floor change's black, drawn over everything in clip space. */
 function makeFadeMaterial() {
@@ -78,12 +82,20 @@ export default function MallScene() {
     return () => useTour.getState().setPlace('mall', null);
   }, [api]);
 
+  useEffect(() => {
+    useMall.setState({ floor: sim.floor(), changing: sim.changing(), goTo: (f) => sim.goTo(f) });
+    return () => useMall.setState({ changing: false, goTo: () => {} });
+  }, [sim]);
+
   // Before CameraRig reads the eye pose, as on the street. The lights stay in the scene at zero outside the
   // mall, so walking in and out never changes the light count every material is compiled for.
   useFrame((_, delta) => {
     const phase = phaseOf(useTour.getState(), 'mall');
     sim.tick(phase, delta, inputFor(phase));
     const floor = sim.floor();
+    const changing = sim.changing();
+    const panel = useMall.getState();
+    if (panel.floor !== floor || panel.changing !== changing) useMall.setState({ floor, changing });
     const shown = visibleFloors(floor);
     for (const f of FLOOR_IDS) floors.current[f]!.visible = shown.includes(f);
     const light = CHARACTER[floor].light;

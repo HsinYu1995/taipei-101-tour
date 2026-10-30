@@ -11,6 +11,7 @@ import { PlaceErrorBoundary } from './PlaceErrorBoundary';
 
 // Same module as the scene's lazy import, so the whole walk arrives as one chunk.
 const WalkHud = lazy(() => import('../street/StreetScene').then((m) => ({ default: m.WalkHud })));
+const FloorPanel = lazy(() => import('../mall/MallScene').then((m) => ({ default: m.FloorPanel })));
 
 /** Scroll length of the tour in vh; one extra viewport so progress spans the full range. */
 const SPACER_VH = CHAPTERS.length * (TRAVEL_WEIGHT + STOP_WEIGHT) * 100 + 100;
@@ -22,6 +23,7 @@ export function Overlay() {
   const inMall = useTour((s) => s.place === 'mall');
   const dispatch = useTour((s) => s.dispatch);
   const streetWanted = useTour((s) => s.streetWanted);
+  const mallWanted = useTour((s) => s.mallWanted);
   const streetLoading = useTour((s) => s.mode === 'descending' && s.places.street === undefined);
   // Re-render when the walk is withdrawn; canWalk() reads it from the store.
   useTour((s) => s.streetFailed);
@@ -93,6 +95,13 @@ export function Overlay() {
         <PlaceErrorBoundary place="street">
           <Suspense fallback={null}>
             <WalkHud />
+          </Suspense>
+        </PlaceErrorBoundary>
+      )}
+      {mallWanted && (
+        <PlaceErrorBoundary place="mall">
+          <Suspense fallback={null}>
+            <FloorPanel />
           </Suspense>
         </PlaceErrorBoundary>
       )}

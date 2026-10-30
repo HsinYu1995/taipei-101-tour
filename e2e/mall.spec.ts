@@ -1,15 +1,18 @@
 import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
-import { MALL_ENTRY } from '../src/mall/layout';
+import { buildFloor, MALL_ENTRY } from '../src/mall/layout';
 import { FLOOR_IDS, type FloorId, type MallTenants } from '../src/mall/types';
 import type { P } from '../src/street/types';
 import { OUTSIDE_ENTRANCE } from '../src/street/api';
 import { EYE_HEIGHT } from '../src/walk/api';
+import { CHAPTERS } from '../src/tour/chapters';
 import type { Vec3 } from '../src/tour/types';
 import {
   dragAcrossCenter,
   enterMall,
   enterStreet,
+  expectNearPose,
+  expectPageScrolls,
   getTour,
   goToFloor,
   mallPlace,
@@ -17,6 +20,7 @@ import {
   nextFrames,
   openTour,
   place,
+  stopCenter,
   stickPush,
   touchDrag,
   visitor,
@@ -275,4 +279,88 @@ test('a failed mall download returns to the street and withdraws the mall', asyn
   await page.waitForTimeout(3000);
   await page.keyboard.up('w');
   expect(await whereNow(page)).toBe('walking street');
+});
+
+/** Taps a floor button and waits until the change has ended on that floor. */
+async function pressFloor(page: Page, floor: FloorId) {
+  await page.getByTestId(`floor-${floor}`).click();
+  await expect
+    .poll(() => page.evaluate(() => {
+      const m = window.__tour!.probes.mall!;
+      return `${m.floor()} ${m.changing()}`;
+    }), { timeout: 20_000 })
+    .toBe(`${floor} false`);
+}
+
+test('the floor panel changes floors and marks the current one', async ({ page, isMobile }) => {
+  test.setTimeout(120_000);
+  await enterMall(page);
+  for (const floor of ['3F', 'B1'] as const) {
+    await pressFloor(page, floor);
+    const lobby = buildFloor(floor, tenants.floors[floor]).lobby;
+    const v = await mallVisitor(page);
+    expect(Math.hypot(v.x - lobby.x, v.z - lobby.z)).toBeLessThan(0.1);
+    await expect(page.getByTestId(`floor-${floor}`)).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('floor-1F')).toHaveAttribute('aria-pressed', 'false');
+  }
+  if (!isMobile) return;
+  // On a phone the panel leaves the thumbstick and the back button clear: a covered button fails the click.
+  const panel = (await page.getByTestId('floor-panel').boundingBox())!;
+  const stick = (await page.getByTestId('street-stick').boundingBox())!;
+  const apart = panel.x >= stick.x + stick.width || stick.x >= panel.x + panel.width
+    || panel.y >= stick.y + stick.height || stick.y >= panel.y + panel.height;
+  expect(apart).toBe(true);
+  await page.getByTestId('back-to-street-button').click();
+  await expect.poll(() => whereNow(page), { timeout: 15_000 }).toBe('walking street');
+});
+
+test('the lift is only on 5F', async ({ page }) => {
+  test.setTimeout(120_000);
+  await enterMall(page);
+  const lift = page.getByTestId('floor-lift');
+  await expect(page.getByTestId('floor-1F')).toHaveAttribute('aria-pressed', 'true');
+  await expect(lift).toHaveCount(0);
+  await pressFloor(page, 'B1');
+  await expect(lift).toHaveCount(0);
+  // Sampled every frame: the lift never shows while the floor change is under way, even once 5F is in the black.
+  await page.evaluate(() => {
+    const w = window as unknown as { __liftEarly: boolean; __liftRaf: number };
+    w.__liftEarly = false;
+    const sample = () => {
+      if (window.__tour!.probes.mall!.changing() && document.querySelector('[data-testid="floor-lift"]')) w.__liftEarly = true;
+      w.__liftRaf = requestAnimationFrame(sample);
+    };
+    sample();
+  });
+  await pressFloor(page, '5F');
+  await expect(lift).toBeVisible();
+  const early = await page.evaluate(() => {
+    const w = window as unknown as { __liftEarly: boolean; __liftRaf: number };
+    cancelAnimationFrame(w.__liftRaf);
+    return w.__liftEarly;
+  });
+  expect(early).toBe(false);
+});
+
+test("the lift hands over to the damper chapter's stop in tour mode", async ({ page, isMobile }) => {
+  test.setTimeout(120_000);
+  await enterMall(page);
+  await pressFloor(page, '5F');
+  await page.getByTestId('floor-lift').click();
+  await expect(page.getByTestId('walk-fade')).toBeVisible();
+  await waitMode(page, 'tour', 20_000);
+  const s = await getTour(page);
+  expect(s.segment).toMatchObject({ kind: 'stop', chapterIndex: 2 });
+  await expect(page.getByTestId('floor-panel')).toHaveCount(0);
+  await expect.poll(async () => {
+    try {
+      expectNearPose((await getTour(page)).camera, CHAPTERS[2].stop);
+      return true;
+    } catch {
+      return false;
+    }
+  }, { timeout: 15_000 }).toBe(true);
+  const at = await page.evaluate(() => window.scrollY / (document.documentElement.scrollHeight - window.innerHeight));
+  expect(Math.abs(at - stopCenter(2))).toBeLessThan(0.01);
+  await expectPageScrolls(page, isMobile);
 });
