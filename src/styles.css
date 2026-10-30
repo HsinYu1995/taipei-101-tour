@@ -266,3 +266,26 @@ body {
   outline: 3px solid var(--ink);
   outline-offset: 2px;
 }
+
+/*
+ * Short viewports (a phone on its side): too short for the column under the top buttons, so the floors go two
+ * abreast, read like a lift's buttons, with the exits across the bottom.
+ */
+@media (max-height: 520px) {
+  .floor-panel {
+    top: 76px;
+    transform: none;
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 4px 6px;
+  }
+
+  .floor-panel button {
+    min-height: 40px;
+  }
+
+  .floor-panel .floor-exit {
+    grid-column: 1 / -1;
+    margin-top: 2px;
+  }
+}

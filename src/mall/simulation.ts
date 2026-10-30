@@ -129,9 +129,11 @@ export class MallSimulation {
 
   /**
    * Changes to `floor`'s lobby over CHANGE_S. The fade rises from where it is, so a press mid-change never flashes
-   * clear: before black it only retargets, after it the view darkens again.
+   * clear: before black it only retargets, after it the view darkens again. The floor the visitor is already
+   * standing on, with no change under way, is no change at all.
    */
   goTo(floor: FloorId) {
+    if (!this.change && floor === this.current) return;
     this.change = { to: floor, fade: this.fade(), rising: true };
   }
 

@@ -295,6 +295,14 @@ async function pressFloor(page: Page, floor: FloorId) {
 test('the floor panel changes floors and marks the current one', async ({ page, isMobile }) => {
   test.setTimeout(120_000);
   await enterMall(page);
+  // The floor the visitor is on does nothing: no fade, and no snap back to the lobby.
+  const before = await mallVisitor(page);
+  await page.getByTestId('floor-1F').click();
+  for (let i = 0; i < 3; i++) {
+    await page.waitForTimeout(150);
+    expect(await page.evaluate(() => window.__tour!.probes.mall!.changing())).toBe(false);
+  }
+  expect(await mallVisitor(page)).toEqual(before);
   for (const floor of ['3F', 'B1'] as const) {
     await pressFloor(page, floor);
     const lobby = buildFloor(floor, tenants.floors[floor]).lobby;
@@ -363,4 +371,30 @@ test("the lift hands over to the damper chapter's stop in tour mode", async ({ p
   const at = await page.evaluate(() => window.scrollY / (document.documentElement.scrollHeight - window.innerHeight));
   expect(Math.abs(at - stopCenter(2))).toBeLessThan(0.01);
   await expectPageScrolls(page, isMobile);
+});
+
+test.describe('a phone on its side', () => {
+  test.use({ viewport: { width: 844, height: 390 } });
+  test.skip(({ isMobile }) => !isMobile, 'the thumbstick and the short layout are for touch phones');
+
+  test('the floor panel leaves the back button and the thumbstick clear', async ({ page }) => {
+    test.setTimeout(120_000);
+    await enterMall(page);
+    await pressFloor(page, '5F');
+    const ids = ['back-to-street-button', 'street-stick', ...FLOOR_IDS.map((f) => `floor-${f}`), 'floor-lift'];
+    const boxes = await Promise.all(ids.map(async (id) => ({ id, box: (await page.getByTestId(id).boundingBox())! })));
+    const { width, height } = page.viewportSize()!;
+    for (const [i, a] of boxes.entries()) {
+      const { x, y, width: w, height: h } = a.box;
+      expect(x >= 0 && y >= 0 && x + w <= width && y + h <= height, `${a.id} on screen`).toBe(true);
+      for (const b of boxes.slice(i + 1)) {
+        const apart = x >= b.box.x + b.box.width || b.box.x >= x + w || y >= b.box.y + b.box.height || b.box.y >= y + h;
+        expect(apart, `${a.id} and ${b.id}`).toBe(true);
+      }
+    }
+    // A trial click runs every actionability check, including that nothing else takes the tap.
+    for (const id of ids.filter((id) => id !== 'street-stick')) await page.getByTestId(id).click({ trial: true });
+    await page.getByTestId('back-to-street-button').click();
+    await expect.poll(() => whereNow(page), { timeout: 15_000 }).toBe('walking street');
+  });
 });

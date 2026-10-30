@@ -8,9 +8,9 @@ import { FLOOR_IDS, type FloorId } from './types';
 const BUTTONS = [...FLOOR_IDS].reverse();
 
 /** Ways out of the mall from the panel, each offered on its floor once a floor change has ended. */
-const EXITS: readonly { floor: FloorId; label: string; to: PlaceId | 'damper' }[] = [
+const EXITS: readonly { id: string; floor: FloorId; label: string; to: PlaceId | 'damper' }[] = [
   // The trip up starts at the 5F ticket hall, as in the building.
-  { floor: '5F', label: en.ui.lift, to: 'damper' },
+  { id: 'lift', floor: '5F', label: en.ui.lift, to: 'damper' },
 ];
 
 /** The floor panel: the only way between the mall's floors, and from 5F the lift up the tower. */
@@ -29,9 +29,9 @@ export function FloorPanel() {
       {!changing &&
         EXITS.filter((e) => e.floor === floor).map((e) => (
           <button
-            key={e.to}
+            key={e.id}
             className="floor-exit"
-            data-testid="floor-lift"
+            data-testid={`floor-${e.id}`}
             onClick={() => useTour.getState().dispatch({ type: 'cross', to: e.to })}
           >
             {e.label}

@@ -260,6 +260,19 @@ describe('mall simulation', () => {
     expect(sim.visitor()).toEqual(sim.plans['2F'].lobby);
   });
 
+  test('pressing the floor the visitor is on does nothing', () => {
+    const sim = on('3F');
+    const [x, z] = farthest(sim, sim.plans['3F'].lobby);
+    sim.place(x, z, 0.3, 0);
+    const v = sim.visitor();
+    sim.goTo('3F');
+    expect(sim.changing()).toBe(false);
+    run(sim, 1);
+    expect(sim.fade()).toBe(0);
+    expect(sim.floor()).toBe('3F');
+    expect(sim.visitor()).toEqual(v);
+  });
+
   test('placing the visitor cancels a floor change', () => {
     const sim = mall();
     sim.goTo('4F');
