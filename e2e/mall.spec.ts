@@ -87,6 +87,29 @@ async function hurry(page: Page, ms: number) {
   await nextFrames(page);
 }
 
+/**
+ * Starts sampling, every animation frame, where the walk is and how many shader programs the renderer had compiled
+ * as that frame began; the returned function stops and reads the samples.
+ */
+async function watchPrograms(page: Page) {
+  await page.evaluate(() => {
+    const w = window as unknown as { __programs: { where: string; programs: number }[]; __programsRaf: number };
+    w.__programs = [];
+    const sample = () => {
+      const { mode, place } = window.__tour!.getState();
+      w.__programs.push({ where: `${mode} ${place}`, programs: window.__tour!.probes.renderStats!().programs });
+      w.__programsRaf = requestAnimationFrame(sample);
+    };
+    sample();
+  });
+  return () =>
+    page.evaluate(() => {
+      const w = window as unknown as { __programs: { where: string; programs: number }[]; __programsRaf: number };
+      cancelAnimationFrame(w.__programsRaf);
+      return w.__programs;
+    });
+}
+
 test.beforeEach(async ({ page }) => openTour(page));
 
 test('walking into the south entrance fades into the 1F hall', async ({ page }) => {
@@ -96,6 +119,7 @@ test('walking into the south entrance fades into the 1F hall', async ({ page }) 
   await enterStreet(page);
   expect(urls.filter((u) => MALL.test(u))).toEqual([]);
   await place(page, { x: 0, z: 46, yaw: 0, pitch: 0 });
+  const programs = await watchPrograms(page);
   const fade = page.getByTestId('walk-fade');
   await page.keyboard.down('w');
   await expect(fade).toBeVisible({ timeout: 15_000 });
@@ -106,6 +130,12 @@ test('walking into the south entrance fades into the 1F hall', async ({ page }) 
   const v = await mallVisitor(page);
   expect(Math.hypot(v.x - MALL_ENTRY.x, v.z - MALL_ENTRY.z)).toBeLessThan(1);
   await expect(fade).toBeHidden();
+  // The mall's shaders were all compiled in the crossing's black: none on the frames the fade-in shows.
+  await nextFrames(page);
+  const samples = await programs();
+  const first = samples.find((s) => s.where === 'walking mall')!;
+  expect(first).toBeDefined();
+  expect(samples.at(-1)!.programs).toBe(first.programs);
   const { mid } = await nearestShopfront(page, '1F');
   const y = await eyeY(page);
   const hit = await castRay(page, [v.x, y, v.z], [mid[0] - v.x, 0, mid[1] - v.z]);

@@ -46,7 +46,8 @@ export default function MallScene() {
   const base = useMemo(() => groundAt(field)(...DOOR), [field]);
   const sim = useMemo(() => new MallSimulation(tenants, base), [tenants, base]);
   const inside = useTour((s) => phaseOf(s, 'mall') !== 'paused');
-  const gl = useThree((s) => s.gl);
+  const { gl, scene, camera } = useThree();
+  const mall = useRef<Group>(null);
   const floors = useRef<Partial<Record<FloorId, Group>>>({});
   const signs = useMemo(() => new MallSigns(sim.plans, base, (f) => floors.current[f]!, gl), [sim, base, gl]);
   useEffect(() => () => signs.show([]), [signs]);
@@ -71,15 +72,16 @@ export default function MallScene() {
         clearInput();
       },
       eye: () => sim.eye(),
-      // The street's south door is the only way in, and it opens on MALL_ENTRY. The signs in view are drawn in the
-      // crossing's black.
-      arrive: () => {
+      // The street's south door is the only way in, and it opens on MALL_ENTRY. Still in the crossing's black, the
+      // signs in view are drawn and every mall material compiled, so the fade-in never stalls on either.
+      arrive: async () => {
         sim.reset();
         clearInput();
         signs.show(visibleFloors(sim.floor()));
+        await gl.compileAsync(mall.current!, camera, scene);
       },
     }),
-    [sim, signs],
+    [sim, signs, gl, camera, scene],
   );
 
   useEffect(() => {
@@ -147,7 +149,7 @@ export default function MallScene() {
     <>
       <ambientLight ref={ambient} intensity={0} />
       <directionalLight ref={key} intensity={0} position={KEY_FROM} />
-      <group visible={inside}>
+      <group ref={mall} visible={inside}>
         {FLOOR_IDS.map((f) => (
           <group key={f} ref={(g) => void (floors.current[f] = g ?? undefined)}>
             <Floor plan={sim.plans[f]} base={base} />

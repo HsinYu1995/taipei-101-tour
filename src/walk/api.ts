@@ -24,8 +24,11 @@ export interface PlaceApi {
   reset(): void;
   /** The visitor's eye pose, as the place's simulation last left it. */
   eye(): Pose;
-  /** Put the visitor at this place's door from `from` and clear held input. */
-  arrive(from: PlaceId): void;
+  /**
+   * Put the visitor at this place's door from `from` and clear held input. A place that has more to ready before it
+   * is seen (shaders to compile) returns a promise; the crossing holds black until it settles.
+   */
+  arrive(from: PlaceId): void | Promise<void>;
 }
 
 /** Each half of a crossing's fade: to black, then back from it. */

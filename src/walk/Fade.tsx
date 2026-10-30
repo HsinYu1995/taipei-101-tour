@@ -27,8 +27,12 @@ export function Fade() {
       return () => window.clearTimeout(timer);
     }
     if (stage !== 'black') return;
+    let live = true;
+    // Set while a place readies itself after arrive; the store changes every frame meanwhile.
+    let arriving = false;
     // Read where the crossing goes at hand-over time: a failed download retargets it to the street meanwhile.
     const handOver = () => {
+      if (!live || arriving) return;
       const { mode, place, crossingTo, places, dispatch } = useTour.getState();
       if (mode !== 'crossing' || crossingTo === null) return;
       if (crossingTo === 'damper') {
@@ -40,11 +44,23 @@ export function Fade() {
       }
       const next = places[crossingTo];
       if (!next) return;
-      next.arrive(place);
-      dispatch({ type: 'crossed' });
+      arriving = true;
+      // Still black until the place is ready to be seen (or failed to ready itself, which its first frame then
+      // makes up for); it crosses only if nothing retargeted it meanwhile.
+      void Promise.resolve(next.arrive(place)).catch((e) => console.warn(`${crossingTo} not readied:`, e)).then(() => {
+        arriving = false;
+        const now = useTour.getState();
+        if (!live || now.mode !== 'crossing') return;
+        if (now.crossingTo === crossingTo) now.dispatch({ type: 'crossed' });
+        else handOver();
+      });
     };
     handOver();
-    return useTour.subscribe(handOver);
+    const unsubscribe = useTour.subscribe(handOver);
+    return () => {
+      live = false;
+      unsubscribe();
+    };
   }, [stage]);
 
   // Hidden by visibility rather than display, so the opacity transition runs from the frame it is shown.

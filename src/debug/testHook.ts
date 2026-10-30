@@ -9,8 +9,11 @@ export type TourSnapshot = TourState & { camera: Pose; frame: number };
 /** Read-only views into the scene, registered by the components that own them. */
 type Probes = {
   groundAt?: (x: number, z: number) => number | null;
-  /** Draw calls and triangles of the last rendered frame. */
-  renderStats?: () => { calls: number; triangles: number };
+  /**
+   * Draw calls and triangles of the last rendered frame, and how many shader programs had been compiled by then:
+   * a frame whose drawing compiles shaders shows in the next frame's count.
+   */
+  renderStats?: () => { calls: number; triangles: number; programs: number };
   /**
    * First visible scene hit along a ray; `name` is the nearest non-empty name up the hit object's parents and
    * `emissive` the hit material's emitted luminance.
