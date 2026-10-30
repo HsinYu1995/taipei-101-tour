@@ -5,7 +5,13 @@ export type TenantCategory =
   | 'watch' | 'jewellery' | 'boutique' | 'beauty' | 'fashion' | 'shoes' | 'life'
   | 'culture' | 'service' | 'souvenir' | 'food-court' | 'restaurant' | 'cafe';
 
-export interface Tenant { name: string; floor: FloorId; category: TenantCategory }
+export interface Tenant {
+  name: string;
+  /** What its shop sign says: the official Latin name, or the Chinese name of a shop that has none. */
+  sign: string;
+  floor: FloorId;
+  category: TenantCategory;
+}
 
 export interface MallTenants {
   /** ISO date the feed was read. */

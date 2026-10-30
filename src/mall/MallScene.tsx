@@ -11,6 +11,7 @@ import { useMallTenants } from './data';
 import { Floor } from './FloorScene';
 import { CHARACTER, FLOOR_Y, visibleFloors } from './floors';
 import { MallPeople } from './MallPeople';
+import { Signs } from './SignScene';
 import { MallSimulation } from './simulation';
 import { FLOOR_IDS, type FloorId } from './types';
 
@@ -126,6 +127,7 @@ export default function MallScene() {
         {FLOOR_IDS.map((f) => (
           <group key={f} ref={(g) => void (floors.current[f] = g ?? undefined)}>
             <Floor plan={sim.plans[f]} base={base} />
+            <Signs plan={sim.plans[f]} base={base} />
             <MallPeople plan={sim.plans[f]} crowd={sim.people(f)} y={base + FLOOR_Y[f]} />
           </group>
         ))}

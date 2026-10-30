@@ -4,6 +4,7 @@ import { MALL_ENTRY } from '../src/mall/layout';
 import { FLOOR_IDS, type FloorId, type MallTenants } from '../src/mall/types';
 import type { P } from '../src/street/types';
 import { OUTSIDE_ENTRANCE } from '../src/street/api';
+import { EYE_HEIGHT } from '../src/walk/api';
 import type { Vec3 } from '../src/tour/types';
 import {
   dragAcrossCenter,
@@ -104,6 +105,18 @@ test('walking into the south entrance fades into the 1F hall', async ({ page }) 
   const y = await eyeY(page);
   const hit = await castRay(page, [v.x, y, v.z], [mid[0] - v.x, 0, mid[1] - v.z]);
   expect(hit?.name).toBe('mall-shopfronts-1F');
+});
+
+test('shopfronts carry their names', async ({ page }) => {
+  test.setTimeout(90_000);
+  await enterMall(page);
+  const v = await mallVisitor(page);
+  const { mid } = await nearestShopfront(page, '1F');
+  const y = await eyeY(page);
+  // 1F's floor lies an eye height under the eye; the sign sits over the window, 3.2 m up.
+  const sign = y - EYE_HEIGHT + 3.2;
+  const hit = await castRay(page, [v.x, y, v.z], [mid[0] - v.x, sign - y, mid[1] - v.z]);
+  expect(hit?.name).toBe('mall-signs-1F');
 });
 
 test('leaving the mall returns to the street outside the entrance, facing out', async ({ page, isMobile }) => {

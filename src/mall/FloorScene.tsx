@@ -19,12 +19,12 @@ type V3 = [number, number, number];
 
 /** The floor slab under each upper floor, seen as the band round the atrium's edge. */
 const SLAB = 0.5;
-/** Shop windows from the floor up to the sign band, which Task 6's signs sit in front of. */
-const WINDOW_TOP = 3;
-const SIGN_BAND_TOP = 3.8;
+/** Shop windows from the floor up to the sign band, which the shop signs (SignScene) sit in front of. */
+export const WINDOW_TOP = 3;
+export const SIGN_BAND_TOP = 3.8;
 /** How far the windows and sign bands stand in front of the wall, so they never fight it for depth. */
 const WINDOW_PROUD = 0.04;
-const BAND_PROUD = 0.07;
+export const BAND_PROUD = 0.07;
 const BALUSTRADE = { panel: 1, rail: 1.1 };
 /** Escalators: a lane's truss, its side panels, and the flat landing that meets each gallery's rim. */
 const ESCALATOR = { half: 0.55, truss: 0.9, side: 1, landing: 1.4 };
@@ -152,7 +152,7 @@ function inside([x, z]: P, ring: readonly P[]) {
 const mix = (a: string, b: string, t: number) => new Color(a).lerp(new Color(b), t);
 
 /** +1 when the ring's inside lies left of each edge, reading (x, z) as plane coordinates (x, y); else -1. */
-const turning = (ring: readonly P[]) =>
+export const turning = (ring: readonly P[]) =>
   Math.sign(ring.reduce((s, [ax, az], i) => {
     const [bx, bz] = ring[(i + 1) % ring.length];
     return s + ax * bz - bx * az;

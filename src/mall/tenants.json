@@ -4,406 +4,487 @@
     "B1": [
       {
         "name": "Läderach",
+        "sign": "Läderach",
         "floor": "B1",
         "category": "souvenir"
       },
       {
         "name": "TISSOT",
+        "sign": "TISSOT",
         "floor": "B1",
         "category": "watch"
       },
       {
         "name": "Aesop",
+        "sign": "Aesop",
         "floor": "B1",
         "category": "beauty"
       },
       {
         "name": "Atelier Cologne",
+        "sign": "Atelier Cologne",
         "floor": "B1",
         "category": "beauty"
       },
       {
         "name": "CREED",
+        "sign": "CREED",
         "floor": "B1",
         "category": "beauty"
       },
       {
         "name": "ROOTON",
+        "sign": "ROOTON",
         "floor": "B1",
         "category": "beauty"
       },
       {
         "name": "TTM",
+        "sign": "TTM",
         "floor": "B1",
         "category": "beauty"
       },
       {
         "name": "ALLSAINTS",
+        "sign": "ALLSAINTS",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "Arc'teryx",
+        "sign": "Arc'teryx",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "Brooks Brothers",
+        "sign": "Brooks Brothers",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "Calvin Klein",
+        "sign": "Calvin Klein",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "LULULEMON",
+        "sign": "LULULEMON",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "Maje",
+        "sign": "Maje",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "Massimo Dutti",
+        "sign": "Massimo Dutti",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "MLB Korea",
+        "sign": "MLB Korea",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "NB GREY",
+        "sign": "NB GREY",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "Nike",
+        "sign": "Nike",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "Onitsuka Tiger",
+        "sign": "Onitsuka Tiger",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "PORTER INTERNATIONAL",
+        "sign": "PORTER INTERNATIONAL",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "THE NORTH FACE",
+        "sign": "THE NORTH FACE",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "TOMMY HILFIGER",
+        "sign": "TOMMY HILFIGER",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "UGG",
+        "sign": "UGG",
         "floor": "B1",
         "category": "fashion"
       },
       {
         "name": "agete",
+        "sign": "agete",
         "floor": "B1",
         "category": "jewellery"
       },
       {
         "name": "CHARLES & KEITH",
+        "sign": "CHARLES & KEITH",
         "floor": "B1",
         "category": "shoes"
       },
       {
         "name": "MIRROR",
+        "sign": "MIRROR",
         "floor": "B1",
         "category": "shoes"
       },
       {
         "name": "PANDORA",
+        "sign": "PANDORA",
         "floor": "B1",
         "category": "jewellery"
       },
       {
         "name": "vacanza",
+        "sign": "vacanza",
         "floor": "B1",
         "category": "shoes"
       },
       {
         "name": "VIVAIA",
+        "sign": "VIVAIA",
         "floor": "B1",
         "category": "shoes"
       },
       {
         "name": "Devialet",
+        "sign": "Devialet",
         "floor": "B1",
         "category": "life"
       },
       {
         "name": "FamilyMart",
+        "sign": "FamilyMart",
         "floor": "B1",
         "category": "life"
       },
       {
         "name": "LAMY",
+        "sign": "LAMY",
         "floor": "B1",
         "category": "life"
       },
       {
         "name": "Sony",
+        "sign": "Sony",
         "floor": "B1",
         "category": "life"
       },
       {
         "name": "31 Ice Cream Baskin Robbins",
+        "sign": "31 Ice Cream Baskin Robbins",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Dairy Queen",
+        "sign": "Dairy Queen",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Niu Xi",
+        "sign": "牛喜",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Three Tong Han Guozi",
+        "sign": "三統漢菓子",
         "floor": "B1",
         "category": "souvenir"
       },
       {
         "name": "Adashi Five Star Shop",
+        "sign": "阿達師五星麵舖",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Aguan Hotpot",
+        "sign": "阿官火鍋",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Bashi Roast Meat Mini",
+        "sign": "Bashi Roast Meat Mini",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "bluebird travel",
+        "sign": "青鳥旅行",
         "floor": "B1",
         "category": "souvenir"
       },
       {
         "name": "COOKIE886",
+        "sign": "COOKIE886",
         "floor": "B1",
         "category": "souvenir"
       },
       {
         "name": "CURISTA COFFEE",
+        "sign": "CURISTA COFFEE",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Din Tai Fung",
+        "sign": "Din Tai Fung",
         "floor": "B1",
         "category": "restaurant"
       },
       {
         "name": "Express Jerky",
+        "sign": "快車肉乾",
         "floor": "B1",
         "category": "souvenir"
       },
       {
         "name": "Five Lights Award",
+        "sign": "五燈獎",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Gift Shop RIVON",
+        "sign": "Gift Shop RIVON",
         "floor": "B1",
         "category": "souvenir"
       },
       {
         "name": "Han He Ting",
+        "sign": "韓鶴亭",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Hsin Tung Yang",
+        "sign": "Hsin Tung Yang",
         "floor": "B1",
         "category": "souvenir"
       },
       {
         "name": "Hsu Yuei Shan",
+        "sign": "雪嶽山韓式料理",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Inherited by CHENG JI",
+        "sign": "Inherited by CHENG JI",
         "floor": "B1",
         "category": "cafe"
       },
       {
         "name": "Juice Bear",
+        "sign": "Juice Bear",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Kaidon",
+        "sign": "開丼",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Karen Teppanyaki",
+        "sign": "凱林鐵板燒",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "KAVALAN",
+        "sign": "KAVALAN",
         "floor": "B1",
         "category": "souvenir"
       },
       {
         "name": "Kuo Yuan Ye",
+        "sign": "Kuo Yuan Ye",
         "floor": "B1",
         "category": "souvenir"
       },
       {
         "name": "Lao Sichuan Xiangyi Hot Pot",
+        "sign": "老四川 饗壹鍋",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Lin Congming Clay Pot Fish Head",
+        "sign": "林聰明沙鍋魚頭",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Master Jun Beef Noodles",
+        "sign": "竣師父牛肉麵",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "McDonald's",
+        "sign": "McDonald's",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Meili Hong Kong Style Tea Stall Company",
+        "sign": "美利港式茶檔公司",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Mia C'bon Market",
+        "sign": "Mia C'bon Market",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Mister Donut",
+        "sign": "Mister Donut",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Moo",
+        "sign": "Moo",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Naan Stop",
+        "sign": "Naan Stop",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Nagahama Fish House",
+        "sign": "長浜魚屋",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Pepper Lunch",
+        "sign": "Pepper Lunch",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "POPEYES",
+        "sign": "POPEYES",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Ruiji Sea Chicken Rice",
+        "sign": "瑞記海雞飯",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Saint Paul Baking Garden",
+        "sign": "聖保羅烘焙花園",
         "floor": "B1",
         "category": "souvenir"
       },
       {
         "name": "Shin Yeh",
+        "sign": "興葉蚵仔煎",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Starbucks",
+        "sign": "Starbucks",
         "floor": "B1",
         "category": "cafe"
       },
       {
         "name": "SUGAR & SPICE",
+        "sign": "SUGAR & SPICE",
         "floor": "B1",
         "category": "souvenir"
       },
       {
         "name": "SunnyHills",
+        "sign": "SunnyHills",
         "floor": "B1",
         "category": "souvenir"
       },
       {
         "name": "TAO TAO TEA",
+        "sign": "TAO TAO TEA",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Turtle Notes",
+        "sign": "龜記",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "VEGE CREEK",
+        "sign": "VEGE CREEK",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Vegetable Square",
+        "sign": "蔬坊",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Xiangyang tea",
+        "sign": "嶢陽茶行",
         "floor": "B1",
         "category": "souvenir"
       },
       {
         "name": "Xiaonanmen",
+        "sign": "小南門",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Yangxin Tea House Mini",
+        "sign": "Yangxin Tea House Mini",
         "floor": "B1",
         "category": "food-court"
       },
       {
         "name": "Zhong qing",
+        "sign": "忠青商行",
         "floor": "B1",
         "category": "food-court"
       }
@@ -411,136 +492,163 @@
     "1F": [
       {
         "name": "Taipei Fubon Bank",
+        "sign": "Taipei Fubon Bank",
         "floor": "1F",
         "category": "service"
       },
       {
         "name": "BREITLING",
+        "sign": "BREITLING",
         "floor": "1F",
         "category": "watch"
       },
       {
         "name": "Grand Seiko",
+        "sign": "Grand Seiko",
         "floor": "1F",
         "category": "watch"
       },
       {
         "name": "IWC",
+        "sign": "IWC",
         "floor": "1F",
         "category": "watch"
       },
       {
         "name": "LONGINES",
+        "sign": "LONGINES",
         "floor": "1F",
         "category": "watch"
       },
       {
         "name": "OMEGA",
+        "sign": "OMEGA",
         "floor": "1F",
         "category": "watch"
       },
       {
         "name": "PANERAI",
+        "sign": "PANERAI",
         "floor": "1F",
         "category": "watch"
       },
       {
         "name": "RADO",
+        "sign": "RADO",
         "floor": "1F",
         "category": "watch"
       },
       {
         "name": "Rolex",
+        "sign": "Rolex",
         "floor": "1F",
         "category": "watch"
       },
       {
         "name": "TAG Heuer",
+        "sign": "TAG Heuer",
         "floor": "1F",
         "category": "watch"
       },
       {
         "name": "Tudor",
+        "sign": "Tudor",
         "floor": "1F",
         "category": "watch"
       },
       {
         "name": "BOSS",
+        "sign": "BOSS",
         "floor": "1F",
         "category": "boutique"
       },
       {
         "name": "LONGCHAMP",
+        "sign": "LONGCHAMP",
         "floor": "1F",
         "category": "boutique"
       },
       {
         "name": "MONTBLANC",
+        "sign": "MONTBLANC",
         "floor": "1F",
         "category": "boutique"
       },
       {
         "name": "POLO RALPH LAUREN",
+        "sign": "POLO RALPH LAUREN",
         "floor": "1F",
         "category": "boutique"
       },
       {
         "name": "Chanel Beauty",
+        "sign": "Chanel Beauty",
         "floor": "1F",
         "category": "beauty"
       },
       {
         "name": "Dior Beauty",
+        "sign": "Dior Beauty",
         "floor": "1F",
         "category": "beauty"
       },
       {
         "name": "Diptyque",
+        "sign": "Diptyque",
         "floor": "1F",
         "category": "beauty"
       },
       {
         "name": "JO MALONE LONDON",
+        "sign": "JO MALONE LONDON",
         "floor": "1F",
         "category": "beauty"
       },
       {
         "name": "SISLEY",
+        "sign": "SISLEY",
         "floor": "1F",
         "category": "beauty"
       },
       {
         "name": "Yves Saint Laurent Beauté",
+        "sign": "Yves Saint Laurent Beauté",
         "floor": "1F",
         "category": "beauty"
       },
       {
         "name": "ZARA",
+        "sign": "ZARA",
         "floor": "1F",
         "category": "fashion"
       },
       {
         "name": "APM MONACO",
+        "sign": "APM MONACO",
         "floor": "1F",
         "category": "shoes"
       },
       {
         "name": "SWAROVSKI",
+        "sign": "SWAROVSKI",
         "floor": "1F",
         "category": "shoes"
       },
       {
         "name": "SWATCH",
+        "sign": "SWATCH",
         "floor": "1F",
         "category": "watch"
       },
       {
         "name": "TUMI",
+        "sign": "TUMI",
         "floor": "1F",
         "category": "shoes"
       },
       {
         "name": "Apple",
+        "sign": "Apple",
         "floor": "1F",
         "category": "life"
       }
@@ -548,126 +656,151 @@
     "2F": [
       {
         "name": "Buccellati",
+        "sign": "Buccellati",
         "floor": "2F",
         "category": "jewellery"
       },
       {
         "name": "CHANEL Watches & Fine Jewelry",
+        "sign": "CHANEL Watches & Fine Jewelry",
         "floor": "2F",
         "category": "watch"
       },
       {
         "name": "Chow Tai Fook",
+        "sign": "Chow Tai Fook",
         "floor": "2F",
         "category": "jewellery"
       },
       {
         "name": "FRED",
+        "sign": "FRED",
         "floor": "2F",
         "category": "jewellery"
       },
       {
         "name": "HARRY WINSTON",
+        "sign": "HARRY WINSTON",
         "floor": "2F",
         "category": "jewellery"
       },
       {
         "name": "HUBLOT",
+        "sign": "HUBLOT",
         "floor": "2F",
         "category": "watch"
       },
       {
         "name": "JAEGER-LECOULTRE",
+        "sign": "JAEGER-LECOULTRE",
         "floor": "2F",
         "category": "watch"
       },
       {
         "name": "MIKIMOTO",
+        "sign": "MIKIMOTO",
         "floor": "2F",
         "category": "jewellery"
       },
       {
         "name": "PATEK PHILIPPE",
+        "sign": "PATEK PHILIPPE",
         "floor": "2F",
         "category": "watch"
       },
       {
         "name": "Sincere Haute Horlogerie",
+        "sign": "Sincere Haute Horlogerie",
         "floor": "2F",
         "category": "watch"
       },
       {
         "name": "TIFFANY & CO.",
+        "sign": "TIFFANY & CO.",
         "floor": "2F",
         "category": "jewellery"
       },
       {
         "name": "VACHERON CONSTANTIN",
+        "sign": "VACHERON CONSTANTIN",
         "floor": "2F",
         "category": "watch"
       },
       {
         "name": "BAO BAO ISSEY MIYAKE",
+        "sign": "BAO BAO ISSEY MIYAKE",
         "floor": "2F",
         "category": "boutique"
       },
       {
         "name": "COACH",
+        "sign": "COACH",
         "floor": "2F",
         "category": "boutique"
       },
       {
         "name": "COS",
+        "sign": "COS",
         "floor": "2F",
         "category": "boutique"
       },
       {
         "name": "HOMME PLISSÉ ISSEY MIYAKE",
+        "sign": "HOMME PLISSÉ ISSEY MIYAKE",
         "floor": "2F",
         "category": "boutique"
       },
       {
         "name": "ISSEY MIYAKE",
+        "sign": "ISSEY MIYAKE",
         "floor": "2F",
         "category": "boutique"
       },
       {
         "name": "MICHAEL KORS",
+        "sign": "MICHAEL KORS",
         "floor": "2F",
         "category": "boutique"
       },
       {
         "name": "PLEATS PLEASE ISSEY MIYAKE",
+        "sign": "PLEATS PLEASE ISSEY MIYAKE",
         "floor": "2F",
         "category": "boutique"
       },
       {
         "name": "Tory Burch",
+        "sign": "Tory Burch",
         "floor": "2F",
         "category": "boutique"
       },
       {
         "name": "ZARA",
+        "sign": "ZARA",
         "floor": "2F",
         "category": "fashion"
       },
       {
         "name": "2020EYEhaus",
+        "sign": "2020EYEhaus",
         "floor": "2F",
         "category": "shoes"
       },
       {
         "name": "HOGAN",
+        "sign": "HOGAN",
         "floor": "2F",
         "category": "shoes"
       },
       {
         "name": "Bang & Olufsen",
+        "sign": "Bang & Olufsen",
         "floor": "2F",
         "category": "life"
       },
       {
         "name": "FIWFIW high-quality repair textile",
+        "sign": "FIWFIW high-quality repair textile",
         "floor": "2F",
         "category": "life"
       }
@@ -675,111 +808,133 @@
     "3F": [
       {
         "name": "A. Lange & Söhne",
+        "sign": "A. Lange & Söhne",
         "floor": "3F",
         "category": "watch"
       },
       {
         "name": "BLANCPAIN",
+        "sign": "BLANCPAIN",
         "floor": "3F",
         "category": "watch"
       },
       {
         "name": "BOUCHERON",
+        "sign": "BOUCHERON",
         "floor": "3F",
         "category": "jewellery"
       },
       {
         "name": "BREGUET",
+        "sign": "BREGUET",
         "floor": "3F",
         "category": "watch"
       },
       {
         "name": "Cartier",
+        "sign": "Cartier",
         "floor": "3F",
         "category": "jewellery"
       },
       {
         "name": "Chaumet",
+        "sign": "Chaumet",
         "floor": "3F",
         "category": "jewellery"
       },
       {
         "name": "CHOPARD",
+        "sign": "CHOPARD",
         "floor": "3F",
         "category": "jewellery"
       },
       {
         "name": "De Beers",
+        "sign": "De Beers",
         "floor": "3F",
         "category": "jewellery"
       },
       {
         "name": "Jadegia",
+        "sign": "Jadegia",
         "floor": "3F",
         "category": "watch"
       },
       {
         "name": "PIAGET",
+        "sign": "PIAGET",
         "floor": "3F",
         "category": "jewellery"
       },
       {
         "name": "Roger Dubuis",
+        "sign": "Roger Dubuis",
         "floor": "3F",
         "category": "watch"
       },
       {
         "name": "TIFFANY & CO.",
+        "sign": "TIFFANY & CO.",
         "floor": "3F",
         "category": "jewellery"
       },
       {
         "name": "Van Cleef & Arpels",
+        "sign": "Van Cleef & Arpels",
         "floor": "3F",
         "category": "jewellery"
       },
       {
         "name": "BALENCIAGA",
+        "sign": "BALENCIAGA",
         "floor": "3F",
         "category": "boutique"
       },
       {
         "name": "Berluti",
+        "sign": "Berluti",
         "floor": "3F",
         "category": "boutique"
       },
       {
         "name": "BOTTEGA VENETA",
+        "sign": "BOTTEGA VENETA",
         "floor": "3F",
         "category": "boutique"
       },
       {
         "name": "CELINE",
+        "sign": "CELINE",
         "floor": "3F",
         "category": "boutique"
       },
       {
         "name": "Ermenegildo Zegna",
+        "sign": "Ermenegildo Zegna",
         "floor": "3F",
         "category": "boutique"
       },
       {
         "name": "FENDI",
+        "sign": "FENDI",
         "floor": "3F",
         "category": "boutique"
       },
       {
         "name": "FERRAGAMO",
+        "sign": "FERRAGAMO",
         "floor": "3F",
         "category": "boutique"
       },
       {
         "name": "Loro Piana",
+        "sign": "Loro Piana",
         "floor": "3F",
         "category": "boutique"
       },
       {
         "name": "Moncler",
+        "sign": "Moncler",
         "floor": "3F",
         "category": "boutique"
       }
@@ -787,71 +942,85 @@
     "4F": [
       {
         "name": "BVLGARI",
+        "sign": "BVLGARI",
         "floor": "4F",
         "category": "jewellery"
       },
       {
         "name": "Cartier",
+        "sign": "Cartier",
         "floor": "4F",
         "category": "jewellery"
       },
       {
         "name": "BURBERRY",
+        "sign": "BURBERRY",
         "floor": "4F",
         "category": "boutique"
       },
       {
         "name": "Delvaux",
+        "sign": "Delvaux",
         "floor": "4F",
         "category": "boutique"
       },
       {
         "name": "Dior",
+        "sign": "Dior",
         "floor": "4F",
         "category": "boutique"
       },
       {
         "name": "GUCCI",
+        "sign": "GUCCI",
         "floor": "4F",
         "category": "boutique"
       },
       {
         "name": "Louis Vuitton",
+        "sign": "Louis Vuitton",
         "floor": "4F",
         "category": "boutique"
       },
       {
         "name": "SAINT LAURENT",
+        "sign": "SAINT LAURENT",
         "floor": "4F",
         "category": "boutique"
       },
       {
         "name": "The one at Taipei 101",
+        "sign": "The one at Taipei 101",
         "floor": "4F",
         "category": "culture"
       },
       {
         "name": "CHUYU",
+        "sign": "CHUYU",
         "floor": "4F",
         "category": "restaurant"
       },
       {
         "name": "Cova",
+        "sign": "Cova",
         "floor": "4F",
         "category": "cafe"
       },
       {
         "name": "LADURÉE",
+        "sign": "LADURÉE",
         "floor": "4F",
         "category": "cafe"
       },
       {
         "name": "SALT & STONE",
+        "sign": "SALT & STONE",
         "floor": "4F",
         "category": "restaurant"
       },
       {
         "name": "Shi Ling Shabu",
+        "sign": "Shi Ling Shabu",
         "floor": "4F",
         "category": "restaurant"
       }
@@ -859,31 +1028,37 @@
     "5F": [
       {
         "name": "ABC Cooking Studio",
+        "sign": "ABC Cooking Studio",
         "floor": "5F",
         "category": "service"
       },
       {
         "name": "Cartier",
+        "sign": "Cartier",
         "floor": "5F",
         "category": "jewellery"
       },
       {
         "name": "GUCCI",
+        "sign": "GUCCI",
         "floor": "5F",
         "category": "boutique"
       },
       {
         "name": "101 Memorial Wine",
+        "sign": "101紀念酒",
         "floor": "5F",
         "category": "souvenir"
       },
       {
         "name": "Fujin Tree Taiwanese Champagne",
+        "sign": "Fujin Tree Taiwanese Champagne",
         "floor": "5F",
         "category": "restaurant"
       },
       {
         "name": "Observatory Tickets",
+        "sign": "Observatory Tickets",
         "floor": "5F",
         "category": "service"
       }

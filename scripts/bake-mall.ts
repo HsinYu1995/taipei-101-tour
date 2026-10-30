@@ -4,9 +4,10 @@
  *
  *   npm run bake:mall
  *
- * Downloads the shop list of each floor and the restaurant list from ws.taipei-101.com.tw into .cache/mall
- * (once; delete the folder to read the feed again), cleans the names, maps the feed's categories to the
- * mall's, and writes src/mall/tenants.json. The snapshot date is the day the cached feed was read.
+ * Downloads the shop list of each floor and the restaurant list from ws.taipei-101.com.tw into .cache/mall,
+ * in English and in Chinese (once; delete the folder to read the feed again), cleans the names, maps the feed's
+ * categories to the mall's, signs each tenant, and writes src/mall/tenants.json. The snapshot date is the day
+ * the cached English feed was read.
  */
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -18,8 +19,13 @@ const CACHE = join(ROOT, '.cache', 'mall');
 const OUT = join(ROOT, 'src', 'mall', 'tenants.json');
 
 const API = 'https://ws.taipei-101.com.tw/api/v1';
-const shopsUrl = (floor: FloorId) => `${API}/shopping/floor/detail/brands?lang=en&floor=FLOOR_${floor}`;
-const FOOD_URL = `${API}/food/search?lang=en`;
+type Lang = 'en' | 'zh';
+const LANGS: readonly Lang[] = ['en', 'zh'];
+const shopsUrl = (floor: FloorId, lang: Lang) => `${API}/shopping/floor/detail/brands?lang=${lang}&floor=FLOOR_${floor}`;
+const foodUrl = (lang: Lang) => `${API}/food/search?lang=${lang}`;
+/** Cache file names; the English ones keep the names they had before the Chinese feed was read too. */
+const shopsFile = (floor: FloorId, lang: Lang) => (lang === 'en' ? `shop_${floor}.json` : `shop_${floor}_${lang}.json`);
+const foodFile = (lang: Lang) => (lang === 'en' ? 'food.json' : `food_${lang}.json`);
 
 const SHOP_CATEGORIES: Record<string, TenantCategory> = {
   watch: 'watch',
@@ -61,11 +67,22 @@ const CATEGORY: Record<string, TenantCategory> = {
   'Läderach': 'souvenir',
   SWATCH: 'watch',
 };
-const HAND_ADDED: Tenant[] = [{ name: 'Observatory Tickets', floor: '5F', category: 'service' }];
+const HAND_ADDED: Tenant[] = [{ name: 'Observatory Tickets', sign: 'Observatory Tickets', floor: '5F', category: 'service' }];
+/** Chinese store-name suffixes, longest first. */
+const ZH_SUFFIXES = ['台北101旗艦店', '台北101專賣店', '台北101店', '101旗艦店', '101店', '台北101', '旗艦店', '專賣店'];
+/**
+ * Shops with an official Latin name whose Chinese listing has none, so signFor would sign them in Chinese; keyed by
+ * the baked name.
+ */
+const LATIN_SIGNED = new Set([
+  'Rolex', 'Tudor', 'CHANEL Watches & Fine Jewelry', 'A. Lange & Söhne', 'Taipei Fubon Bank', "McDonald's",
+  'Din Tai Fung', 'KAVALAN', 'SunnyHills', 'FamilyMart', 'TAO TAO TEA', 'CHUYU', 'Fujin Tree Taiwanese Champagne',
+  'Kuo Yuan Ye', 'Hsin Tung Yang',
+]);
 
-interface FeedShop { name: string }
+interface FeedShop { id: string; name: string }
 type FeedShops = Record<string, FeedShop[]>;
-interface FeedFood { title: string; floor: string; category: string }
+interface FeedFood { id: string; title: string; floor: string; category: string }
 
 async function cached<T>(file: string, url: string): Promise<T> {
   const path = join(CACHE, file);
@@ -99,6 +116,30 @@ function cleanName(raw: string): string {
   return RENAME[name] ?? name;
 }
 
+const LATIN = /\p{Script=Latin}/u;
+
+/** The feed's Chinese name, trimmed of its store-name suffix. */
+function cleanZh(raw: string): string {
+  let name = decodeEntities(raw).normalize('NFC').replace(/\s+/g, ' ').trim();
+  const suffix = ZH_SUFFIXES.find((s) => name.endsWith(s) && name.length > s.length);
+  if (suffix) name = name.slice(0, -suffix.length).trim();
+  return name;
+}
+
+/**
+ * What the shop's sign says: its Latin name, unless its Chinese listing has no Latin letters at all, which means
+ * it has no official Latin name and the English feed's is a translation; then its Chinese name.
+ */
+function signFor(name: string, zh: string | undefined): string {
+  if (LATIN_SIGNED.has(name)) return name;
+  if (zh === undefined) {
+    console.warn(`no Chinese listing for "${name}"; signed with its Latin name`);
+    return name;
+  }
+  const z = cleanZh(zh);
+  return z && !LATIN.test(z) ? z : name;
+}
+
 function shopCategory(key: string, name: string): TenantCategory {
   if (CATEGORY[name]) return CATEGORY[name];
   if (JEWELLERY.has(name.toLowerCase())) return 'jewellery';
@@ -125,22 +166,33 @@ function readOn(files: string[]): string {
 async function main() {
   mkdirSync(CACHE, { recursive: true });
   const listings: Tenant[] = [];
+  const shops = {} as Record<Lang, Record<FloorId, FeedShops>>;
+  const food = {} as Record<Lang, FeedFood[]>;
+  for (const lang of LANGS) {
+    shops[lang] = {} as Record<FloorId, FeedShops>;
+    for (const floor of FLOOR_IDS) shops[lang][floor] = await cached<FeedShops>(shopsFile(floor, lang), shopsUrl(floor, lang));
+    food[lang] = await cached<FeedFood[]>(foodFile(lang), foodUrl(lang));
+  }
+  // The two languages list the same shops under the same ids.
+  const zhName = new Map<string, string>();
+  for (const floor of FLOOR_IDS) for (const list of Object.values(shops.zh[floor])) for (const s of list) zhName.set(s.id, s.name);
+  for (const r of food.zh) zhName.set(r.id, r.title);
+
   for (const floor of FLOOR_IDS) {
-    const shops = await cached<FeedShops>(`shop_${floor}.json`, shopsUrl(floor));
-    for (const [key, list] of Object.entries(shops)) {
+    for (const [key, list] of Object.entries(shops.en[floor])) {
       for (const shop of list) {
         const name = cleanName(shop.name);
-        listings.push({ name, floor, category: shopCategory(key, name) });
+        listings.push({ name, sign: signFor(name, zhName.get(shop.id)), floor, category: shopCategory(key, name) });
       }
     }
   }
-  const food = await cached<FeedFood[]>('food.json', FOOD_URL);
-  for (const r of food) {
+  for (const r of food.en) {
     const floors = r.floor.split(',').map((f) => f.trim()).filter(isFloor);
     if (floors.length === 0) continue;
     const name = cleanName(r.title);
     const category = foodCategory(r.category, name);
-    for (const floor of floors) listings.push({ name, floor, category });
+    const sign = signFor(name, zhName.get(r.id));
+    for (const floor of floors) listings.push({ name, sign, floor, category });
   }
   listings.push(...HAND_ADDED);
 
@@ -150,7 +202,7 @@ async function main() {
     if (!onFloor.some((o) => o.name.toLowerCase() === t.name.toLowerCase())) onFloor.push(t);
   }
 
-  const data: MallTenants = { snapshot: readOn([...FLOOR_IDS.map((f) => `shop_${f}.json`), 'food.json']), floors };
+  const data: MallTenants = { snapshot: readOn([...FLOOR_IDS.map((f) => shopsFile(f, 'en')), foodFile('en')]), floors };
   writeFileSync(OUT, JSON.stringify(data, null, 2) + '\n');
   console.log(`wrote ${OUT} (snapshot ${data.snapshot}): ${FLOOR_IDS.map((f) => `${f} ${floors[f].length}`).join(', ')}`);
 }
