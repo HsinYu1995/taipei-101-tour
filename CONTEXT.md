@@ -18,13 +18,13 @@ Domain language for the Taipei 101 tour. Use these words in code, docs and conve
 
 ## Walk
 
-- **Walk**: walking at eye level with the walk controls (keys or thumbstick, drag to look). One lifecycle, used by every place. Entered from the tower chapter's stop (onto the street) or the view chapter's stop (onto the observatory); each Escape steps back one place toward the tour.
-- **Place**: somewhere the visitor can walk: the street (Xinyi), the mall (inside 101) or the observatory (89F). Each has its own simulation and its own exits.
+- **Walk**: walking at eye level with the walk controls (keys or thumbstick, drag to look). One lifecycle, used by every place. Entered from the tower chapter's stop (onto the street), and from the view chapter's stop onto the observatory once that is built (planned, M4); each Escape steps back one place toward the tour.
+- **Place**: somewhere the visitor can walk: the street (Xinyi), the mall (inside 101) and, planned for M4, the observatory (89F). Each has its own simulation and its own exits.
 - **Crossing**: moving the visitor between places, or from the mall to the damper chapter, behind a short fade to black.
 - **Mall**: the 101 shopping mall, floors B1 to 5F, entered on foot from the street through 101's south entrance.
 - **Floor**: one mall level, with its real tenants and its own character (centrepiece, mood, crowd).
 - **Floor panel**: the on-screen buttons that move the visitor between floors; on 5F it also offers the lift.
 - **Lift**: the observatory express lift from the 5F ticket hall up to the observatory. Until the observatory is built, taking it ends the walk at the damper chapter.
-- **Observatory**: the 89F observatory floor, a place of the walk: a ring of floor round the tower core, glass all round, the damper visible in the middle. The damper and view chapters are tour stops looking at the same floor (owner, 2026-10-30).
+- **Observatory** (planned, M4; not yet a place): the 89F observatory floor, to be a place of the walk: a ring of floor round the tower core, glass all round, the damper visible in the middle. The damper and view chapters are tour stops looking at the same floor (owner, 2026-10-30).
 - **Tenant**: a shop, restaurant or stall with a frontage on a floor, from the official 101 listing.
 - **Sign**: the name over a tenant's shopfront, in lettering that echoes the brand, never its logo. In Latin script when the brand has an official Latin name, otherwise in Chinese.
