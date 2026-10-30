@@ -132,7 +132,9 @@ test('leaving the mall returns to the street outside the entrance, facing out', 
   const v = await visitor(page);
   expect(Math.hypot(v.x - OUTSIDE_ENTRANCE.x, v.z - OUTSIDE_ENTRANCE.z)).toBeLessThan(0.5);
   expect(Math.abs(v.yaw - Math.PI)).toBeLessThan(0.1);
-  await page.keyboard.press('Escape');
+  // One step further back, the way each visitor has: a phone has no Escape key.
+  if (isMobile) await page.getByTestId('back-to-tour-button').click();
+  else await page.keyboard.press('Escape');
   await waitMode(page, 'tour');
 });
 
