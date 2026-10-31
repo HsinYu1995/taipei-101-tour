@@ -10,9 +10,10 @@ const PINCH_PX = 60;
 
 /**
  * Zooming past the tower chapter's closest explore distance (wheel up, or a two-finger spread) goes down to
- * the street; zooming out while walking (wheel down, or a pinch) comes back up. Observers only: camera-controls
- * keeps handling the same events for its own dolly. While walking camera-controls is off, so the wheel is
- * cancelled here instead: a trackpad pinch arrives as a Control+wheel, which would otherwise zoom the page.
+ * the street; zooming out while walking (wheel down, or a pinch) comes back up, and turns back from the mall's door
+ * while crossing into it. Observers only: camera-controls keeps handling the same events for its own dolly. While
+ * walking camera-controls is off, so the wheel is cancelled here instead: a trackpad pinch arrives as a
+ * Control+wheel, which would otherwise zoom the page.
  */
 export function useStreetGestures(el: HTMLElement, controls: RefObject<CameraControlsImpl | null>) {
   useEffect(() => {
@@ -24,11 +25,15 @@ export function useStreetGestures(el: HTMLElement, controls: RefObject<CameraCon
       return chapter.id === STREET_CHAPTER && canWalk() && c.distance <= chapter.explore.minDistance + 1;
     };
     const dispatch = (type: 'walkEnter' | 'walkExit') => useTour.getState().dispatch({ type });
+    const leaving = () => {
+      const { mode } = useTour.getState();
+      return mode === 'walking' || mode === 'crossing';
+    };
 
     const onWheel = (e: WheelEvent) => {
       if (isWalkMode(useTour.getState().mode)) e.preventDefault();
       if (e.deltaY < 0 && atClosest()) dispatch('walkEnter');
-      else if (e.deltaY > 0 && useTour.getState().mode === 'walking') dispatch('walkExit');
+      else if (e.deltaY > 0 && leaving()) dispatch('walkExit');
     };
 
     // Touches that started on the canvas (the street thumbstick sits above it, so its touches never count).
@@ -51,7 +56,7 @@ export function useStreetGestures(el: HTMLElement, controls: RefObject<CameraCon
       if (change > PINCH_PX && atClosest()) {
         startSpread = null;
         dispatch('walkEnter');
-      } else if (change < -PINCH_PX && useTour.getState().mode === 'walking') {
+      } else if (change < -PINCH_PX && leaving()) {
         startSpread = null;
         dispatch('walkExit');
       }

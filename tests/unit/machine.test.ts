@@ -124,9 +124,13 @@ describe('crossing', () => {
     const s = tourReducer(inMall(), { type: 'walkExit' });
     expect(s).toMatchObject({ mode: 'crossing', place: 'mall', crossingTo: 'street' });
   });
-  test('during a crossing only crossed and a retarget apply', () => {
+  test('during a crossing only crossed, a retarget and turning back from the mall apply', () => {
     const s = tourReducer(onStreet(), { type: 'cross', to: 'mall' });
-    expect(tourReducer(s, { type: 'walkExit' })).toBe(s);
+    expect(tourReducer(s, { type: 'walkExit' })).toMatchObject({ mode: 'crossing', place: 'street', crossingTo: 'street' });
+    const toStreet = tourReducer(inMall(), { type: 'walkExit' });
+    expect(tourReducer(toStreet, { type: 'walkExit' })).toBe(toStreet);
+    const toDamper = tourReducer(inMall(), { type: 'cross', to: 'damper' });
+    expect(tourReducer(toDamper, { type: 'walkExit' })).toBe(toDamper);
     expect(tourReducer(s, { type: 'scroll', progress: stopCenter(3) })).toBe(s);
     expect(tourReducer(s, { type: 'exploreEnd' })).toBe(s);
     expect(tourReducer(s, { type: 'openHotspot', id: CHAPTERS[1].hotspot.id })).toBe(s);

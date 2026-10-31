@@ -370,6 +370,77 @@ test('a mall download that never arrives is given up on, back on the street', as
   await page.unrouteAll({ behavior: 'ignoreErrors' });
 });
 
+test('a mall still loading can be turned back from, back on the street', async ({ page, isMobile }) => {
+  test.setTimeout(120_000);
+  // The download hangs for good, so the visitor holds black on the loading line until they turn back.
+  await page.route(MALL, () => new Promise<void>(() => {}));
+  await enterStreet(page);
+  const walkIn = async () => {
+    await place(page, { x: 0, z: 46, yaw: 0, pitch: 0 });
+    await page.keyboard.down('w');
+    await expect(page.getByTestId('walk-loading')).toBeVisible({ timeout: 15_000 });
+    await page.keyboard.up('w');
+  };
+  const { width, height } = page.viewportSize()!;
+  const ways: Record<string, () => Promise<void>> = {
+    ...(isMobile
+      ? {}
+      : {
+          Escape: () => page.keyboard.press('Escape'),
+          'scrolling out': async () => {
+            await page.mouse.move(width / 2, height / 2);
+            await page.mouse.wheel(0, 300);
+          },
+        }),
+    button: () => page.getByTestId('back-to-street-button').click(),
+  };
+  for (const [way, turnBack] of Object.entries(ways)) {
+    await walkIn();
+    await turnBack();
+    // Well inside the 20 s the crossing would otherwise hold black for.
+    await expect.poll(() => whereNow(page), { timeout: 5000, message: way }).toBe('walking street');
+    await expect(page.getByTestId('walk-loading')).toHaveCount(0);
+    const v = await visitor(page);
+    expect(Math.hypot(v.x - OUTSIDE_ENTRANCE.x, v.z - OUTSIDE_ENTRANCE.z), way).toBeLessThan(0.5);
+  }
+  // Turning back does not withdraw the mall: the door still leads in.
+  await walkIn();
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
+});
+
+test('a mall whose shaders never report ready still lets the visitor in', async ({ page }) => {
+  test.setTimeout(120_000);
+  // A lost WebGL context answers every query with null, so a program's parallel compile never reads complete and
+  // three's compileAsync polls forever. SwiftShader has no KHR_parallel_shader_compile, so it is stood in for here.
+  await page.addInitScript(() => {
+    const COMPLETION_STATUS_KHR = 0x91b1;
+    const w = window as Window & { __compileStalls?: boolean };
+    type Context = { getExtension(name: string): unknown; getProgramParameter(p: WebGLProgram, pname: number): unknown };
+    for (const C of [WebGLRenderingContext, WebGL2RenderingContext]) {
+      const proto = C.prototype as unknown as Context;
+      const { getExtension, getProgramParameter } = proto;
+      proto.getExtension = function (this: Context, name) {
+        return name === 'KHR_parallel_shader_compile' ? { COMPLETION_STATUS_KHR } : getExtension.call(this, name);
+      };
+      proto.getProgramParameter = function (this: Context, program, pname) {
+        if (pname === COMPLETION_STATUS_KHR) return w.__compileStalls ? null : true;
+        return getProgramParameter.call(this, program, pname);
+      };
+    }
+  });
+  await openTour(page);
+  await page.evaluate(() => (window.__tour!.timings.crossingTimeoutMs = 3000));
+  await enterStreet(page);
+  await page.evaluate(() => ((window as Window & { __compileStalls?: boolean }).__compileStalls = true));
+  await place(page, { x: 0, z: 46, yaw: 0, pitch: 0 });
+  await page.keyboard.down('w');
+  await waitMode(page, 'crossing');
+  await page.keyboard.up('w');
+  // The mall's shaders compile on its first frame instead, as when arrive fails.
+  await expect.poll(() => whereNow(page), { timeout: 30_000 }).toBe('walking mall');
+  await expect(page.getByTestId('walk-fade')).toHaveCSS('visibility', 'hidden', { timeout: 5000 });
+});
+
 /** Taps a floor button and waits until the change has ended on that floor. */
 async function pressFloor(page: Page, floor: FloorId) {
   await page.getByTestId(`floor-${floor}`).click();

@@ -62,6 +62,9 @@ export function tourReducer(s: TourState, e: TourEvent): TourState {
         return e.to === s.crossingTo ? s : { ...s, crossingTo: e.to };
       case 'crossed':
         return crossed(s);
+      // Turning back from the mall's door (while it loads, say) leaves the visitor on the street outside it.
+      case 'walkExit':
+        return s.crossingTo === 'mall' ? { ...s, crossingTo: 'street' } : s;
       case 'walkAbort':
         return abort(s);
       default:

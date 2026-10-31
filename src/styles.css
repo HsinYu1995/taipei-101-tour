@@ -161,6 +161,11 @@ body {
   pointer-events: none;
 }
 
+/* The way back while the mall loads, where the walk's own back button sits, taking taps through the fade. */
+.walk-fade-controls {
+  pointer-events: auto;
+}
+
 .street-hint {
   position: fixed;
   top: 16px;

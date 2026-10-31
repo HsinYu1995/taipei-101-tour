@@ -8,10 +8,20 @@ import { CROSSING_TIMEOUT_MS, FADE_MS, placeFailed } from './api';
 
 type Stage = 'clear' | 'darkening' | 'black' | 'lightening';
 
+/** Settles as `ready` does, or rejects once `ms` have passed without it. */
+function within(ready: Promise<void>, ms: number) {
+  let timer = 0;
+  const late = new Promise<never>((_, reject) => {
+    timer = window.setTimeout(() => reject(new Error(`not ready after ${ms} ms`)), ms);
+  });
+  return Promise.race([ready, late]).finally(() => window.clearTimeout(timer));
+}
+
 /**
  * The crossing's fade. Fades to black when a crossing starts; once black, hands the visitor over as soon as where
- * they are going is ready (holding black with a loading line while the mall downloads), then fades back. A place
- * that has not loaded after CROSSING_TIMEOUT_MS is given up on, as if its download had failed.
+ * they are going is ready (holding black with a loading line, and a way back, while the mall downloads), then fades
+ * back. A place that has not loaded after CROSSING_TIMEOUT_MS is given up on, as if its download had failed; one
+ * that has not readied itself that long after arriving is crossed into anyway.
  */
 export function Fade() {
   const crossing = useTour((s) => s.mode === 'crossing');
@@ -37,13 +47,14 @@ export function Fade() {
       if (waiting) window.clearTimeout(waiting.timer);
       waiting = null;
     };
-    // Set while a place readies itself after arrive; the store changes every frame meanwhile.
-    let arriving = false;
-    // Read where the crossing goes at hand-over time: a failed download retargets it to the street meanwhile.
+    // The place readying itself after arrive; the store changes every frame meanwhile.
+    let arriving: PlaceId | null = null;
+    // Read where the crossing goes at hand-over time: a failed download or turning back retargets it meanwhile.
     const handOver = () => {
-      if (!live || arriving) return;
+      if (!live) return;
       const { mode, place, crossingTo, places, dispatch } = useTour.getState();
       if (mode !== 'crossing' || crossingTo === null) return stopWaiting();
+      if (crossingTo === arriving) return;
       if (crossingTo === 'damper') {
         dispatch({ type: 'crossed' });
         // Overlay unfreezes the page once React commits the tour mode; scroll after that, to the stop crossed to.
@@ -51,26 +62,28 @@ export function Fade() {
         requestAnimationFrame(() => window.scrollTo(0, progress * maxScroll()));
         return;
       }
+      const ms = testTimings.crossingTimeoutMs ?? CROSSING_TIMEOUT_MS;
       const next = places[crossingTo];
       if (!next) {
         if (waiting?.to !== crossingTo) {
           stopWaiting();
-          const ms = testTimings.crossingTimeoutMs ?? CROSSING_TIMEOUT_MS;
           waiting = { to: crossingTo, timer: window.setTimeout(() => live && placeFailed(crossingTo), ms) };
         }
         return;
       }
       stopWaiting();
-      arriving = true;
-      // Still black until the place is ready to be seen (or failed to ready itself, which its first frame then
-      // makes up for); it crosses only if nothing retargeted it meanwhile.
-      void Promise.resolve(next.arrive(place)).catch((e) => console.warn(`${crossingTo} not readied:`, e)).then(() => {
-        arriving = false;
-        const now = useTour.getState();
-        if (!live || now.mode !== 'crossing') return;
-        if (now.crossingTo === crossingTo) now.dispatch({ type: 'crossed' });
-        else handOver();
-      });
+      arriving = crossingTo;
+      // Still black until the place is ready to be seen (or failed to ready itself in time, which its first frame
+      // then makes up for: a lost WebGL context never reports its shaders compiled); it crosses only if nothing
+      // retargeted it meanwhile, and a retarget hands over at once rather than wait on it.
+      void within(Promise.resolve(next.arrive(place)), ms)
+        .catch((e) => console.warn(`${crossingTo} not readied:`, e))
+        .then(() => {
+          if (!live || arriving !== crossingTo) return;
+          arriving = null;
+          const now = useTour.getState();
+          if (now.mode === 'crossing' && now.crossingTo === crossingTo) now.dispatch({ type: 'crossed' });
+        });
     };
     handOver();
     const unsubscribe = useTour.subscribe(handOver);
@@ -90,9 +103,16 @@ export function Fade() {
       style={{ opacity: dark ? 1 : 0, visibility: stage === 'clear' ? 'hidden' : 'visible', transition: `opacity ${FADE_MS}ms ease` }}
     >
       {loading && (
-        <p className="walk-loading" data-testid="walk-loading" role="status">
-          {en.ui.mallLoading}
-        </p>
+        <>
+          <p className="walk-loading" data-testid="walk-loading" role="status">
+            {en.ui.mallLoading}
+          </p>
+          <div className="controls walk-fade-controls">
+            <button data-testid="back-to-street-button" onClick={() => useTour.getState().dispatch({ type: 'walkExit' })}>
+              {en.ui.backToStreet}
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
