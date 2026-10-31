@@ -29,3 +29,14 @@ export function takeInput(): WalkInput {
   input.look.dx = input.look.dy = 0;
   return { keys: new Set(input.keys), stick: { ...input.stick }, look };
 }
+
+/**
+ * One frame of a place's input. A place that is not paused drains the look drag every frame, so a drag made while
+ * the visitor was only looking (the descent, a crossing) is dropped rather than turning them on the first step;
+ * only a walking visitor is handed it.
+ */
+export function inputFor(phase: 'paused' | 'still' | 'walking'): WalkInput | undefined {
+  if (phase === 'paused') return undefined;
+  const taken = takeInput();
+  return phase === 'walking' ? taken : undefined;
+}

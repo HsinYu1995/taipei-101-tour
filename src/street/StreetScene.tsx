@@ -4,7 +4,7 @@ import { registerProbe } from '../debug/testHook';
 import { useHeightField } from '../scene/terrain/Terrain';
 import { useTour } from '../tour/store';
 import { isWalkMode, phaseOf, type PlaceApi } from '../walk/api';
-import { clearInput, takeInput } from '../walk/input';
+import { clearInput, inputFor } from '../walk/input';
 import { People } from './People';
 import { Scooters } from './Scooters';
 import { Buildings } from './Buildings';
@@ -31,6 +31,11 @@ export default function StreetScene() {
         clearInput();
       },
       eye: () => sim.eye(),
+      // The only other place is the mall, whose door is 101's south entrance.
+      arrive: () => {
+        sim.arrive();
+        clearInput();
+      },
     }),
     [sim],
   );
@@ -41,8 +46,14 @@ export default function StreetScene() {
   }, [api]);
 
   // Once per frame, before CameraRig reads the eye pose (a negative priority runs earlier without taking over
-  // rendering). The walk's phase decides what moves.
-  useFrame((_, delta) => sim.tick(phaseOf(useTour.getState(), 'street'), delta, takeInput()), -1);
+  // rendering). The walk's phase decides what moves; walking into 101's south entrance crosses to the mall.
+  useFrame((_, delta) => {
+    const tour = useTour.getState();
+    const phase = phaseOf(tour, 'street');
+    // Input is taken only by the place being walked (even while still), so the other place never swallows a drag.
+    sim.tick(phase, delta, inputFor(phase));
+    if (phase === 'walking' && sim.atEntrance() && !tour.mallFailed) tour.dispatch({ type: 'cross', to: 'mall' });
+  }, -1);
 
   useEffect(
     () =>

@@ -139,7 +139,8 @@ body {
   color: inherit;
 }
 
-.street-loading {
+.street-loading,
+.walk-loading {
   position: fixed;
   top: 72px;
   left: 50%;
@@ -149,6 +150,15 @@ body {
   border-radius: 999px;
   background: var(--panel);
   font-size: 0.9rem;
+}
+
+/* A crossing's fade to black, over everything; it never takes a tap from the controls beneath. */
+.walk-fade {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: #000;
+  pointer-events: none;
 }
 
 .street-hint {
@@ -201,4 +211,81 @@ body {
   border-radius: 50%;
   background: rgb(31 111 120 / 0.85);
   pointer-events: none;
+}
+
+/* The mall's floor panel: a lift's column of buttons on the right, between the top buttons and the bottom corner. */
+.floor-panel {
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+/* Phones: just under the stacked buttons, clear of the hint above the thumbstick. */
+@media (max-width: 600px) {
+  .floor-panel {
+    top: 76px;
+    transform: none;
+  }
+}
+
+.floor-panel button {
+  min-width: 56px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.floor-panel button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.floor-panel .floor-exit {
+  margin-top: 6px;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.floor-panel button:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/*
+ * Short viewports (a phone on its side): too short for the column under the top buttons, so the floors go two
+ * abreast, read like a lift's buttons, with the exits across the bottom.
+ */
+@media (max-height: 520px) {
+  .floor-panel {
+    top: 76px;
+    transform: none;
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 4px 6px;
+  }
+
+  .floor-panel button {
+    min-height: 40px;
+  }
+
+  .floor-panel .floor-exit {
+    grid-column: 1 / -1;
+    margin-top: 2px;
+  }
 }

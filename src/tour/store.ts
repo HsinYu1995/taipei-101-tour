@@ -15,10 +15,15 @@ interface TourStore extends TourState {
   streetWanted: boolean;
   /** The street chunk failed to load; the walk is withdrawn. */
   streetFailed: boolean;
+  /** Sticky: a crossing to the mall has started, so the mall chunk should load. */
+  mallWanted: boolean;
+  /** The mall chunk failed to load; the street's door no longer leads in. */
+  mallFailed: boolean;
   dispatch(e: TourEvent): void;
   setCamera(p: Pose): void;
   setPlace(id: PlaceId, api: PlaceApi | null): void;
   setStreetFailed(): void;
+  setMallFailed(): void;
 }
 
 const wantsStreet = (s: TourState) =>
@@ -31,12 +36,17 @@ export const useTour = create<TourStore>((set) => ({
   places: {},
   streetWanted: false,
   streetFailed: false,
+  mallWanted: false,
+  mallFailed: false,
   dispatch: (e) =>
     set((s) => {
       const next = tourReducer(s, e);
-      return !s.streetWanted && wantsStreet(next) ? { ...next, streetWanted: true } : next;
+      if (!s.streetWanted && wantsStreet(next)) return { ...next, streetWanted: true };
+      if (!s.mallWanted && next.mode === 'crossing' && next.crossingTo === 'mall') return { ...next, mallWanted: true };
+      return next;
     }),
   setCamera: (camera) => set((s) => ({ camera, frame: s.frame + 1 })),
   setPlace: (id, api) => set((s) => ({ places: { ...s.places, [id]: api ?? undefined } })),
   setStreetFailed: () => set({ streetFailed: true }),
+  setMallFailed: () => set({ mallFailed: true }),
 }));

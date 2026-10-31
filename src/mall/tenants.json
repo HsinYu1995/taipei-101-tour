@@ -1,0 +1,1242 @@
+{
+  "snapshot": "2026-10-29",
+  "floors": {
+    "B1": [
+      {
+        "name": "Läderach",
+        "sign": "Läderach",
+        "zh": "Läderach",
+        "floor": "B1",
+        "category": "souvenir"
+      },
+      {
+        "name": "TISSOT",
+        "sign": "TISSOT",
+        "zh": "TISSOT",
+        "floor": "B1",
+        "category": "watch"
+      },
+      {
+        "name": "Aesop",
+        "sign": "Aesop",
+        "zh": "Aesop",
+        "floor": "B1",
+        "category": "beauty"
+      },
+      {
+        "name": "Atelier Cologne",
+        "sign": "Atelier Cologne",
+        "zh": "Atelier Cologne",
+        "floor": "B1",
+        "category": "beauty"
+      },
+      {
+        "name": "CREED",
+        "sign": "CREED",
+        "zh": "CREED",
+        "floor": "B1",
+        "category": "beauty"
+      },
+      {
+        "name": "ROOTON",
+        "sign": "ROOTON",
+        "zh": "ROOTON",
+        "floor": "B1",
+        "category": "beauty"
+      },
+      {
+        "name": "TTM",
+        "sign": "TTM",
+        "zh": "TTM 提提研",
+        "floor": "B1",
+        "category": "beauty"
+      },
+      {
+        "name": "ALLSAINTS",
+        "sign": "ALLSAINTS",
+        "zh": "ALLSAINTS",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "Arc'teryx",
+        "sign": "Arc'teryx",
+        "zh": "Arc'teryx 始祖鳥形象店",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "Brooks Brothers",
+        "sign": "Brooks Brothers",
+        "zh": "Brooks Brothers",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "Calvin Klein",
+        "sign": "Calvin Klein",
+        "zh": "Calvin Klein / CK",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "LULULEMON",
+        "sign": "LULULEMON",
+        "zh": "LULULEMON",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "Maje",
+        "sign": "Maje",
+        "zh": "Maje",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "Massimo Dutti",
+        "sign": "Massimo Dutti",
+        "zh": "Massimo Dutti",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "MLB Korea",
+        "sign": "MLB Korea",
+        "zh": "MLB Korea",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "NB GREY",
+        "sign": "NB GREY",
+        "zh": "NB GREY形象總店",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "Nike",
+        "sign": "Nike",
+        "zh": "Nike臺北品牌體驗店",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "Onitsuka Tiger",
+        "sign": "Onitsuka Tiger",
+        "zh": "Onitsuka Tiger 鬼塚虎",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "PORTER INTERNATIONAL",
+        "sign": "PORTER INTERNATIONAL",
+        "zh": "PORTER INTERNATIONAL",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "THE NORTH FACE",
+        "sign": "THE NORTH FACE",
+        "zh": "THE NORTH FACE",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "TOMMY HILFIGER",
+        "sign": "TOMMY HILFIGER",
+        "zh": "TOMMY HILFIGER",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "UGG",
+        "sign": "UGG",
+        "zh": "UGG",
+        "floor": "B1",
+        "category": "fashion"
+      },
+      {
+        "name": "agete",
+        "sign": "agete",
+        "zh": "agete",
+        "floor": "B1",
+        "category": "jewellery"
+      },
+      {
+        "name": "CHARLES & KEITH",
+        "sign": "CHARLES & KEITH",
+        "zh": "CHARLES & KEITH",
+        "floor": "B1",
+        "category": "shoes"
+      },
+      {
+        "name": "MIRROR",
+        "sign": "MIRROR",
+        "zh": "MIRROR皇宣緣",
+        "floor": "B1",
+        "category": "shoes"
+      },
+      {
+        "name": "PANDORA",
+        "sign": "PANDORA",
+        "zh": "PANDORA",
+        "floor": "B1",
+        "category": "jewellery"
+      },
+      {
+        "name": "vacanza",
+        "sign": "vacanza",
+        "zh": "vacanza",
+        "floor": "B1",
+        "category": "shoes"
+      },
+      {
+        "name": "VIVAIA",
+        "sign": "VIVAIA",
+        "zh": "VIVAIA",
+        "floor": "B1",
+        "category": "shoes"
+      },
+      {
+        "name": "Devialet",
+        "sign": "Devialet",
+        "zh": "Devialet",
+        "floor": "B1",
+        "category": "life"
+      },
+      {
+        "name": "FamilyMart",
+        "sign": "FamilyMart",
+        "zh": "全家便利商店",
+        "floor": "B1",
+        "category": "life"
+      },
+      {
+        "name": "LAMY",
+        "sign": "LAMY",
+        "zh": "LAMY",
+        "floor": "B1",
+        "category": "life"
+      },
+      {
+        "name": "Sony",
+        "sign": "SONY",
+        "zh": "SONY 台北 101 直營店",
+        "floor": "B1",
+        "category": "life"
+      },
+      {
+        "name": "31 Ice Cream Baskin Robbins",
+        "sign": "Baskin Robbins",
+        "zh": "31冰淇淋Baskin Robbins",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Dairy Queen",
+        "sign": "Dairy Queen",
+        "zh": "Dairy Queen",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Niu Xi",
+        "sign": "牛喜",
+        "zh": "牛喜",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Three Tong Han Guozi",
+        "sign": "三統漢菓子",
+        "zh": "三統漢菓子",
+        "floor": "B1",
+        "category": "souvenir"
+      },
+      {
+        "name": "Adashi Five Star Shop",
+        "sign": "阿達師五星麵舖",
+        "zh": "阿達師五星麵舖",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Aguan Hotpot",
+        "sign": "阿官火鍋",
+        "zh": "阿官火鍋",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Bashi Roast Meat Mini",
+        "sign": "八色烤肉mini",
+        "zh": "八色烤肉mini",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "bluebird travel",
+        "sign": "青鳥旅行",
+        "zh": "青鳥旅行",
+        "floor": "B1",
+        "category": "souvenir"
+      },
+      {
+        "name": "COOKIE886",
+        "sign": "COOKIE886",
+        "zh": "COOKIE886",
+        "floor": "B1",
+        "category": "souvenir"
+      },
+      {
+        "name": "CURISTA COFFEE",
+        "sign": "CURISTA COFFEE",
+        "zh": "CURISTA COFFEE 奎士咖啡",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Din Tai Fung",
+        "sign": "Din Tai Fung",
+        "zh": "鼎泰豐",
+        "floor": "B1",
+        "category": "restaurant"
+      },
+      {
+        "name": "Express Jerky",
+        "sign": "快車肉乾",
+        "zh": "快車肉乾",
+        "floor": "B1",
+        "category": "souvenir"
+      },
+      {
+        "name": "Five Lights Award",
+        "sign": "五燈獎",
+        "zh": "五燈獎",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Gift Shop RIVON",
+        "sign": "RIVON",
+        "zh": "禮坊RIVON",
+        "floor": "B1",
+        "category": "souvenir"
+      },
+      {
+        "name": "Han He Ting",
+        "sign": "韓鶴亭",
+        "zh": "韓鶴亭",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Hsin Tung Yang",
+        "sign": "Hsin Tung Yang",
+        "zh": "新東陽",
+        "floor": "B1",
+        "category": "souvenir"
+      },
+      {
+        "name": "Hsu Yuei Shan",
+        "sign": "雪嶽山韓式料理",
+        "zh": "雪嶽山韓式料理",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Inherited by CHENG JI",
+        "sign": "CHENG JI",
+        "zh": "承繼CHENG JI",
+        "floor": "B1",
+        "category": "cafe"
+      },
+      {
+        "name": "Juice Bear",
+        "sign": "Juice Bear",
+        "zh": "Juice Bear",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Kaidon",
+        "sign": "開丼",
+        "zh": "開丼",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Karen Teppanyaki",
+        "sign": "凱林鐵板燒",
+        "zh": "凱林鐵板燒",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "KAVALAN",
+        "sign": "KAVALAN",
+        "zh": "噶瑪蘭威士忌",
+        "floor": "B1",
+        "category": "souvenir"
+      },
+      {
+        "name": "Kuo Yuan Ye",
+        "sign": "Kuo Yuan Ye",
+        "zh": "郭元益",
+        "floor": "B1",
+        "category": "souvenir"
+      },
+      {
+        "name": "Lao Sichuan Xiangyi Hot Pot",
+        "sign": "老四川 饗壹鍋",
+        "zh": "老四川 饗壹鍋",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Lin Congming Clay Pot Fish Head",
+        "sign": "林聰明沙鍋魚頭",
+        "zh": "林聰明沙鍋魚頭",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Master Jun Beef Noodles",
+        "sign": "竣師父牛肉麵",
+        "zh": "竣師父牛肉麵",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "McDonald's",
+        "sign": "McDonald's",
+        "zh": "麥當勞",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Meili Hong Kong Style Tea Stall Company",
+        "sign": "美利港式茶檔公司",
+        "zh": "美利港式茶檔公司",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Mia C'bon Market",
+        "sign": "Mia C'bon Market",
+        "zh": "Mia C’bon Market",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Mister Donut",
+        "sign": "Mister Donut",
+        "zh": "Mister Donut",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Moo",
+        "sign": "Moo",
+        "zh": "Moo",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Naan Stop",
+        "sign": "Naan Stop",
+        "zh": "Naan Stop",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Nagahama Fish House",
+        "sign": "長浜魚屋",
+        "zh": "長浜魚屋",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Pepper Lunch",
+        "sign": "Pepper Lunch",
+        "zh": "Pepper Lunch胡椒廚房",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "POPEYES",
+        "sign": "POPEYES",
+        "zh": "POPEYES",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Ruiji Sea Chicken Rice",
+        "sign": "瑞記海雞飯",
+        "zh": "瑞記海雞飯",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Saint Paul Baking Garden",
+        "sign": "聖保羅烘焙花園",
+        "zh": "聖保羅烘焙花園",
+        "floor": "B1",
+        "category": "souvenir"
+      },
+      {
+        "name": "Shin Yeh",
+        "sign": "興葉蚵仔煎",
+        "zh": "興葉蚵仔煎",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Starbucks",
+        "sign": "Starbucks",
+        "zh": "Starbucks 星巴克咖啡",
+        "floor": "B1",
+        "category": "cafe"
+      },
+      {
+        "name": "SUGAR & SPICE",
+        "sign": "SUGAR & SPICE",
+        "zh": "SUGAR & SPICE 糖村",
+        "floor": "B1",
+        "category": "souvenir"
+      },
+      {
+        "name": "SunnyHills",
+        "sign": "SunnyHills",
+        "zh": "微熱山丘",
+        "floor": "B1",
+        "category": "souvenir"
+      },
+      {
+        "name": "TAO TAO TEA",
+        "sign": "TAO TAO TEA",
+        "zh": "先喝道",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Turtle Notes",
+        "sign": "龜記",
+        "zh": "龜記",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "VEGE CREEK",
+        "sign": "VEGE CREEK",
+        "zh": "VEGE CREEK 蔬河",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Vegetable Square",
+        "sign": "蔬坊",
+        "zh": "蔬坊",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Xiangyang tea",
+        "sign": "嶢陽茶行",
+        "zh": "嶢陽茶行",
+        "floor": "B1",
+        "category": "souvenir"
+      },
+      {
+        "name": "Xiaonanmen",
+        "sign": "小南門",
+        "zh": "小南門",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Yangxin Tea House Mini",
+        "sign": "養心茶樓mini",
+        "zh": "養心茶樓mini",
+        "floor": "B1",
+        "category": "food-court"
+      },
+      {
+        "name": "Zhong qing",
+        "sign": "忠青商行",
+        "zh": "忠青商行",
+        "floor": "B1",
+        "category": "food-court"
+      }
+    ],
+    "1F": [
+      {
+        "name": "Taipei Fubon Bank",
+        "sign": "Taipei Fubon Bank",
+        "zh": "台北富邦銀行",
+        "floor": "1F",
+        "category": "service"
+      },
+      {
+        "name": "BREITLING",
+        "sign": "BREITLING",
+        "zh": "BREITLING 百年靈",
+        "floor": "1F",
+        "category": "watch"
+      },
+      {
+        "name": "Grand Seiko",
+        "sign": "Grand Seiko",
+        "zh": "Grand Seiko",
+        "floor": "1F",
+        "category": "watch"
+      },
+      {
+        "name": "IWC",
+        "sign": "IWC",
+        "zh": "IWC",
+        "floor": "1F",
+        "category": "watch"
+      },
+      {
+        "name": "LONGINES",
+        "sign": "LONGINES",
+        "zh": "LONGINES",
+        "floor": "1F",
+        "category": "watch"
+      },
+      {
+        "name": "OMEGA",
+        "sign": "OMEGA",
+        "zh": "OMEGA 歐米茄",
+        "floor": "1F",
+        "category": "watch"
+      },
+      {
+        "name": "PANERAI",
+        "sign": "PANERAI",
+        "zh": "PANERAI",
+        "floor": "1F",
+        "category": "watch"
+      },
+      {
+        "name": "RADO",
+        "sign": "RADO",
+        "zh": "RADO",
+        "floor": "1F",
+        "category": "watch"
+      },
+      {
+        "name": "Rolex",
+        "sign": "Rolex",
+        "zh": "勞力士– 迪生鐘錶珠寶",
+        "floor": "1F",
+        "category": "watch"
+      },
+      {
+        "name": "TAG Heuer",
+        "sign": "TAG Heuer",
+        "zh": "TAG Heuer",
+        "floor": "1F",
+        "category": "watch"
+      },
+      {
+        "name": "Tudor",
+        "sign": "Tudor",
+        "zh": "帝舵表– 迪生鐘錶珠寶",
+        "floor": "1F",
+        "category": "watch"
+      },
+      {
+        "name": "BOSS",
+        "sign": "BOSS",
+        "zh": "BOSS",
+        "floor": "1F",
+        "category": "boutique"
+      },
+      {
+        "name": "LONGCHAMP",
+        "sign": "LONGCHAMP",
+        "zh": "LONGCHAMP",
+        "floor": "1F",
+        "category": "boutique"
+      },
+      {
+        "name": "MONTBLANC",
+        "sign": "MONTBLANC",
+        "zh": "MONTBLANC",
+        "floor": "1F",
+        "category": "boutique"
+      },
+      {
+        "name": "POLO RALPH LAUREN",
+        "sign": "POLO RALPH LAUREN",
+        "zh": "POLO RALPH LAUREN",
+        "floor": "1F",
+        "category": "boutique"
+      },
+      {
+        "name": "Chanel Beauty",
+        "sign": "Chanel Beauty",
+        "zh": "Chanel Beauty",
+        "floor": "1F",
+        "category": "beauty"
+      },
+      {
+        "name": "Dior Beauty",
+        "sign": "Dior Beauty",
+        "zh": "Dior Beauty",
+        "floor": "1F",
+        "category": "beauty"
+      },
+      {
+        "name": "Diptyque",
+        "sign": "Diptyque",
+        "zh": "Diptyque",
+        "floor": "1F",
+        "category": "beauty"
+      },
+      {
+        "name": "JO MALONE LONDON",
+        "sign": "JO MALONE LONDON",
+        "zh": "JO MALONE LONDON",
+        "floor": "1F",
+        "category": "beauty"
+      },
+      {
+        "name": "SISLEY",
+        "sign": "SISLEY",
+        "zh": "SISLEY",
+        "floor": "1F",
+        "category": "beauty"
+      },
+      {
+        "name": "Yves Saint Laurent Beauté",
+        "sign": "Yves Saint Laurent Beauté",
+        "zh": "Yves Saint Laurent Beauté / YSL Beauté",
+        "floor": "1F",
+        "category": "beauty"
+      },
+      {
+        "name": "ZARA",
+        "sign": "ZARA",
+        "zh": "ZARA",
+        "floor": "1F",
+        "category": "fashion"
+      },
+      {
+        "name": "APM MONACO",
+        "sign": "APM MONACO",
+        "zh": "APM MONACO",
+        "floor": "1F",
+        "category": "shoes"
+      },
+      {
+        "name": "SWAROVSKI",
+        "sign": "SWAROVSKI",
+        "zh": "SWAROVSKI",
+        "floor": "1F",
+        "category": "shoes"
+      },
+      {
+        "name": "SWATCH",
+        "sign": "SWATCH",
+        "zh": "SWATCH",
+        "floor": "1F",
+        "category": "watch"
+      },
+      {
+        "name": "TUMI",
+        "sign": "TUMI",
+        "zh": "TUMI",
+        "floor": "1F",
+        "category": "shoes"
+      },
+      {
+        "name": "Apple",
+        "sign": "Apple",
+        "zh": "Apple",
+        "floor": "1F",
+        "category": "life"
+      }
+    ],
+    "2F": [
+      {
+        "name": "Buccellati",
+        "sign": "Buccellati",
+        "zh": "Buccellati",
+        "floor": "2F",
+        "category": "jewellery"
+      },
+      {
+        "name": "CHANEL Watches & Fine Jewelry",
+        "sign": "CHANEL Watches & Fine Jewelry",
+        "zh": "香奈兒台北101腕錶暨珠寶店",
+        "floor": "2F",
+        "category": "watch"
+      },
+      {
+        "name": "Chow Tai Fook",
+        "sign": "CHOW TAI FOOK",
+        "zh": "周大福CHOW TAI FOOK",
+        "floor": "2F",
+        "category": "jewellery"
+      },
+      {
+        "name": "FRED",
+        "sign": "FRED",
+        "zh": "FRED",
+        "floor": "2F",
+        "category": "jewellery"
+      },
+      {
+        "name": "HARRY WINSTON",
+        "sign": "HARRY WINSTON",
+        "zh": "HARRY WINSTON",
+        "floor": "2F",
+        "category": "jewellery"
+      },
+      {
+        "name": "HUBLOT",
+        "sign": "HUBLOT",
+        "zh": "HUBLOT",
+        "floor": "2F",
+        "category": "watch"
+      },
+      {
+        "name": "JAEGER-LECOULTRE",
+        "sign": "JAEGER-LECOULTRE",
+        "zh": "JAEGER-LECOULTRE",
+        "floor": "2F",
+        "category": "watch"
+      },
+      {
+        "name": "MIKIMOTO",
+        "sign": "MIKIMOTO",
+        "zh": "MIKIMOTO",
+        "floor": "2F",
+        "category": "jewellery"
+      },
+      {
+        "name": "PATEK PHILIPPE",
+        "sign": "PATEK PHILIPPE",
+        "zh": "PATEK PHILIPPE / PP",
+        "floor": "2F",
+        "category": "watch"
+      },
+      {
+        "name": "Sincere Haute Horlogerie",
+        "sign": "Sincere Haute Horlogerie",
+        "zh": "Sincere Haute Horlogerie /SHH",
+        "floor": "2F",
+        "category": "watch"
+      },
+      {
+        "name": "TIFFANY & CO.",
+        "sign": "TIFFANY & CO.",
+        "zh": "TIFFANY ＆ CO.",
+        "floor": "2F",
+        "category": "jewellery"
+      },
+      {
+        "name": "VACHERON CONSTANTIN",
+        "sign": "VACHERON CONSTANTIN",
+        "zh": "VACHERON CONSTANTIN / VC",
+        "floor": "2F",
+        "category": "watch"
+      },
+      {
+        "name": "BAO BAO ISSEY MIYAKE",
+        "sign": "BAO BAO ISSEY MIYAKE",
+        "zh": "BAO BAO ISSEY MIYAKE",
+        "floor": "2F",
+        "category": "boutique"
+      },
+      {
+        "name": "COACH",
+        "sign": "COACH",
+        "zh": "COACH",
+        "floor": "2F",
+        "category": "boutique"
+      },
+      {
+        "name": "COS",
+        "sign": "COS",
+        "zh": "COS",
+        "floor": "2F",
+        "category": "boutique"
+      },
+      {
+        "name": "HOMME PLISSÉ ISSEY MIYAKE",
+        "sign": "HOMME PLISSÉ ISSEY MIYAKE",
+        "zh": "HOMME PLISSÉ ISSEY MIYAKE",
+        "floor": "2F",
+        "category": "boutique"
+      },
+      {
+        "name": "ISSEY MIYAKE",
+        "sign": "ISSEY MIYAKE",
+        "zh": "ISSEY MIYAKE",
+        "floor": "2F",
+        "category": "boutique"
+      },
+      {
+        "name": "MICHAEL KORS",
+        "sign": "MICHAEL KORS",
+        "zh": "MICHAEL KORS / MK",
+        "floor": "2F",
+        "category": "boutique"
+      },
+      {
+        "name": "PLEATS PLEASE ISSEY MIYAKE",
+        "sign": "PLEATS PLEASE ISSEY MIYAKE",
+        "zh": "PLEATS PLEASE ISSEY MIYAKE",
+        "floor": "2F",
+        "category": "boutique"
+      },
+      {
+        "name": "Tory Burch",
+        "sign": "Tory Burch",
+        "zh": "Tory Burch",
+        "floor": "2F",
+        "category": "boutique"
+      },
+      {
+        "name": "ZARA",
+        "sign": "ZARA",
+        "zh": "ZARA",
+        "floor": "2F",
+        "category": "fashion"
+      },
+      {
+        "name": "2020EYEhaus",
+        "sign": "2020EYEhaus",
+        "zh": "2020EYEhaus",
+        "floor": "2F",
+        "category": "shoes"
+      },
+      {
+        "name": "HOGAN",
+        "sign": "HOGAN",
+        "zh": "HOGAN",
+        "floor": "2F",
+        "category": "shoes"
+      },
+      {
+        "name": "Bang & Olufsen",
+        "sign": "Bang & Olufsen",
+        "zh": "Bang & Olufsen",
+        "floor": "2F",
+        "category": "life"
+      },
+      {
+        "name": "FIWFIW high-quality repair textile",
+        "sign": "FIWFIW",
+        "zh": "FIWFIW精品修護紡",
+        "floor": "2F",
+        "category": "life"
+      }
+    ],
+    "3F": [
+      {
+        "name": "A. Lange & Söhne",
+        "sign": "A. Lange & Söhne",
+        "zh": "朗格",
+        "floor": "3F",
+        "category": "watch"
+      },
+      {
+        "name": "BLANCPAIN",
+        "sign": "BLANCPAIN",
+        "zh": "BLANCPAIN",
+        "floor": "3F",
+        "category": "watch"
+      },
+      {
+        "name": "BOUCHERON",
+        "sign": "BOUCHERON",
+        "zh": "BOUCHERON",
+        "floor": "3F",
+        "category": "jewellery"
+      },
+      {
+        "name": "BREGUET",
+        "sign": "BREGUET",
+        "zh": "BREGUET",
+        "floor": "3F",
+        "category": "watch"
+      },
+      {
+        "name": "Cartier",
+        "sign": "Cartier",
+        "zh": "Cartier",
+        "floor": "3F",
+        "category": "jewellery"
+      },
+      {
+        "name": "Chaumet",
+        "sign": "Chaumet",
+        "zh": "Chaumet",
+        "floor": "3F",
+        "category": "jewellery"
+      },
+      {
+        "name": "CHOPARD",
+        "sign": "CHOPARD",
+        "zh": "CHOPARD",
+        "floor": "3F",
+        "category": "jewellery"
+      },
+      {
+        "name": "De Beers",
+        "sign": "De Beers",
+        "zh": "De Beers",
+        "floor": "3F",
+        "category": "jewellery"
+      },
+      {
+        "name": "Jadegia",
+        "sign": "Jadegia",
+        "zh": "Jadegia 玉世家",
+        "floor": "3F",
+        "category": "watch"
+      },
+      {
+        "name": "PIAGET",
+        "sign": "PIAGET",
+        "zh": "PIAGET",
+        "floor": "3F",
+        "category": "jewellery"
+      },
+      {
+        "name": "Roger Dubuis",
+        "sign": "Roger Dubuis",
+        "zh": "Roger Dubuis",
+        "floor": "3F",
+        "category": "watch"
+      },
+      {
+        "name": "TIFFANY & CO.",
+        "sign": "TIFFANY & CO.",
+        "zh": "TIFFANY ＆ CO.",
+        "floor": "3F",
+        "category": "jewellery"
+      },
+      {
+        "name": "Van Cleef & Arpels",
+        "sign": "Van Cleef & Arpels",
+        "zh": "Van Cleef & Arpels / VCA",
+        "floor": "3F",
+        "category": "jewellery"
+      },
+      {
+        "name": "BALENCIAGA",
+        "sign": "BALENCIAGA",
+        "zh": "BALENCIAGA",
+        "floor": "3F",
+        "category": "boutique"
+      },
+      {
+        "name": "Berluti",
+        "sign": "Berluti",
+        "zh": "Berluti",
+        "floor": "3F",
+        "category": "boutique"
+      },
+      {
+        "name": "BOTTEGA VENETA",
+        "sign": "BOTTEGA VENETA",
+        "zh": "BOTTEGA VENETA / BV",
+        "floor": "3F",
+        "category": "boutique"
+      },
+      {
+        "name": "CELINE",
+        "sign": "CELINE",
+        "zh": "CELINE",
+        "floor": "3F",
+        "category": "boutique"
+      },
+      {
+        "name": "Ermenegildo Zegna",
+        "sign": "Ermenegildo Zegna",
+        "zh": "ZEGNA",
+        "floor": "3F",
+        "category": "boutique"
+      },
+      {
+        "name": "FENDI",
+        "sign": "FENDI",
+        "zh": "FENDI",
+        "floor": "3F",
+        "category": "boutique"
+      },
+      {
+        "name": "FERRAGAMO",
+        "sign": "FERRAGAMO",
+        "zh": "FERRAGAMO",
+        "floor": "3F",
+        "category": "boutique"
+      },
+      {
+        "name": "Loro Piana",
+        "sign": "Loro Piana",
+        "zh": "Loro Piana",
+        "floor": "3F",
+        "category": "boutique"
+      },
+      {
+        "name": "Moncler",
+        "sign": "Moncler",
+        "zh": "Moncler",
+        "floor": "3F",
+        "category": "boutique"
+      }
+    ],
+    "4F": [
+      {
+        "name": "BVLGARI",
+        "sign": "BVLGARI",
+        "zh": "BVLGARI",
+        "floor": "4F",
+        "category": "jewellery"
+      },
+      {
+        "name": "Cartier",
+        "sign": "Cartier",
+        "zh": "Cartier",
+        "floor": "4F",
+        "category": "jewellery"
+      },
+      {
+        "name": "BURBERRY",
+        "sign": "BURBERRY",
+        "zh": "BURBERRY",
+        "floor": "4F",
+        "category": "boutique"
+      },
+      {
+        "name": "Delvaux",
+        "sign": "Delvaux",
+        "zh": "Delvaux",
+        "floor": "4F",
+        "category": "boutique"
+      },
+      {
+        "name": "Dior",
+        "sign": "Dior",
+        "zh": "Dior",
+        "floor": "4F",
+        "category": "boutique"
+      },
+      {
+        "name": "GUCCI",
+        "sign": "GUCCI",
+        "zh": "GUCCI",
+        "floor": "4F",
+        "category": "boutique"
+      },
+      {
+        "name": "Louis Vuitton",
+        "sign": "Louis Vuitton",
+        "zh": "Louis Vuitton / LV",
+        "floor": "4F",
+        "category": "boutique"
+      },
+      {
+        "name": "SAINT LAURENT",
+        "sign": "SAINT LAURENT",
+        "zh": "SAINT LAURENT / YSL",
+        "floor": "4F",
+        "category": "boutique"
+      },
+      {
+        "name": "The one at Taipei 101",
+        "sign": "The one at Taipei 101",
+        "zh": "The one at Taipei 101 獨一文創",
+        "floor": "4F",
+        "category": "culture"
+      },
+      {
+        "name": "CHUYU",
+        "sign": "CHUYU",
+        "zh": "初魚鮨 | 初魚鉄板料亭",
+        "floor": "4F",
+        "category": "restaurant"
+      },
+      {
+        "name": "Cova",
+        "sign": "Cova",
+        "zh": "Cova",
+        "floor": "4F",
+        "category": "cafe"
+      },
+      {
+        "name": "LADURÉE",
+        "sign": "LADURÉE",
+        "zh": "LADURÉE 拉朵蕾",
+        "floor": "4F",
+        "category": "cafe"
+      },
+      {
+        "name": "SALT & STONE",
+        "sign": "SALT & STONE",
+        "zh": "SALT & STONE",
+        "floor": "4F",
+        "category": "restaurant"
+      },
+      {
+        "name": "Shi Ling Shabu",
+        "sign": "食令shabu",
+        "zh": "食令shabu",
+        "floor": "4F",
+        "category": "restaurant"
+      }
+    ],
+    "5F": [
+      {
+        "name": "ABC Cooking Studio",
+        "sign": "ABC Cooking Studio",
+        "zh": "ABC Cooking Studio",
+        "floor": "5F",
+        "category": "service"
+      },
+      {
+        "name": "Cartier",
+        "sign": "Cartier",
+        "zh": "Cartier",
+        "floor": "5F",
+        "category": "jewellery"
+      },
+      {
+        "name": "GUCCI",
+        "sign": "GUCCI",
+        "zh": "GUCCI",
+        "floor": "5F",
+        "category": "boutique"
+      },
+      {
+        "name": "101 Memorial Wine",
+        "sign": "101紀念酒",
+        "zh": "101紀念酒",
+        "floor": "5F",
+        "category": "souvenir"
+      },
+      {
+        "name": "Fujin Tree Taiwanese Champagne",
+        "sign": "Fujin Tree Taiwanese Champagne",
+        "zh": "富錦樹台菜香檳",
+        "floor": "5F",
+        "category": "restaurant"
+      },
+      {
+        "name": "Observatory Tickets",
+        "sign": "Observatory Tickets",
+        "zh": "",
+        "floor": "5F",
+        "category": "service"
+      }
+    ]
+  }
+}

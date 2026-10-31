@@ -13,7 +13,8 @@
     "e2e": "playwright test",
     "bake:terrain": "node scripts/bake-terrain.ts",
     "shots": "node scripts/screenshots.ts",
-    "bake:xinyi": "node scripts/bake-xinyi.ts"
+    "bake:xinyi": "node scripts/bake-xinyi.ts",
+    "bake:mall": "node scripts/bake-mall.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

@@ -57,6 +57,20 @@ describe('Colliders', () => {
     expect(trees.blocked([10.2, 10])).toBe(true);
   });
 
+  test('a walk area keeps the visitor inside its outline', () => {
+    const area: P[] = [
+      [-10, -10],
+      [10, -10],
+      [10, 10],
+      [-10, 10],
+    ];
+    const room = new Colliders([], bounds, 0.3, [], area);
+    const [x] = room.move([0, 0], [15, 0]);
+    expect(x).toBeLessThanOrEqual(10 - 0.3 + 1e-6);
+    expect(room.blocked([12, 0])).toBe(true);
+    expect(room.blocked([0, 0])).toBe(false);
+  });
+
   test('blocked reports inside and outside', () => {
     expect(c.blocked([0, 0])).toBe(true);
     expect(c.blocked([-20, 0])).toBe(false);
