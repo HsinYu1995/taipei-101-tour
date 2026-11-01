@@ -192,16 +192,19 @@ body {
 
 .street-hint {
   position: fixed;
-  top: 16px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   width: max-content;
-  max-width: min(520px, calc(100vw - 32px));
+  max-width: min(560px, calc(100vw - 32px));
   margin: 0;
-  padding: 10px 16px;
-  border-radius: 12px;
-  background: var(--panel);
-  text-align: center;
+  padding: 10px 18px;
+  border-top: 2px solid var(--steel-edge);
+  border-radius: 4px;
+  background: var(--sign-ground);
+  color: var(--ink);
+  font-family: var(--font-sign);
+  font-size: 15px;
   line-height: 1.4;
   pointer-events: none;
   transition: opacity 400ms ease;
@@ -211,11 +214,23 @@ body {
   opacity: 0;
 }
 
-/* Phones: the hint goes below the stacked buttons. */
+/* A wayfinding sign: one line per thing to know. */
+.hint-line {
+  display: block;
+}
+
+/* The way to the mall, led by an arrow in the tower's glass (decoration: the alt text after the slash is empty). */
+.hint-doors::before {
+  content: "\279C" / "";
+  margin-right: 8px;
+  color: var(--glass);
+  font-weight: 600;
+}
+
+/* Phones: above the thumbstick (120 px tall, 24 px up), clear of the stacked buttons. */
 @media (max-width: 600px) {
   .street-hint {
-    top: auto;
-    bottom: 176px;
+    bottom: 168px;
   }
 }
 

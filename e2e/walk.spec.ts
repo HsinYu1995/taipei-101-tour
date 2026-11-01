@@ -43,7 +43,10 @@ test('the hint shows on landing and fades on first movement', async ({ page, isM
   await enterStreet(page);
   const hint = page.getByTestId('street-hint');
   await expect(hint).toBeVisible();
-  await expect(hint).toHaveText(isMobile ? en.ui.walkHintTouch : en.ui.walkHintDesktop);
+  // A line each: how to move, where the mall's doors are, how to leave.
+  const device = isMobile ? 'touch' : 'desktop';
+  const { move, doors, leave } = en.ui.walkHint;
+  await expect(hint.locator('.hint-line')).toHaveText([move[device], doors, leave[device]]);
   if (isMobile) {
     await stickPush(page, 0, -40, 600);
   } else {

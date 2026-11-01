@@ -13,11 +13,11 @@ const STICK_RANGE_PX = 50;
 
 const isTouch = () => window.matchMedia('(pointer: coarse)').matches;
 
+type Device = 'desktop' | 'touch';
+type Hint = { move: Record<Device, string>; doors?: string; leave: Record<Device, string> };
+
 /** Each place says how to leave it: the street rises to the tour, the mall goes back to the street. */
-const HINTS: Record<PlaceId, { desktop: string; touch: string }> = {
-  street: { desktop: en.ui.walkHintDesktop, touch: en.ui.walkHintTouch },
-  mall: { desktop: en.ui.mallHintDesktop, touch: en.ui.mallHintTouch },
-};
+const HINTS: Record<PlaceId, Hint> = { street: en.ui.walkHint, mall: en.ui.mallHint };
 
 /** Walk controls: keys, look drags, the touch thumbstick, and the landing hint. */
 export default function WalkHud() {
@@ -104,12 +104,21 @@ export default function WalkHud() {
   return (
     <>
       {hint !== 'gone' && (
-        <p className={`street-hint${hint === 'fading' ? ' fading' : ''}`} data-testid="street-hint">
-          {isTouch() ? HINTS[place].touch : HINTS[place].desktop}
-        </p>
+        <HintStrip hint={HINTS[place]} device={isTouch() ? 'touch' : 'desktop'} fading={hint === 'fading'} />
       )}
       {isTouch() && <Thumbstick onMove={() => hideHint.current()} />}
     </>
+  );
+}
+
+/** The hint as a wayfinding strip: a line each, the line about the mall's doors led by an arrow. */
+function HintStrip({ hint, device, fading }: { hint: Hint; device: Device; fading: boolean }) {
+  return (
+    <p className={`street-hint${fading ? ' fading' : ''}`} data-testid="street-hint">
+      <span className="hint-line">{hint.move[device]}</span>
+      {hint.doors && <span className="hint-line hint-doors">{hint.doors}</span>}
+      <span className="hint-line">{hint.leave[device]}</span>
+    </p>
   );
 }
 
