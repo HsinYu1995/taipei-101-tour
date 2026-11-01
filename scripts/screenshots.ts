@@ -1,12 +1,13 @@
 /**
- * Saves one screenshot per chapter stop and per street pose, desktop and phone, into screenshots/, and prints
- * each one's render counts. Needs the e2e build being served:
+ * Saves one screenshot per chapter stop, per street pose and per mall floor (both ways), desktop and phone, into
+ * screenshots/, and prints each one's render counts. Needs the e2e build being served:
  *
  *   npm run build:e2e && npx vite preview --port 4173
  *   npm run shots
  */
 import { mkdirSync } from 'node:fs';
 import { chromium, devices } from '@playwright/test';
+import { FLOOR_IDS } from '../src/mall/types.ts';
 import { CHAPTERS, STOP_WEIGHT, TRAVEL_WEIGHT } from '../src/tour/chapters.ts';
 
 const URL = process.env.SHOTS_URL ?? 'http://localhost:4173/';
@@ -55,6 +56,30 @@ for (const [project, options] of Object.entries(PROJECTS)) {
     await page.evaluate((v) => window.__tour!.probes.street!.place(v), pose);
     await page.waitForTimeout(1000);
     await shoot(name);
+  }
+
+  // The mall: in through the south door, then every floor's lobby, facing the atrium and facing away.
+  await page.evaluate(() => window.__tour!.probes.street!.place({ x: 0, z: 46, yaw: 0, pitch: 0 }));
+  await page.keyboard.down('w');
+  await page.waitForFunction(() => {
+    const s = window.__tour!.getState();
+    return s.mode === 'walking' && s.place === 'mall' && window.__tour!.probes.mall !== undefined;
+  }, null, { timeout: 90_000 });
+  await page.keyboard.up('w');
+  await page.waitForTimeout(2500);
+  await shoot('mall-panel');
+  for (const floor of FLOOR_IDS) {
+    await page.evaluate((f) => window.__tour!.probes.mall!.goTo(f), floor);
+    await page.waitForFunction((f) => {
+      const m = window.__tour!.probes.mall!;
+      return m.floor() === f && !m.changing();
+    }, floor, { timeout: 30_000 });
+    await page.waitForTimeout(2500);
+    await shoot(`mall-${floor}`);
+    const lobby = await page.evaluate(() => window.__tour!.probes.mall!.visitor());
+    await page.evaluate((v) => window.__tour!.probes.mall!.place({ ...v, yaw: v.yaw + Math.PI }), lobby);
+    await page.waitForTimeout(1500);
+    await shoot(`mall-${floor}-back`);
   }
   await page.close();
 }
