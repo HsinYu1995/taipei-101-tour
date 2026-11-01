@@ -322,6 +322,40 @@ test('each floor looks different', async ({ page }, info) => {
   await info.attach('floor-distances.txt', { body: distances.join('\n'), contentType: 'text/plain' });
 });
 
+test("no floor's ceiling renders black", async ({ page }, info) => {
+  test.setTimeout(240_000);
+  await enterMall(page);
+  const dark: string[] = [];
+  for (const floor of FLOOR_IDS) {
+    await goToFloor(page, floor);
+    // From the lobby, turned away from the atrium (1F's is open to the floors above) and looking up at the ceiling.
+    const lobby = await mallVisitor(page);
+    await mallPlace(page, { x: lobby.x, z: lobby.z, yaw: lobby.yaw + Math.PI, pitch: 1.1 });
+    const png = await page.screenshot({ style: '*:not(canvas):not(:has(canvas)) { visibility: hidden !important; }' });
+    await info.attach(`ceiling-${floor}.png`, { body: png, contentType: 'image/png' });
+    // The 25th percentile of the top half's relative luminance: lit lamp panels would lift a mean over a black ceiling.
+    const p25 = await page.evaluate(async (b64) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${b64}`;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const g = canvas.getContext('2d')!;
+      g.drawImage(img, 0, 0);
+      const { data } = g.getImageData(0, 0, img.width, Math.floor(img.height / 2));
+      const lin = (c: number) => ((c /= 255) <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+      const lum: number[] = [];
+      for (let i = 0; i < data.length; i += 4) lum.push(0.2126 * lin(data[i]) + 0.7152 * lin(data[i + 1]) + 0.0722 * lin(data[i + 2]));
+      lum.sort((a, b) => a - b);
+      return lum[Math.floor(lum.length / 4)];
+    }, png.toString('base64'));
+    // 0.01 is about sRGB 25 of 255: black renders near 0.001, and 2F's dusk ceiling, fully lit, about 0.024.
+    if (p25 < 0.01) dark.push(`${floor} ${p25.toFixed(3)}`);
+  }
+  expect(dark, 'floors whose ceiling renders black').toEqual([]);
+});
+
 test('a failed mall download returns to the street and withdraws the mall', async ({ page }) => {
   test.setTimeout(90_000);
   // Hold the download until the visitor is waiting in the black, then let it die.

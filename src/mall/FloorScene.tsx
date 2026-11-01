@@ -32,6 +32,9 @@ const ESCALATOR = { half: 0.55, truss: 0.9, side: 1, landing: 1.4 };
 /** Ceiling lamps on a grid this many metres apart, each a square this wide; none over or beside the atrium. */
 const LAMPS = { spacing: 6, size: 1.2, clear: 2 };
 
+/** The cove strip: how far in from the wall, its top and bottom below the ceiling, and its width round the atrium. */
+const COVE = { inset: 0.05, top: 0.3, bottom: 0.15, ring: 0.3 };
+
 /** Furniture colours that are the same on every floor; the rest come from the floor's palette. */
 const FIXED = {
   wood: '#7a4e2c',
@@ -158,6 +161,27 @@ export const turning = (ring: readonly P[]) =>
     return s + ax * bz - bx * az;
   }, 0));
 
+/**
+ * `ring` with every vertex moved `d` metres toward its inside along the corner's bisector (negative `d` moves it
+ * outward), so each edge moves `d` square to itself.
+ */
+export function inset(ring: readonly P[], d: number): P[] {
+  const s = turning(ring);
+  // The inward normal of the edge from a to b: left of it when the inside is on the left.
+  const normal = ([ax, az]: P, [bx, bz]: P): P => {
+    const len = Math.hypot(bx - ax, bz - az);
+    return [(-(bz - az) / len) * s, ((bx - ax) / len) * s];
+  };
+  return ring.map((p, i) => {
+    const n0 = normal(ring[(i - 1 + ring.length) % ring.length], p);
+    const n1 = normal(p, ring[(i + 1) % ring.length]);
+    const [bx, bz] = [n0[0] + n1[0], n0[1] + n1[1]];
+    // Along the bisector, as far as moves both edges d: d / cos(half the corner's turn).
+    const k = d / Math.max(0.2, (bx * n1[0] + bz * n1[1]) / Math.hypot(bx, bz)) / Math.hypot(bx, bz);
+    return [p[0] + bx * k, p[1] + bz * k];
+  });
+}
+
 /** Where a line from `from` along unit `u` leaves the convex `ring`, as a distance along it. */
 function exit(ring: readonly P[], [fx, fz]: P, [ux, uz]: P): number {
   let best = Infinity;
@@ -220,6 +244,10 @@ function buildMeshes(plan: FloorPlan, base: number): FloorMeshes {
       glow.flat(lamp, top - 0.02);
     }
   }
+  // Coves: a lit strip round the top of the walls, and round the ceiling's atrium opening, so every ceiling has a
+  // lit edge.
+  glow.paint(mix(palette.accent, '#ffffff', 0.35)).band(inset(plan.area, COVE.inset), top - COVE.top, top - COVE.bottom);
+  if (openAbove && atrium.length) glow.flat(inset(atrium, -COVE.ring), top - 0.01, [atrium]);
   if (gallery) {
     shell.paint(palette.accent).band(atrium, y0 - SLAB, y0);
     shell.paint(mix(palette.accent, palette.wall, 0.55)).band(atrium, y0, y0 + BALUSTRADE.panel);

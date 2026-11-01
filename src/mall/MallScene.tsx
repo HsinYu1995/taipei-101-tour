@@ -1,6 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import { AmbientLight, DirectionalLight, Group, Mesh, PlaneGeometry, ShaderMaterial } from 'three';
+import { DirectionalLight, Group, HemisphereLight, Mesh, PlaneGeometry, ShaderMaterial } from 'three';
 import { registerProbe } from '../debug/testHook';
 import { useHeightField } from '../scene/terrain/Terrain';
 import { groundAt } from '../street/groundAt';
@@ -51,7 +51,7 @@ export default function MallScene() {
   const floors = useRef<Partial<Record<FloorId, Group>>>({});
   const signs = useMemo(() => new MallSigns(sim.plans, base, (f) => floors.current[f]!, gl), [sim, base, gl]);
   useEffect(() => () => signs.show([]), [signs]);
-  const ambient = useRef<AmbientLight>(null);
+  const hemi = useRef<HemisphereLight>(null);
   const key = useRef<DirectionalLight>(null);
   const fade = useRef<Mesh>(null);
   const fadeMaterial = useMemo(makeFadeMaterial, []);
@@ -112,8 +112,9 @@ export default function MallScene() {
     else if (tour.mode !== 'crossing' || tour.crossingTo !== 'mall') signs.show([]);
     const light = CHARACTER[floor].light;
     const on = phase !== 'paused';
-    ambient.current!.color.set(light.ambient);
-    ambient.current!.intensity = on ? light.ambientIntensity : 0;
+    hemi.current!.color.set(light.sky);
+    hemi.current!.groundColor.set(light.ground);
+    hemi.current!.intensity = on ? light.hemiIntensity : 0;
     key.current!.color.set(light.key);
     key.current!.intensity = on ? light.keyIntensity : 0;
     fadeMaterial.uniforms.opacity.value = sim.fade();
@@ -147,7 +148,7 @@ export default function MallScene() {
 
   return (
     <>
-      <ambientLight ref={ambient} intensity={0} />
+      <hemisphereLight ref={hemi} intensity={0} />
       <directionalLight ref={key} intensity={0} position={KEY_FROM} />
       <group ref={mall} visible={inside}>
         {FLOOR_IDS.map((f) => (
