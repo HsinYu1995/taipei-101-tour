@@ -35,6 +35,23 @@ const eyeY = (page: Page) => page.evaluate(() => window.__tour!.probes.mall!.eye
 const castRay = (page: Page, origin: Vec3, dir: Vec3) =>
   page.evaluate(([o, d]) => window.__tour!.probes.castRay!(o, d), [origin, dir] as const);
 
+/**
+ * Watches from now for the lift's doors appearing (a lift crossing is over in well under a second, too quick to poll
+ * for); the returned function says whether they did.
+ */
+async function watchLiftDoors(page: Page) {
+  await page.evaluate(() => {
+    const w = window as unknown as { __liftDoors: boolean; __liftWatch?: MutationObserver };
+    w.__liftDoors = false;
+    w.__liftWatch?.disconnect();
+    w.__liftWatch = new MutationObserver(() => {
+      if (document.querySelector('[data-testid="lift-doors"]')) w.__liftDoors = true;
+    });
+    w.__liftWatch.observe(document.body, { childList: true, subtree: true });
+  });
+  return () => page.evaluate(() => (window as unknown as { __liftDoors: boolean }).__liftDoors);
+}
+
 /** Where the place is now: mode and place together, so a crossing in between never matches. */
 const whereNow = async (page: Page) => {
   const s = await getTour(page);
@@ -121,10 +138,13 @@ test('walking into the south entrance fades into the 1F hall', async ({ page }) 
   await place(page, { x: 0, z: 46, yaw: 0, pitch: 0 });
   const programs = await watchPrograms(page);
   const fade = page.getByTestId('walk-fade');
+  const doors = await watchLiftDoors(page);
   await page.keyboard.down('w');
   await expect(fade).toBeVisible({ timeout: 15_000 });
   await page.keyboard.up('w');
   await expect.poll(() => whereNow(page), { timeout: 45_000 }).toBe('walking mall');
+  // A door off the street is no lift: it fades, with no lift doors.
+  expect(await doors()).toBe(false);
   await page.waitForFunction(() => window.__tour!.probes.mall !== undefined);
   expect(await page.evaluate(() => window.__tour!.probes.mall!.floor())).toBe('1F');
   const v = await mallVisitor(page);
@@ -548,9 +568,12 @@ test("the lift hands over to the damper chapter's stop in tour mode", async ({ p
   test.setTimeout(120_000);
   await enterMall(page);
   await pressFloor(page, '5F');
+  const doors = await watchLiftDoors(page);
   await page.getByTestId('floor-lift').click();
-  await expect(page.getByTestId('walk-fade')).toBeVisible();
   await waitMode(page, 'tour', 20_000);
+  // The lift's doors closed on the mall, and are gone once they have opened on the damper.
+  expect(await doors()).toBe(true);
+  await expect(page.getByTestId('lift-doors')).toHaveCount(0);
   const s = await getTour(page);
   expect(s.segment).toMatchObject({ kind: 'stop', chapterIndex: 2 });
   await expect(page.getByTestId('floor-panel')).toHaveCount(0);

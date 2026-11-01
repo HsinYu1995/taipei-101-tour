@@ -185,6 +185,46 @@ body {
   pointer-events: none;
 }
 
+/* The lift's doors cover instead of the black (see src/walk/doors.ts). */
+.walk-fade.lift {
+  background: transparent;
+}
+
+.lift-door {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+}
+
+.lift-door-left {
+  left: 0;
+}
+
+.lift-door-right {
+  right: 0;
+}
+
+@keyframes lift-close-left {
+  from { transform: translateX(-100%); }
+  to { transform: none; }
+}
+
+@keyframes lift-close-right {
+  from { transform: translateX(100%); }
+  to { transform: none; }
+}
+
+@keyframes lift-open-left {
+  from { transform: none; }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes lift-open-right {
+  from { transform: none; }
+  to { transform: translateX(100%); }
+}
+
 /* The way back while the mall loads, where the walk's own back button sits, taking taps through the fade. */
 .walk-fade-controls {
   pointer-events: auto;

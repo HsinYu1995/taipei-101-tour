@@ -9,7 +9,7 @@ import { CHARACTER, FLOOR_Y } from './floors';
 import { buildFloor, floorColliders, MALL_BOUNDS, MALL_ENTRY, type FloorPlan } from './layout';
 import { FLOOR_IDS, type FloorId, type MallTenants } from './types';
 
-/** Seconds a floor button's change takes: fade to black, switch floor, fade up at that floor's lobby. */
+/** Seconds a floor button's change takes: doors shut, switch floor, doors open at that floor's lobby. */
 export const CHANGE_S = 1;
 /** Summed frame steps fall just short of round numbers (30 frames of 1/30 s make 0.9999999999999999). */
 const EPS = 1e-9;

@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { en } from '../content/en';
 import { testTimings } from '../debug/testHook';
 import type { PlaceId } from '../tour/machine';
 import { useTour } from '../tour/store';
 import { maxScroll } from '../tour/useScrollProgress';
 import { CROSSING_TIMEOUT_MS, FADE_MS, placeFailed } from './api';
+import { DOORS } from './doors';
 
 type Stage = 'clear' | 'darkening' | 'black' | 'lightening';
+/** How a crossing covers the screen: the lift's doors from the mall up the tower, a fade to black otherwise. */
+type Cover = 'lift' | 'fade';
 
 /** Settles as `ready` does, or rejects once `ms` have passed without it. */
 function within(ready: Promise<void>, ms: number) {
@@ -26,12 +29,19 @@ function within(ready: Promise<void>, ms: number) {
 export function Fade() {
   const crossing = useTour((s) => s.mode === 'crossing');
   const [stage, setStage] = useState<Stage>('clear');
+  const [cover, setCover] = useState<Cover>('fade');
+  const stageNow = useRef(stage);
+  stageNow.current = stage;
   const loading = useTour((s) => stage === 'black' && s.crossingTo === 'mall' && s.places.mall === undefined);
 
   // A crossing fades out from wherever the fade is, even mid fade-in; its end fades back in.
+  // How it covers is settled once, as the crossing starts, and kept until the screen is clear again.
   useEffect(() => {
-    if (crossing) setStage((s) => (s === 'black' ? s : 'darkening'));
-    else setStage((s) => (s === 'clear' ? s : 'lightening'));
+    if (crossing) {
+      const { place, crossingTo } = useTour.getState();
+      if (stageNow.current === 'clear') setCover(place === 'mall' && crossingTo === 'damper' ? 'lift' : 'fade');
+      setStage((s) => (s === 'black' ? s : 'darkening'));
+    } else setStage((s) => (s === 'clear' ? s : 'lightening'));
   }, [crossing]);
 
   useEffect(() => {
@@ -94,14 +104,21 @@ export function Fade() {
     };
   }, [stage]);
 
-  // Hidden by visibility rather than display, so the opacity transition runs from the frame it is shown.
+  // Hidden by visibility rather than display, so the opacity transition runs from the frame it is shown. The doors
+  // cover by sliding, so under them the fade itself stays clear and fully shown.
   const dark = stage === 'darkening' || stage === 'black';
+  const lift = cover === 'lift' && stage !== 'clear';
   return (
     <div
-      className="walk-fade"
+      className={lift ? 'walk-fade lift' : 'walk-fade'}
       data-testid="walk-fade"
-      style={{ opacity: dark ? 1 : 0, visibility: stage === 'clear' ? 'hidden' : 'visible', transition: `opacity ${FADE_MS}ms ease` }}
+      style={{
+        opacity: dark || lift ? 1 : 0,
+        visibility: stage === 'clear' ? 'hidden' : 'visible',
+        transition: lift ? 'none' : `opacity ${FADE_MS}ms ease`,
+      }}
     >
+      {lift && <LiftDoors stage={stage} />}
       {loading && (
         <>
           <p className="walk-loading" data-testid="walk-loading" role="status">
@@ -114,6 +131,26 @@ export function Fade() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/** The lift's doors: sliding shut while darkening, shut while black, sliding open while lightening. */
+function LiftDoors({ stage }: { stage: Stage }) {
+  const motion = stage === 'darkening' ? 'lift-close' : stage === 'lightening' ? 'lift-open' : undefined;
+  return (
+    <div className="lift-doors" data-testid="lift-doors">
+      {(['left', 'right'] as const).map((side) => (
+        <div
+          key={side}
+          className={`lift-door lift-door-${side}`}
+          style={{
+            background: `linear-gradient(to top, ${DOORS.edge}, ${DOORS.steel})`,
+            [side === 'left' ? 'borderRight' : 'borderLeft']: `${DOORS.seamPx / 2}px solid ${DOORS.edge}`,
+            animation: motion && `${motion}-${side} ${FADE_MS}ms ease both`,
+          }}
+        />
+      ))}
     </div>
   );
 }
