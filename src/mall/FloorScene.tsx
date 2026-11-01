@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import {
+  AdditiveBlending,
   BufferGeometry,
   Color,
   DoubleSide,
@@ -7,15 +8,18 @@ import {
   MeshBasicMaterial,
   MeshStandardMaterial,
   ShapeUtils,
+  SRGBColorSpace,
   Vector2,
   type Material,
 } from 'three';
 import type { P } from '../street/types';
-import { ATRIUM_FLOORS, CEILING, CHARACTER, FLOOR_Y } from './floors';
+import { ATRIUM_FLOORS, CEILING, CHARACTER, FLOOR_Y, TRIM, type Character } from './floors';
 import type { FloorPlan } from './layout';
 import { FLOOR_IDS, type FloorId } from './types';
 
 type V3 = [number, number, number];
+
+const BLACK = new Color(0, 0, 0);
 
 /** The floor slab under each upper floor, seen as the band round the atrium's edge. */
 const SLAB = 0.5;
@@ -31,6 +35,18 @@ const ESCALATOR = { half: 0.55, truss: 0.9, side: 1, landing: 1.4 };
 
 /** Ceiling lamps on a grid this many metres apart, each a square this wide; none over or beside the atrium. */
 const LAMPS = { spacing: 6, size: 1.2, clear: 2 };
+
+/** Light pools on the floor: how far a lamp's reaches, how deep a shopfront's, and the most any one adds. */
+const POOLS = { lamp: 2.5, front: 2, margin: 2, cap: 0.35, lift: 0.01 };
+/** The solids each centrepiece is made of, whose middle gets a pool in the floor's accent. */
+const CENTREPIECE_KIND: Record<Character['centrepiece'], string> = {
+  'food-hall': 'table',
+  islands: 'island',
+  stage: 'stage',
+  lounge: 'sofa',
+  terrace: 'cafe',
+  tickets: 'lane',
+};
 
 /** The cove strip: how far in from the wall, its top and bottom below the ceiling, and its width round the atrium. */
 const COVE = { inset: 0.05, top: 0.3, bottom: 0.15, ring: 0.3 };
@@ -111,6 +127,35 @@ class Builder {
     this.quad(b0, b1, b3, b2);
   }
 
+  private vertex([x, y, z]: V3, c: Color) {
+    this.positions.push(x, y, z);
+    this.colors.push(c.r, c.g, c.b);
+  }
+
+  /** A level disc of `radius` at height y, `inner` at its centre fading to black (adding nothing) at its rim. */
+  fan([cx, cz]: P, radius: number, y: number, inner: Color, segments = 12) {
+    const rim = (i: number): V3 => {
+      const a = (i / segments) * 2 * Math.PI;
+      return [cx + Math.cos(a) * radius, y, cz + Math.sin(a) * radius];
+    };
+    for (let i = 0; i < segments; i++) {
+      this.vertex([cx, y, cz], inner);
+      this.vertex(rim(i), BLACK);
+      this.vertex(rim(i + 1), BLACK);
+    }
+  }
+
+  /** A level band from edge a-b, `near` along it, fading to black `depth` along unit `n`. */
+  fade(a: P, b: P, [nx, nz]: P, depth: number, y: number, near: Color) {
+    const at = ([x, z]: P, d: number): V3 => [x + nx * d, y, z + nz * d];
+    this.vertex(at(a, 0), near);
+    this.vertex(at(b, 0), near);
+    this.vertex(at(b, depth), BLACK);
+    this.vertex(at(a, 0), near);
+    this.vertex(at(b, depth), BLACK);
+    this.vertex(at(a, depth), BLACK);
+  }
+
   geometry() {
     const g = new BufferGeometry();
     g.setAttribute('position', new Float32BufferAttribute(this.positions, 3));
@@ -153,6 +198,16 @@ function inside([x, z]: P, ring: readonly P[]) {
 }
 
 const mix = (a: string, b: string, t: number) => new Color(a).lerp(new Color(b), t);
+
+/**
+ * `hex` scaled by k, and by how dark the floor is (a pale floor needs little added to show a pool, and much would
+ * blow out to white), each channel capped so overlapping pools never add up to white.
+ */
+const pool = (hex: string, k: number, floor: string) => {
+  const dark = Math.max(0.15, 1 - new Color(floor).getHSL({ h: 0, s: 0, l: 0 }, SRGBColorSpace).l);
+  const c = new Color(hex).multiplyScalar(k * dark);
+  return new Color(Math.min(c.r, POOLS.cap), Math.min(c.g, POOLS.cap), Math.min(c.b, POOLS.cap));
+};
 
 /** +1 when the ring's inside lies left of each edge, reading (x, z) as plane coordinates (x, y); else -1. */
 export const turning = (ring: readonly P[]) =>
@@ -202,6 +257,7 @@ interface FloorMeshes {
   shopfronts: BufferGeometry;
   furniture: BufferGeometry;
   glow: BufferGeometry;
+  pools: BufferGeometry;
 }
 
 /** The floor above `floor`, if any. */
@@ -211,13 +267,15 @@ const isGallery = (floor: FloorId) => ATRIUM_FLOORS.includes(floor) && floor !==
 
 function buildMeshes(plan: FloorPlan, base: number): FloorMeshes {
   const f = plan.floor;
-  const { palette } = CHARACTER[f];
+  const { palette, light, centrepiece } = CHARACTER[f];
   const y0 = base + FLOOR_Y[f];
   const top = y0 + CEILING[f];
   const shell = new Builder();
   const shopfronts = new Builder();
   const furniture = new Builder();
   const glow = new Builder();
+  const pools = new Builder();
+  const poolY = y0 + POOLS.lift;
   const atrium = plan.void;
   const gallery = isGallery(f);
   const next = above(f);
@@ -229,9 +287,11 @@ function buildMeshes(plan: FloorPlan, base: number): FloorMeshes {
   shell.paint(palette.wall).band(plan.area, y0, top);
   const openAbove = next !== undefined && isGallery(next);
   shell.paint(palette.ceiling).flat(plan.area, top, openAbove && atrium.length ? [atrium] : []);
-  if (atrium.length && !openAbove) glow.paint(mix(palette.ceiling, '#ffffff', 0.5)).flat(shrink(atrium, 0.9), top - 0.02);
-  // Lamps, so even the darkest ceilings read as ceilings rather than a void.
-  glow.paint(palette.accent);
+  // 4F's laylight over the atrium; 5F's skylight is the tower's glass with daylight through it.
+  const overhead = f === '5F' ? mix('#ffffff', TRIM.glass, 0.12) : mix(palette.ceiling, '#ffffff', 0.5);
+  if (atrium.length && !openAbove) glow.paint(overhead).flat(shrink(atrium, 0.9), top - 0.02);
+  // Lamps, lighter than the lit ceiling round them on every floor.
+  glow.paint(mix(palette.accent, '#ffffff', 0.6));
   const [ax, az] = atrium.length ? centroid(atrium) : [0, 0];
   const atriumRadius = atrium.length ? Math.hypot(atrium[0][0] - ax, atrium[0][1] - az) : 0;
   const xs = plan.area.map((p) => p[0]);
@@ -242,6 +302,7 @@ function buildMeshes(plan: FloorPlan, base: number): FloorMeshes {
       if (!lamp.every((p) => inside(p, plan.area))) continue;
       if (atrium.length && Math.hypot(x - ax, z - az) < atriumRadius + LAMPS.clear) continue;
       glow.flat(lamp, top - 0.02);
+      pools.fan([x, z], POOLS.lamp, poolY, pool(light.key, 0.22, palette.floor));
     }
   }
   // Coves: a lit strip round the top of the walls, and round the ceiling's atrium opening, so every ceiling has a
@@ -250,8 +311,8 @@ function buildMeshes(plan: FloorPlan, base: number): FloorMeshes {
   if (openAbove && atrium.length) glow.flat(inset(atrium, -COVE.ring), top - 0.01, [atrium]);
   if (gallery) {
     shell.paint(palette.accent).band(atrium, y0 - SLAB, y0);
-    shell.paint(mix(palette.accent, palette.wall, 0.55)).band(atrium, y0, y0 + BALUSTRADE.panel);
-    shell.paint(palette.accent).band(atrium, y0 + BALUSTRADE.panel, y0 + BALUSTRADE.rail);
+    shell.paint(mix(TRIM.glass, palette.wall, 0.35)).band(atrium, y0, y0 + BALUSTRADE.panel);
+    shell.paint(TRIM.gold).band(atrium, y0 + BALUSTRADE.panel, y0 + BALUSTRADE.rail);
   }
 
   // Shop windows, lit from inside, under a sign band in the floor's accent.
@@ -263,6 +324,11 @@ function buildMeshes(plan: FloorPlan, base: number): FloorMeshes {
     shopfronts.quad(at(a, WINDOW_PROUD, y0), at(b, WINDOW_PROUD, y0), at(b, WINDOW_PROUD, y0 + WINDOW_TOP), at(a, WINDOW_PROUD, y0 + WINDOW_TOP));
     shell.paint(palette.accent);
     shell.quad(at(a, BAND_PROUD, y0 + WINDOW_TOP), at(b, BAND_PROUD, y0 + WINDOW_TOP), at(b, BAND_PROUD, y0 + SIGN_BAND_TOP), at(a, BAND_PROUD, y0 + SIGN_BAND_TOP));
+    // A thin gold edge along the band's top, standing just proud of it.
+    const edge = BAND_PROUD + 0.005;
+    shell.paint(TRIM.gold).quad(at(a, edge, y0 + SIGN_BAND_TOP - 0.06), at(b, edge, y0 + SIGN_BAND_TOP - 0.06), at(b, edge, y0 + SIGN_BAND_TOP), at(a, edge, y0 + SIGN_BAND_TOP));
+    // The window's light spilling onto the floor in front of it.
+    pools.fade(a, b, n, POOLS.front, poolY, pool(palette.shopfront, 0.3, palette.floor));
   }
 
   // The centrepiece, counters and escalators.
@@ -359,7 +425,7 @@ function buildMeshes(plan: FloorPlan, base: number): FloorMeshes {
       const head = along(topD, yTop);
       furniture.paint(FIXED.steps).beam(foot, head, ESCALATOR.half, 0.05);
       furniture.paint(FIXED.truss).beam([foot[0], y0 - 0.05, foot[2]], [head[0], yTop - 0.05, head[2]], ESCALATOR.half, ESCALATOR.truss);
-      furniture.paint(mix(palette.accent, FIXED.truss, 0.5));
+      furniture.paint(TRIM.gold);
       for (const side of [-1, 1]) {
         const off = (p: V3): V3 => [p[0] + u[1] * side * ESCALATOR.half, p[1], p[2] - u[0] * side * ESCALATOR.half];
         furniture.beam(off([foot[0], y0 + ESCALATOR.side, foot[2]]), off([head[0], yTop + ESCALATOR.side, head[2]]), 0.03, ESCALATOR.side);
@@ -370,10 +436,24 @@ function buildMeshes(plan: FloorPlan, base: number): FloorMeshes {
     }
   }
 
-  return { shell: shell.geometry(), shopfronts: shopfronts.geometry(), furniture: furniture.geometry(), glow: glow.geometry() };
+  // A pool in the floor's accent round the centrepiece.
+  const pieces = plan.solids.filter((_, i) => plan.kinds[i] === CENTREPIECE_KIND[centrepiece]).flat();
+  if (pieces.length) {
+    const c = centroid(pieces);
+    const reach = Math.max(...pieces.map(([x, z]) => Math.hypot(x - c[0], z - c[1])));
+    pools.fan(c, reach + POOLS.margin, poolY, pool(palette.accent, 0.25, palette.floor), 24);
+  }
+
+  return {
+    shell: shell.geometry(),
+    shopfronts: shopfronts.geometry(),
+    furniture: furniture.geometry(),
+    glow: glow.geometry(),
+    pools: pools.geometry(),
+  };
 }
 
-/** One floor's walls, shopfronts, centrepiece, escalators and balustrade, as four merged meshes in its palette. */
+/** One floor's walls, shopfronts, centrepiece, escalators and balustrade, as five merged meshes in its palette. */
 export function Floor({ plan, base }: { plan: FloorPlan; base: number }) {
   const f = plan.floor;
   const { palette } = CHARACTER[f];
@@ -385,6 +465,17 @@ export function Floor({ plan, base }: { plan: FloorPlan; base: number }) {
       shopfronts: new MeshStandardMaterial({ ...lit, color: palette.shopfront, emissive: palette.shopfront, emissiveIntensity: 0.45, roughness: 0.4 }),
       furniture: new MeshStandardMaterial({ ...lit, vertexColors: true }),
       glow: new MeshBasicMaterial({ vertexColors: true, side: DoubleSide, fog: false }),
+      // Added onto the floor beneath, black adding nothing; drawn over it without writing depth.
+      pools: new MeshBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        blending: AdditiveBlending,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        side: DoubleSide,
+        fog: false,
+      }),
     } satisfies Record<keyof FloorMeshes, Material>;
   }, [palette]);
   useEffect(
@@ -400,6 +491,7 @@ export function Floor({ plan, base }: { plan: FloorPlan; base: number }) {
       <mesh name={`mall-shopfronts-${f}`} geometry={meshes.shopfronts} material={materials.shopfronts} />
       <mesh name={`mall-furniture-${f}`} geometry={meshes.furniture} material={materials.furniture} />
       <mesh name={`mall-glow-${f}`} geometry={meshes.glow} material={materials.glow} />
+      <mesh name={`mall-pools-${f}`} geometry={meshes.pools} material={materials.pools} raycast={() => {}} />
     </>
   );
 }

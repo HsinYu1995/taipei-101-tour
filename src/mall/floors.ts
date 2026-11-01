@@ -28,7 +28,8 @@ export const TRIM = { gold: '#C8A44D', glass: '#5E8C86' } as const;
 /**
  * Every floor's hemisphere intensity. three divides indirect light by pi and ACES darkens the lows, so a dark ceiling
  * needs this much of its ground colour to read as lit; each floor's sky colour is scaled down to match, keeping its
- * floor as bright as the old ambient left it.
+ * floor as bright as the old ambient left it. Floors with light ceilings (1F, 4F, 5F) bounce a darker ground, so
+ * their ceilings stay below their lamps and laylights.
  */
 const HEMI = 8;
 
@@ -47,7 +48,7 @@ export const CHARACTER: Record<FloorId, Character> = {
   '1F': {
     centrepiece: 'islands',
     palette: { floor: '#f4f1ea', wall: '#cfd6dc', shopfront: '#a7aeb3', ceiling: '#fbfaf7', accent: '#d4af37' },
-    light: { sky: '#747474', ground: '#fbfaf7', hemiIntensity: HEMI, key: '#fff6e5', keyIntensity: 2 },
+    light: { sky: '#747474', ground: '#8a8988', hemiIntensity: HEMI, key: '#fff6e5', keyIntensity: 2 },
     crowd: 45,
   },
   '2F': {
@@ -65,13 +66,13 @@ export const CHARACTER: Record<FloorId, Character> = {
   '4F': {
     centrepiece: 'terrace',
     palette: { floor: '#e9d6cf', wall: '#b98f84', shopfront: '#fff7ef', ceiling: '#f6e9e4', accent: '#d98b8b' },
-    light: { sky: '#685e5c', ground: '#f7e1dc', hemiIntensity: HEMI, key: '#fff3e8', keyIntensity: 1.4 },
+    light: { sky: '#685e5c', ground: '#887c79', hemiIntensity: HEMI, key: '#fff3e8', keyIntensity: 1.4 },
     crowd: 30,
   },
   '5F': {
     centrepiece: 'tickets',
     palette: { floor: '#2f5266', wall: '#2a4a5e', shopfront: '#7fb3c9', ceiling: '#cfe8f2', accent: '#a9d8ea' },
-    light: { sky: '#3b4d5e', ground: '#8fb4d6', hemiIntensity: HEMI, key: '#e6f6ff', keyIntensity: 1.6 },
+    light: { sky: '#3b4d5e', ground: '#647e96', hemiIntensity: HEMI, key: '#e6f6ff', keyIntensity: 1.6 },
     crowd: 24,
   },
 };
