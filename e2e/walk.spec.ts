@@ -108,3 +108,25 @@ test('window blur releases held keys', async ({ page, isMobile }) => {
   await page.keyboard.up('w');
   expect(Math.hypot(b.x - a.x, b.z - a.z)).toBeLessThan(0.05);
 });
+
+// Review Focus 2: a phone on its side, narrow and wide.
+for (const viewport of [{ width: 667, height: 375 }, { width: 844, height: 390 }]) {
+  test.describe(`a phone on its side at ${viewport.width}x${viewport.height}`, () => {
+    test.use({ viewport });
+    test.skip(({ isMobile }) => !isMobile, 'the thumbstick is for touch phones');
+
+    test('the hint leaves the thumbstick and the back button clear', async ({ page }) => {
+      await enterStreet(page);
+      const ids = ['street-hint', 'street-stick', 'back-to-tour-button'];
+      const boxes = await Promise.all(ids.map(async (id) => ({ id, box: (await page.getByTestId(id).boundingBox())! })));
+      for (const [i, a] of boxes.entries()) {
+        const { x, y, width: w, height: h } = a.box;
+        expect(x >= 0 && y >= 0 && x + w <= viewport.width && y + h <= viewport.height, `${a.id} on screen`).toBe(true);
+        for (const b of boxes.slice(i + 1)) {
+          const apart = x >= b.box.x + b.box.width || b.box.x >= x + w || y >= b.box.y + b.box.height || b.box.y >= y + h;
+          expect(apart, `${a.id} and ${b.id}`).toBe(true);
+        }
+      }
+    });
+  });
+}

@@ -274,6 +274,18 @@ body {
   }
 }
 
+/*
+ * Short viewports (a phone on its side): no room above the thumbstick, so the strip starts right of it (24 px in,
+ * 120 px wide, 16 px gap) and stops short of the mall's two-abreast floor panel on the right.
+ */
+@media (max-height: 520px) {
+  .street-hint {
+    left: 160px;
+    transform: none;
+    max-width: calc(100vw - 160px - 140px);
+  }
+}
+
 .street-stick {
   position: fixed;
   left: 24px;
