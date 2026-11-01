@@ -1,24 +1,25 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { test, expect } from '@playwright/test';
+import { fetchesAny, lazyFiles, MALL_SCENE, STREET_SCENE, type LazyScene } from './chunks';
 import { enterTowerExplore, expectPageScrolls, openTour, scrollToProgress, stopCenter, waitMode } from './helpers';
 
-const STREET = /\/assets\/(Street|xinyi)[^/]*\.(js|json)$/;
-
-test('first load and a full tour without explore never fetch the street', async ({ page }) => {
+test('first load and a full tour without explore never fetch the street or the mall', async ({ page }) => {
+  const lazy = fetchesAny([...lazyFiles(STREET_SCENE), ...lazyFiles(MALL_SCENE)]);
   const urls: string[] = [];
   page.on('request', (r) => urls.push(r.url()));
   await openTour(page);
   for (let i = 0; i < 4; i++) await scrollToProgress(page, stopCenter(i));
-  expect(urls.filter((u) => STREET.test(u))).toEqual([]);
+  expect(urls.filter(lazy)).toEqual([]);
 });
 
 test('entering tower explore fetches the street', async ({ page }) => {
+  const street = fetchesAny(lazyFiles(STREET_SCENE));
   const urls: string[] = [];
   page.on('request', (r) => urls.push(r.url()));
   await openTour(page);
   await enterTowerExplore(page);
-  await expect.poll(() => urls.some((u) => STREET.test(u))).toBe(true);
+  await expect.poll(() => urls.some(street)).toBe(true);
 });
 
 // Review Focus 5
@@ -26,7 +27,7 @@ test('a failed street download returns to the tour and withdraws the walk', asyn
   // Hold the download until the visitor is waiting at the top of the descent, then let it die.
   let fail!: () => void;
   const failed = new Promise<void>((f) => (fail = f));
-  await page.route(STREET, async (r) => {
+  await page.route(fetchesAny(lazyFiles(STREET_SCENE)), async (r) => {
     await failed;
     await r.abort();
   });
@@ -44,10 +45,19 @@ test('a failed street download returns to the tour and withdraws the walk', asyn
   await expectPageScrolls(page, isMobile);
 });
 
+/** Gzipped bytes of everything `scene` fetches beyond the first load, shared chunks included. */
+function lazyGzip(scene: LazyScene) {
+  const files = lazyFiles(scene);
+  expect(files.length).toBeGreaterThan(0);
+  return files.reduce((n, f) => n + gzipSync(readFileSync(`dist/assets/${f}`)).length, 0);
+}
+
 test('the street chunks stay under 1.5 MB gzipped', async ({}, info) => {
   test.skip(info.project.name !== 'desktop', 'one build, checked once');
-  const files = readdirSync('dist/assets').filter((f) => /^(Street|xinyi)/.test(f));
-  expect(files.length).toBeGreaterThan(0);
-  const gz = files.reduce((n, f) => n + gzipSync(readFileSync(`dist/assets/${f}`)).length, 0);
-  expect(gz).toBeLessThan(1.5 * 1024 * 1024);
+  expect(lazyGzip(STREET_SCENE)).toBeLessThan(1.5 * 1024 * 1024);
+});
+
+test('the mall chunks stay under 1 MB gzipped', async ({}, info) => {
+  test.skip(info.project.name !== 'desktop', 'one build, checked once');
+  expect(lazyGzip(MALL_SCENE)).toBeLessThan(1024 * 1024);
 });

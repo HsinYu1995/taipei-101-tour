@@ -1,12 +1,11 @@
-import { footprint } from '../scene/tower/loft';
-import { GRID_ROTATION, PODIUM } from '../scene/tower/podium';
-import { SECTIONS } from '../scene/tower/towerProfile';
+import { PODIUM } from '../scene/tower/podium';
+import { TOWER_BASE } from '../scene/tower/towerBase';
 import type { Pose } from '../tour/types';
 import type { Phase } from '../walk/api';
 import { Colliders, type Circle } from '../walk/collide';
 import type { WalkInput } from '../walk/input';
 import { Walker } from '../walk/walker';
-import { LANDING } from './api';
+import { ENTRANCE, LANDING, OUTSIDE_ENTRANCE } from './api';
 import { SCENE_AREA, WALK_AREA } from './areas';
 import { buildGraph, Crowd, type Agent } from './crowd';
 import { buildLanes, Traffic, type Scooter } from './traffic';
@@ -31,12 +30,8 @@ function buildColliders(data: XinyiData, trees: P[]) {
   const near = (ring: P[]) =>
     ring.some(([x, z]) => x > WALK_AREA.x0 - REACH && x < WALK_AREA.x1 + REACH && z > WALK_AREA.z0 - REACH && z < WALK_AREA.z1 + REACH);
   const footprints = data.buildings.filter((b) => !b.roof && b.base < 2 && near(b.outer)).map((b) => b.outer);
-  // The tower's ground footprint, turned like the Tower group (rotation.y = GRID_ROTATION).
-  const c = Math.cos(GRID_ROTATION);
-  const s = Math.sin(GRID_ROTATION);
-  const tower = footprint(SECTIONS[0].half0).map(([x, z]): P => [x * c + z * s, -x * s + z * c]);
   const trunks = trees.map(([x, z]) => ({ x, z, r: TRUNK_RADIUS }));
-  return new Colliders([...footprints, PODIUM.outline, tower], WALK_AREA, RADIUS, trunks);
+  return new Colliders([...footprints, PODIUM.outline, TOWER_BASE], WALK_AREA, RADIUS, trunks);
 }
 
 /**
@@ -91,6 +86,18 @@ export class StreetSimulation {
   /** Puts the visitor back at the landing spot. */
   reset() {
     this.walker.reset();
+  }
+
+  /** Puts the visitor outside the south entrance, facing out: where leaving the mall lands. */
+  arrive() {
+    const { x, z, yaw, pitch } = OUTSIDE_ENTRANCE;
+    this.walker.place(x, z, yaw, pitch);
+  }
+
+  /** Whether the visitor has walked into 101's south entrance. */
+  atEntrance() {
+    const { x, z } = this.walker;
+    return x >= ENTRANCE.x0 && x <= ENTRANCE.x1 && z >= ENTRANCE.z0 && z <= ENTRANCE.z1;
   }
 
   /** Puts the visitor somewhere (test hook and debugging). */

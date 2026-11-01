@@ -57,6 +57,11 @@ export function segmentAt(progress: number): Segment {
   return { kind: 'stop', chapterIndex, t: Math.min((local - TRAVEL_WEIGHT) / STOP_WEIGHT, 1) };
 }
 
+/** The progress at the centre of a chapter's stop. */
+export function stopProgress(chapterIndex: number): number {
+  return (chapterIndex * CHAPTER_WEIGHT + TRAVEL_WEIGHT + STOP_WEIGHT / 2) / TOTAL_WEIGHT;
+}
+
 export function poseAt(progress: number): Pose {
   const s = segmentAt(progress);
   const stop = CHAPTERS[s.chapterIndex].stop;

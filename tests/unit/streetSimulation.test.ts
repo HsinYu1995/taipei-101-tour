@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { HeightField } from '../../src/scene/terrain/grid';
-import { LANDING, WALK_AREA } from '../../src/street/api';
+import { LANDING, OUTSIDE_ENTRANCE, WALK_AREA } from '../../src/street/api';
 import { groundAt } from '../../src/street/groundAt';
 import type { WalkInput } from '../../src/walk/input';
 import { StreetSimulation } from '../../src/street/simulation';
@@ -78,6 +78,28 @@ describe('street simulation', () => {
     expect(v.z).toBeLessThan(44);
     expect(v.z).toBeGreaterThan(42.8);
     expect(sim.blocked(v.x, v.z)).toBe(false);
+  });
+
+  test('walking into the south entrance reaches it; the landing does not', () => {
+    const sim = street();
+    expect(sim.atEntrance()).toBe(false);
+    sim.place(0, 46, 0);
+    run(sim, 2, keys('w'));
+    expect(sim.atEntrance()).toBe(true);
+  });
+
+  test('leaving the mall lands outside the door, and walking back in reaches it', () => {
+    const sim = street();
+    sim.arrive();
+    const v = sim.visitor();
+    expect(v).toEqual({ x: OUTSIDE_ENTRANCE.x, z: OUTSIDE_ENTRANCE.z, yaw: OUTSIDE_ENTRANCE.yaw, pitch: OUTSIDE_ENTRANCE.pitch });
+    expect(sim.blocked(v.x, v.z)).toBe(false);
+    expect(sim.atEntrance()).toBe(false);
+    run(sim, 1, keys('w'));
+    expect(sim.atEntrance()).toBe(false);
+    sim.place(v.x, v.z, 0);
+    run(sim, 2, keys('w'));
+    expect(sim.atEntrance()).toBe(true);
   });
 
   test('the walk area edge stops the visitor', () => {

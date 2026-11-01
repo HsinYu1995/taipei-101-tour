@@ -6,10 +6,12 @@ import { CHAPTERS, STOP_WEIGHT, TRAVEL_WEIGHT } from '../tour/chapters';
 import { useTour } from '../tour/store';
 import { HotspotButton } from './HotspotButton';
 import { HotspotPanel } from './HotspotPanel';
-import { StreetErrorBoundary } from './StreetErrorBoundary';
+import { Fade } from '../walk/Fade';
+import { PlaceErrorBoundary } from './PlaceErrorBoundary';
 
 // Same module as the scene's lazy import, so the whole walk arrives as one chunk.
 const WalkHud = lazy(() => import('../street/StreetScene').then((m) => ({ default: m.WalkHud })));
+const FloorPanel = lazy(() => import('../mall/MallScene').then((m) => ({ default: m.FloorPanel })));
 
 /** Scroll length of the tour in vh; one extra viewport so progress spans the full range. */
 const SPACER_VH = CHAPTERS.length * (TRAVEL_WEIGHT + STOP_WEIGHT) * 100 + 100;
@@ -18,8 +20,10 @@ export function Overlay() {
   const chapter = CHAPTERS[useTour((s) => s.segment.chapterIndex)];
   const atStop = useTour((s) => s.segment.kind === 'stop');
   const mode = useTour((s) => s.mode);
+  const inMall = useTour((s) => s.place === 'mall');
   const dispatch = useTour((s) => s.dispatch);
   const streetWanted = useTour((s) => s.streetWanted);
+  const mallWanted = useTour((s) => s.mallWanted);
   const streetLoading = useTour((s) => s.mode === 'descending' && s.places.street === undefined);
   // Re-render when the walk is withdrawn; canWalk() reads it from the store.
   useTour((s) => s.streetFailed);
@@ -71,9 +75,14 @@ export function Overlay() {
             {en.ui.backToTour}
           </button>
         )}
-        {(mode === 'descending' || mode === 'walking') && (
+        {(mode === 'descending' || mode === 'walking') && !inMall && (
           <button data-testid="back-to-tour-button" onClick={() => dispatch({ type: 'walkExit' })}>
             {en.ui.backToTour}
+          </button>
+        )}
+        {mode === 'walking' && inMall && (
+          <button data-testid="back-to-street-button" onClick={() => dispatch({ type: 'walkExit' })}>
+            {en.ui.backToStreet}
           </button>
         )}
       </div>
@@ -83,14 +92,22 @@ export function Overlay() {
         </p>
       )}
       {streetWanted && (
-        <StreetErrorBoundary>
+        <PlaceErrorBoundary place="street">
           <Suspense fallback={null}>
             <WalkHud />
           </Suspense>
-        </StreetErrorBoundary>
+        </PlaceErrorBoundary>
+      )}
+      {mallWanted && (
+        <PlaceErrorBoundary place="mall">
+          <Suspense fallback={null}>
+            <FloorPanel />
+          </Suspense>
+        </PlaceErrorBoundary>
       )}
       <HotspotButton />
       <HotspotPanel />
+      <Fade />
       <div className="credits">
         <p data-testid="terrain-credit">
           {en.credits.terrain}

@@ -3,7 +3,8 @@ import { useTour } from './store';
 
 const STORAGE_KEY = 'tour-progress';
 
-const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight;
+/** Page scroll offset at progress 1. */
+export const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight;
 
 function readSaved(): number {
   try {

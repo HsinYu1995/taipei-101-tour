@@ -24,14 +24,27 @@ export interface PlaceApi {
   reset(): void;
   /** The visitor's eye pose, as the place's simulation last left it. */
   eye(): Pose;
+  /**
+   * Put the visitor at this place's door from `from` and clear held input. A place that has more to ready before it
+   * is seen (shaders to compile) returns a promise; the crossing holds black until it settles.
+   */
+  arrive(from: PlaceId): void | Promise<void>;
 }
 
-export const isWalkMode = (m: Mode) => m === 'descending' || m === 'walking' || m === 'ascending';
+/** Each half of a crossing's fade: to black, then back from it. */
+export const FADE_MS = 350;
+/** How long a crossing holds black waiting for a place to load before giving it up as failed. */
+export const CROSSING_TIMEOUT_MS = 20_000;
+
+export const isWalkMode = (m: Mode) => m === 'descending' || m === 'walking' || m === 'crossing' || m === 'ascending';
 
 /** How a place's simulation runs this frame. */
 export type Phase = 'paused' | 'still' | 'walking';
 
-/** paused unless the walk is in `place`; still during the descent and ascent; walking when the visitor has control. */
+/**
+ * paused unless the walk is in `place`; still during the descent, ascent and a crossing out of it; walking when
+ * the visitor has control.
+ */
 export function phaseOf(state: { mode: Mode; place: PlaceId }, place: PlaceId): Phase {
   if (!isWalkMode(state.mode) || state.place !== place) return 'paused';
   return state.mode === 'walking' ? 'walking' : 'still';
@@ -49,4 +62,19 @@ export function eyePose(x: number, y: number, z: number, yaw: number, pitch: num
     position: [x, y, z],
     target: [x - 10 * Math.sin(yaw) * c, y + 10 * Math.sin(pitch), z - 10 * Math.cos(yaw) * c],
   };
+}
+
+/**
+ * Withdraws a place that cannot be had and brings the visitor somewhere they can be: losing the street ends the walk
+ * wherever it is (the mall is only reached through the street), the mall returns to the street outside its door.
+ */
+export function placeFailed(place: PlaceId) {
+  const tour = useTour.getState();
+  if (place === 'street') {
+    tour.setStreetFailed();
+    tour.dispatch({ type: 'walkAbort' });
+    return;
+  }
+  tour.setMallFailed();
+  if (tour.crossingTo === 'mall' || (tour.mode === 'walking' && tour.place === 'mall')) tour.dispatch({ type: 'cross', to: 'street' });
 }

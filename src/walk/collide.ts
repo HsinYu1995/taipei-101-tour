@@ -35,27 +35,38 @@ function nearest(e: Edge, x: number, z: number): P {
 
 /**
  * The visitor's collision world: building footprints, fixed round obstacles (tree trunks) and the walk
- * area's bounds, for a circle of the given radius. Moving into a wall keeps the part of the motion along it,
- * so the visitor slides instead of stopping dead.
+ * area's bounds, for a circle of the given radius. With an `area` outline the visitor also stays inside it,
+ * its edges walls like any footprint's. Moving into a wall keeps the part of the motion along it, so the
+ * visitor slides instead of stopping dead.
  */
 export class Colliders {
   readonly radius: number;
   private readonly bounds: Rect;
   private readonly polygons: readonly (readonly P[])[];
+  private readonly area?: readonly P[];
   private readonly edgeCells = new Map<string, Edge[]>();
   private readonly polygonCells = new Map<string, number[]>();
   private readonly circleCells = new Map<string, Circle[]>();
 
-  constructor(polygons: readonly (readonly P[])[], bounds: Rect, radius: number, circles: readonly Circle[] = []) {
+  constructor(
+    polygons: readonly (readonly P[])[],
+    bounds: Rect,
+    radius: number,
+    circles: readonly Circle[] = [],
+    area?: readonly P[],
+  ) {
     this.radius = radius;
     this.bounds = bounds;
     this.polygons = polygons;
+    this.area = area;
     polygons.forEach((poly, k) => {
       const xs = poly.map((p) => p[0]);
       const zs = poly.map((p) => p[1]);
       for (const key of this.cells(Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs), 0)) {
         this.push(this.polygonCells, key, k);
       }
+    });
+    for (const poly of area ? [...polygons, area] : polygons) {
       poly.forEach(([ax, az], i) => {
         const [bx, bz] = poly[(i + 1) % poly.length];
         const edge = { ax, az, bx, bz };
@@ -63,7 +74,7 @@ export class Colliders {
           this.push(this.edgeCells, key, edge);
         }
       });
-    });
+    }
     for (const c of circles) {
       for (const key of this.cells(c.x - c.r, c.x + c.r, c.z - c.r, c.z + c.r, radius)) this.push(this.circleCells, key, c);
     }
@@ -84,11 +95,12 @@ export class Colliders {
     return [x, z];
   }
 
-  /** True if a circle at p overlaps a footprint or a fixed obstacle, or lies outside the bounds. */
+  /** True if a circle at p overlaps a footprint or a fixed obstacle, or lies outside the bounds or the area. */
   blocked([x, z]: P): boolean {
     const r = this.radius;
     const b = this.bounds;
     if (x < b.x0 + r - 1e-6 || x > b.x1 - r + 1e-6 || z < b.z0 + r - 1e-6 || z > b.z1 - r + 1e-6) return true;
+    if (this.area && !inside([x, z], this.area)) return true;
     const key = this.key(x, z);
     if ((this.polygonCells.get(key) ?? []).some((k) => inside([x, z], this.polygons[k]))) return true;
     for (const e of this.edgeCells.get(key) ?? []) {

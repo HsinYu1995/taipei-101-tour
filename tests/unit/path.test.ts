@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { CHAPTERS, INTRO_POSE, STOP_WEIGHT, TRAVEL_WEIGHT } from '../../src/tour/chapters';
-import { easeInOutCubic, orbitLerpPose, poseAt, segmentAt } from '../../src/tour/path';
+import { easeInOutCubic, orbitLerpPose, poseAt, segmentAt, stopProgress } from '../../src/tour/path';
 import type { Pose } from '../../src/tour/types';
 
 const TOTAL = CHAPTERS.length * (TRAVEL_WEIGHT + STOP_WEIGHT);
@@ -26,6 +26,13 @@ describe('segmentAt', () => {
   test('clamps out-of-range progress', () => {
     expect(segmentAt(-1)).toEqual(segmentAt(0));
     expect(segmentAt(2)).toEqual(segmentAt(1));
+  });
+  test('stopProgress is the middle of each stop', () => {
+    CHAPTERS.forEach((_, i) => {
+      const s = segmentAt(stopProgress(i));
+      expect(s).toMatchObject({ kind: 'stop', chapterIndex: i });
+      expect(s.t).toBeCloseTo(0.5, 9);
+    });
   });
 });
 

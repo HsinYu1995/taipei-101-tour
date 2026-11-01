@@ -10,7 +10,7 @@ The street walk ends at 101's walls. The owner wants visitors to walk on into th
 
 - Walk in from the street walk through 101's entrance and walk around the mall floors B1, 1F, 2F, 3F, 4F and 5F at eye level, with the same controls as the street.
 - Each floor carries its real tenants (official list, below) and its own character. The owner's picture: each floor is a large lounge with a cafe or small stage in the middle.
-- An on-screen floor panel moves the visitor between floors, and its Damper button hands over to the existing damper chapter.
+- An on-screen floor panel moves the visitor between floors, and on 5F its lift button takes the visitor up to the existing damper chapter, as the observatory's express lift does from the real 5F ticket hall.
 
 ## Anti-goals
 
@@ -48,7 +48,7 @@ Crowd levels are relative; the builder sets numbers within the performance budge
 ## Shops and signs
 
 - **Source:** the official site's data feed, `https://ws.taipei-101.com.tw/api/v1/shopping/floor/detail/brands?lang=en&floor=FLOOR_<B1|1F..5F>` (shops, with a category such as watch, boutique, cosmetic, apparel) and `https://ws.taipei-101.com.tw/api/v1/food/search?lang=en` (restaurants, with floor and category). Baked into the app by a script, like `scripts/bake-xinyi.ts`, as a dated snapshot. The app never fetches it at runtime.
-- **Signs:** each shopfront shows the brand name in lettering that echoes the brand (typeface feel, colour), never the logo. Names stay in Latin script in both English and zh-Hant, as in the real mall.
+- **Signs:** each shopfront shows the brand name in lettering that echoes the brand (typeface feel, colour), never the logo. Script follows the real mall (owner, 2026-10-30): brands with an official Latin name (Nike, Aesop, McDonald's, Din Tai Fung) are signed in Latin; local stalls and souvenir shops without one (mostly B1) are signed in Chinese, never in the feed's literal translation. The sign does not change with the UI language.
 - **Placement:** every tenant gets a shopfront on its real floor; positions are the builder's (believable: flagships on the long frontages, food court stalls round B1).
 - **Cleaning the feed (designer's call):** one shopfront per listing per floor, so a brand listed on several floors (Cartier on 3F, 4F and 5F; Tiffany on 2F and 3F) has a front on each, as in the real mall. Non-shop listings that are real frontages (Taipei Fubon Bank on 1F) stay; anything without a frontage is dropped. Restaurants on floors outside B1-5F (the 35F and 85F-89F sky dining) are dropped. The 5F observatory ticket hall is not in the feed and is added by hand.
 
@@ -56,8 +56,8 @@ Crowd levels are relative; the builder sets numbers within the performance budge
 
 - **In:** during the street walk, walking through 101's south entrance (the podium wall facing Xinyi Rd, around x 0, z 42.8) fades the visitor into the 1F arrival lobby. A walk area edge, wall or crowd elsewhere is unchanged.
 - **On a floor:** the street's controls exactly: keys / thumbstick to walk, drag to look, Shift to hurry. Walls, shopfronts, counters, tables and balustrades block like buildings do on the street. The atrium void cannot be walked into.
-- **Floor panel:** always on screen while in the mall. Buttons B1, 1F, 2F, 3F, 4F, 5F, Damper; the current floor is marked. A floor button glides the visitor to that floor's elevator lobby in about a second. Damper leaves the walk and lands the visitor at the existing damper chapter's stop.
-- **Damper handover (designer's call):** a short fade to black, then the page is at the damper chapter's stop in ordinary tour mode, with the walk ended. Getting back to the mall means walking in from the street again. This is the walk's third kind of exit (the others return to the street, and from the street to the tower stop).
+- **Floor panel:** always on screen while in the mall. Buttons B1, 1F, 2F, 3F, 4F, 5F; the current floor is marked. On 5F only, a lift button ("Lift to 89F") sits below them (owner, 2026-10-30: more faithful to the building, where the trip up starts at the 5F ticket hall). A floor button takes the visitor to that floor's elevator lobby in about a second, through a fade to black (builder's call, 2026-10-29: a moving glide flew the camera through the tower core and floor slabs). The lift button leaves the walk and lands the visitor at the existing damper chapter's stop; from any other floor the visitor first goes to 5F. Where the lift goes may change with the observatory design.
+- **Lift handover (designer's call):** a short fade to black, then the page is at the damper chapter's stop in ordinary tour mode, with the walk ended. Getting back to the mall means walking in from the street again. This is the walk's third kind of exit (the others return to the street, and from the street to the tower stop).
 - **Out:** Escape or zooming out (the street's own exits) returns the visitor to the street just outside the south entrance, facing out. Leaving the street then works as today.
 - **Shoppers:** a crowd per floor walks the galleries as the street crowd walks the footways (yields to the visitor, stands about); seated people at B1 tables and the 4F cafe.
 
@@ -74,7 +74,7 @@ Step two builds the mall on that.
 - Flat low-poly style, matching the street.
 - Reduced motion: the walk is not offered, as today; the mall therefore isn't either.
 - Bilingual UI copy (EN default, zh-Hant; the owner reviews Chinese).
-- Tests: behaviour in fast module tests on real data (the mall simulation like `tests/unit/streetSimulation.test.ts`); e2e only for wiring a browser alone can show (walking in, the floor panel, Damper handover, leaving). Keep CI e2e shards well under 20 minutes.
+- Tests: behaviour in fast module tests on real data (the mall simulation like `tests/unit/streetSimulation.test.ts`); e2e only for wiring a browser alone can show (walking in, the floor panel, the lift handover, leaving). Keep CI e2e shards well under 20 minutes.
 - Domain words: visitor, crowd, walk, place, floor, floor panel (added to `CONTEXT.md`).
 
 ## Left to the builder

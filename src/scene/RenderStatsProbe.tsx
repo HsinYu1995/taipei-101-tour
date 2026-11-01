@@ -31,12 +31,12 @@ function inHole(o: Object3D, p: Vector3) {
 /** Registers the renderStats and castRay probes for e2e tests; renders nothing. */
 export function RenderStatsProbe() {
   const { gl, scene } = useThree();
-  const last = useRef({ calls: 0, triangles: 0 });
+  const last = useRef({ calls: 0, triangles: 0, programs: 0 });
 
   // gl.info resets when a render starts, so at the start of a frame it still holds the previous frame's counts.
   // (A positive useFrame priority would take over rendering, so this stays at the default.)
   useFrame(() => {
-    last.current = { calls: gl.info.render.calls, triangles: gl.info.render.triangles };
+    last.current = { calls: gl.info.render.calls, triangles: gl.info.render.triangles, programs: gl.info.programs?.length ?? 0 };
   });
 
   useEffect(() => registerProbe('renderStats', () => ({ ...last.current })), []);

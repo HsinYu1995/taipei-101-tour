@@ -1,6 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 import { CHAPTERS, STOP_WEIGHT, TRAVEL_WEIGHT } from '../src/tour/chapters';
 import type { TourSnapshot } from '../src/debug/testHook';
+import type { FloorId } from '../src/mall/types';
 import type { Pose, Vec3 } from '../src/tour/types';
 
 const CHAPTER_WEIGHT = TRAVEL_WEIGHT + STOP_WEIGHT;
@@ -160,5 +161,45 @@ export async function touchDrag(page: Page, { from, to }: { from: [number, numbe
   for (let i = 1; i <= 12; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [at(i / 12)] });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await cdp.detach();
+  await nextFrames(page);
+}
+
+/** Walks into 101's south entrance from just outside it and waits until the visitor is walking in the mall. */
+export async function enterMall(page: Page) {
+  await enterStreet(page);
+  await place(page, { x: 0, z: 46, yaw: 0, pitch: 0 });
+  await page.keyboard.down('w');
+  try {
+    // The first walk in downloads the mall and compiles its shaders, which SwiftShader takes a while over.
+    await expect
+      .poll(async () => {
+        const s = await getTour(page);
+        return s.mode === 'walking' && s.place === 'mall';
+      }, { timeout: 45_000 })
+      .toBe(true);
+  } finally {
+    await page.keyboard.up('w');
+  }
+  await page.waitForFunction(() => window.__tour!.probes.mall !== undefined);
+}
+
+export async function mallVisitor(page: Page) {
+  return page.evaluate(() => window.__tour!.probes.mall!.visitor());
+}
+
+export async function mallPlace(page: Page, v: { x: number; z: number; yaw?: number; pitch?: number }) {
+  await page.evaluate((v) => window.__tour!.probes.mall!.place(v), v);
+  await nextFrames(page);
+}
+
+/** Changes floor through the probe and waits until the fade has cleared at that floor's lobby. */
+export async function goToFloor(page: Page, floor: FloorId) {
+  await page.evaluate((f) => window.__tour!.probes.mall!.goTo(f), floor);
+  await expect
+    .poll(() => page.evaluate((f) => {
+      const m = window.__tour!.probes.mall!;
+      return m.floor() === f && !m.changing();
+    }, floor), { timeout: 20_000 })
+    .toBe(true);
   await nextFrames(page);
 }
