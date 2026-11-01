@@ -242,7 +242,7 @@ body {
   pointer-events: none;
 }
 
-/* The mall's floor panel: a lift's column of buttons on the right, between the top buttons and the bottom corner. */
+/* The mall's floor panel: a lift's button plate on the right, between the top buttons and the bottom corner. */
 .floor-panel {
   position: fixed;
   right: 16px;
@@ -253,9 +253,12 @@ body {
   flex-direction: column;
   align-items: flex-end;
   gap: 6px;
-  padding: 8px;
-  border-radius: 12px;
-  background: var(--panel);
+  padding: 10px;
+  border: 1px solid var(--steel-edge);
+  border-radius: 6px;
+  background: linear-gradient(#e3e0da, var(--steel) 40%, #cfcbc3);
+  font-family: var(--font-sign);
+  color: var(--ink);
 }
 
 /* Phones: just under the stacked buttons, clear of the hint above the thumbstick. */
@@ -266,34 +269,83 @@ body {
   }
 }
 
+/* Each floor: its name, then its round button, so the buttons line up in one column. */
+.floor-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.floor-name {
+  font-size: 13px;
+  line-height: 1.2;
+  text-align: right;
+}
+
 .floor-panel button {
-  min-width: 56px;
-  min-height: 44px;
-  padding: 0 12px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: 1px solid var(--ink);
-  border-radius: 999px;
-  background: transparent;
+  border-radius: 50%;
+  background: linear-gradient(#f1efea, #d3cfc7);
   color: var(--ink);
   font: inherit;
+  font-size: 20px;
   font-weight: 600;
   cursor: pointer;
 }
 
+/* The floor the visitor is on, lit like a pressed lift button. */
 .floor-panel button[aria-pressed='true'] {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: #fff;
+  border: 2px solid var(--gold);
+  background: linear-gradient(#cfcbc3, #bdb8ae);
+  color: #8a6d22;
+  box-shadow: 0 0 0 2px rgb(200 164 77 / 0.35);
+}
+
+.floor-exit-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.floor-rule {
+  width: 100%;
+  margin: 2px 0 0;
+  border: 0;
+  border-top: 1px solid var(--steel-edge);
 }
 
 .floor-panel .floor-exit {
-  margin-top: 6px;
-  border-color: var(--accent);
-  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--ink);
+  border-radius: 22px;
+  font-size: 15px;
+}
+
+.lift-lamp {
+  color: var(--gold);
+  font-size: 11px;
 }
 
 .floor-panel button:focus-visible {
-  outline: 3px solid var(--ink);
+  outline: 3px solid var(--glass);
   outline-offset: 2px;
+}
+
+/* Phones: the buttons alone, no names. */
+@media (max-width: 600px) {
+  .floor-name {
+    display: none;
+  }
 }
 
 /*
@@ -309,12 +361,16 @@ body {
     gap: 4px 6px;
   }
 
-  .floor-panel button {
-    min-height: 40px;
+  .floor-name {
+    display: none;
   }
 
-  .floor-panel .floor-exit {
+  .floor-panel button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .floor-exit-row {
     grid-column: 1 / -1;
-    margin-top: 2px;
   }
 }

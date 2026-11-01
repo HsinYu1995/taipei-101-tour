@@ -1,3 +1,4 @@
+import type { FloorId } from '../mall/types';
 import type { ChapterId } from '../tour/types';
 
 export const en = {
@@ -41,6 +42,8 @@ export const en = {
     mallHintTouch: 'Use the stick to walk and drag to look around. Pinch or tap Back to the street to leave.',
     walkStick: 'Walk',
     floors: 'Floors',
+    /** Beside each floor's button on the mall's panel, as a lift's directory reads. */
+    floorNames: { B1: 'Food hall', '1F': 'Lobby', '2F': 'Gallery', '3F': 'Lounge', '4F': 'Terrace', '5F': 'Observatory tickets' } satisfies Record<FloorId, string>,
     lift: 'Lift to 89F',
     close: 'Close',
   },
