@@ -59,7 +59,7 @@ export function Overlay() {
         <h2>{copy.title}</h2>
         <p>{copy.body}</p>
       </section>
-      <div className="controls">
+      <div className={walking ? 'controls walking' : 'controls'}>
         {atStop && mode === 'tour' && (
           <button data-testid="explore-button" onClick={() => dispatch({ type: 'exploreStart' })}>
             {en.ui.explore}

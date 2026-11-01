@@ -3,6 +3,13 @@
   --ink: #1d2a33;
   --panel: rgb(255 255 255 / 0.85);
   --accent: #1f6f78;
+  /* The walk's signage: lift plates in brushed steel, gold for "you are here", the tower's glass for focus. */
+  --steel: #d9d6cf;
+  --steel-edge: #a9a59c;
+  --gold: #c8a44d;
+  --glass: #5e8c86;
+  --sign-ground: rgb(243 240 232 / 0.92);
+  --font-sign: "Atkinson Hyperlegible Next", "Noto Sans TC", system-ui, sans-serif;
 }
 
 * {
@@ -68,6 +75,23 @@ body {
 
 .controls button:focus-visible {
   outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* While walking, the way out is a steel plate like the floor panel's, not the tour's teal. */
+.controls.walking button,
+.walk-fade-controls button {
+  border: 1px solid var(--steel-edge);
+  border-radius: 6px;
+  background: linear-gradient(var(--steel), #cbc7bf);
+  color: var(--ink);
+  font-family: var(--font-sign);
+}
+
+.controls.walking button:focus-visible,
+.walk-fade-controls button:focus-visible,
+.street-stick:focus-visible {
+  outline: 3px solid var(--glass);
   outline-offset: 2px;
 }
 
@@ -205,8 +229,8 @@ body {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: rgb(255 255 255 / 0.35);
-  border: 2px solid rgb(255 255 255 / 0.8);
+  background: rgb(217 214 207 / 0.45);
+  border: 2px solid var(--steel-edge);
   touch-action: none;
 }
 
@@ -214,7 +238,7 @@ body {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: rgb(31 111 120 / 0.85);
+  background: rgb(29 42 51 / 0.8);
   pointer-events: none;
 }
 
