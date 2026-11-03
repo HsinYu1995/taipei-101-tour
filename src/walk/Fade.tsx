@@ -8,7 +8,7 @@ import { CROSSING_TIMEOUT_MS, FADE_MS, placeFailed } from './api';
 import { DOORS } from './doors';
 
 type Stage = 'clear' | 'darkening' | 'black' | 'lightening';
-/** How a crossing covers the screen: the lift's doors from the mall up the tower, a fade to black otherwise. */
+/** How a crossing covers the screen: the lift's doors between the mall and the damper, a fade to black otherwise. */
 type Cover = 'lift' | 'fade';
 
 /** Settles as `ready` does, or rejects once `ms` have passed without it. */
@@ -18,6 +18,12 @@ function within(ready: Promise<void>, ms: number) {
     timer = window.setTimeout(() => reject(new Error(`not ready after ${ms} ms`)), ms);
   });
   return Promise.race([ready, late]).finally(() => window.clearTimeout(timer));
+}
+
+/** On the next frame, scrolls the page to where the tour now is. */
+function scrollToTour() {
+  const progress = useTour.getState().progress;
+  requestAnimationFrame(() => window.scrollTo(0, progress * maxScroll()));
 }
 
 /**
@@ -33,13 +39,14 @@ export function Fade() {
   const stageNow = useRef(stage);
   stageNow.current = stage;
   const loading = useTour((s) => stage === 'black' && s.crossingTo === 'mall' && s.places.mall === undefined);
+  const fromDamper = useTour((s) => s.place === 'damper');
 
   // A crossing fades out from wherever the fade is, even mid fade-in; its end fades back in.
   // How it covers is settled once, as the crossing starts, and kept until the screen is clear again.
   useEffect(() => {
     if (crossing) {
       const { place, crossingTo } = useTour.getState();
-      if (stageNow.current === 'clear') setCover(place === 'mall' && crossingTo === 'damper' ? 'lift' : 'fade');
+      if (stageNow.current === 'clear') setCover(place === 'damper' || (place === 'mall' && crossingTo === 'damper') ? 'lift' : 'fade');
       setStage((s) => (s === 'black' ? s : 'darkening'));
     } else setStage((s) => (s === 'clear' ? s : 'lightening'));
   }, [crossing]);
@@ -68,8 +75,7 @@ export function Fade() {
       if (crossingTo === 'damper') {
         dispatch({ type: 'crossed' });
         // Overlay unfreezes the page once React commits the tour mode; scroll after that, to the stop crossed to.
-        const progress = useTour.getState().progress;
-        requestAnimationFrame(() => window.scrollTo(0, progress * maxScroll()));
+        scrollToTour();
         return;
       }
       const ms = testTimings.crossingTimeoutMs ?? CROSSING_TIMEOUT_MS;
@@ -92,7 +98,10 @@ export function Fade() {
           if (!live || arriving !== crossingTo) return;
           arriving = null;
           const now = useTour.getState();
-          if (now.mode === 'crossing' && now.crossingTo === crossingTo) now.dispatch({ type: 'crossed' });
+          if (now.mode !== 'crossing' || now.crossingTo !== crossingTo) return;
+          now.dispatch({ type: 'crossed' });
+          // Off the lift the tour waits at the tower stop, so the frozen page has to be there when the walk ends.
+          if (place === 'damper') scrollToTour();
         });
     };
     handOver();
@@ -125,8 +134,11 @@ export function Fade() {
             {en.ui.mallLoading}
           </p>
           <div className="controls walk-fade-controls">
-            <button data-testid="back-to-street-button" onClick={() => useTour.getState().dispatch({ type: 'walkExit' })}>
-              {en.ui.backToStreet}
+            <button
+              data-testid={fromDamper ? 'back-to-tour-button' : 'back-to-street-button'}
+              onClick={() => useTour.getState().dispatch({ type: 'walkExit' })}
+            >
+              {fromDamper ? en.ui.backToTour : en.ui.backToStreet}
             </button>
           </div>
         </>

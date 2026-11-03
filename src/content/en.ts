@@ -48,7 +48,8 @@ export const en = {
     floors: 'Floors',
     /** Beside each floor's button on the mall's panel, as a lift's directory reads. */
     floorNames: { B1: 'Food hall', '1F': 'Lobby', '2F': 'Gallery', '3F': 'Lounge', '4F': 'Terrace', '5F': 'Observatory tickets' } satisfies Record<FloorId, string>,
-    lift: 'Lift to 89F',
+    lift: 'Elevator to 89F',
+    liftDown: 'Elevator to 5F',
     close: 'Close',
   },
   credits: {

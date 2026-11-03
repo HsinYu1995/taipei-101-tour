@@ -13,7 +13,7 @@ The tour's damper and view chapters (M3, M4) are, in the real building, one plac
   - In by the lift from the mall's 5F (a crossing), replacing the interim handover to the damper chapter.
   - In from the view chapter's explore mode by zooming in at its closest distance, or a "Walk the observatory" button, like the street from the tower stop; a short settle to eye height, not a long descent.
   - Out by Escape or zooming out: back to the view chapter's stop in tour mode.
-  - Out by the lift down: a button on the observatory's panel crosses back to the mall's 5F lobby.
+  - Out by the lift down: a button on the observatory's panel crosses back to the mall's 5F lobby. (Until then, since the owner asked for a way back on 2026-11-03: the damper chapter's stop has this lift down, as an "Elevator to 5F" button, for anyone at that stop. Move it onto the observatory's panel when this walk lands, and decide then whether the stop keeps it.)
   - The walk is then a chain with two ends on the tour: tower stop - street - mall - observatory - view stop.
 - **Time of day** (owner, 2026-10-30): the observatory walk is always at dusk (low sun, sky turning, the first city lights on, bloom). The view chapter's stop keeps its scroll-driven dusk to night. Light does not carry between places; crossings fade through black and the mall between is indoors.
 - **Floors** (owner, 2026-10-30): 89F only. The damper is seen by looking down into the open core from a railing that blocks the visitor, like the mall's balustrade; the core is a void that cannot be walked into.

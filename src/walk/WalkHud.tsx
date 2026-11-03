@@ -22,7 +22,8 @@ const HINTS: Record<PlaceId, Hint> = { street: en.ui.walkHint, mall: en.ui.mallH
 /** Walk controls: keys, look drags, the touch thumbstick, and the landing hint. */
 export default function WalkHud() {
   const walking = useTour((s) => s.mode === 'walking');
-  const place = useTour((s) => s.place);
+  // The hint shows only while walking, which is always in a place of the walk; the lift down is not one.
+  const place = useTour((s) => (s.place === 'mall' ? 'mall' : 'street'));
   const [hint, setHint] = useState<'shown' | 'fading' | 'gone'>('gone');
   const hideHint = useRef(() => {});
 

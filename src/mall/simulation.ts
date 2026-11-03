@@ -116,6 +116,12 @@ export class MallSimulation {
     this.floors['1F'].walker.reset();
   }
 
+  /** Puts the visitor in the 5F lobby, where the lift down from the damper opens, ending any change. */
+  arriveByLift() {
+    this.change = null;
+    this.land('5F');
+  }
+
   /** Puts the visitor somewhere on the current floor, ending any change (test hook and debugging). */
   place(x: number, z: number, yaw?: number, pitch?: number) {
     this.change = null;

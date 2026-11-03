@@ -26,8 +26,11 @@ interface TourStore extends TourState {
   setMallFailed(): void;
 }
 
+// The lift down wants the street too: the walk's controls arrive with its chunk, and the mall's way out leads there.
 const wantsStreet = (s: TourState) =>
-  s.mode === 'explore' && s.segment.kind === 'stop' && CHAPTERS[s.segment.chapterIndex].id === 'tower';
+  (s.mode === 'explore' && s.segment.kind === 'stop' && CHAPTERS[s.segment.chapterIndex].id === 'tower') ||
+  (s.mode === 'crossing' && s.place === 'damper' && s.crossingTo === 'mall');
+const wantsMall = (s: TourState) => s.mode === 'crossing' && s.crossingTo === 'mall';
 
 export const useTour = create<TourStore>((set) => ({
   ...initialState,
@@ -41,9 +44,10 @@ export const useTour = create<TourStore>((set) => ({
   dispatch: (e) =>
     set((s) => {
       const next = tourReducer(s, e);
-      if (!s.streetWanted && wantsStreet(next)) return { ...next, streetWanted: true };
-      if (!s.mallWanted && next.mode === 'crossing' && next.crossingTo === 'mall') return { ...next, mallWanted: true };
-      return next;
+      // Both at once: the lift down wants the two places in the one event.
+      const streetWanted = s.streetWanted || wantsStreet(next);
+      const mallWanted = s.mallWanted || wantsMall(next);
+      return streetWanted === s.streetWanted && mallWanted === s.mallWanted ? next : { ...next, streetWanted, mallWanted };
     }),
   setCamera: (camera) => set((s) => ({ camera, frame: s.frame + 1 })),
   setPlace: (id, api) => set((s) => ({ places: { ...s.places, [id]: api ?? undefined } })),

@@ -21,6 +21,7 @@ import {
   nextFrames,
   openTour,
   place,
+  scrollToProgress,
   stopCenter,
   stickPush,
   touchDrag,
@@ -587,6 +588,38 @@ test("the lift hands over to the damper chapter's stop in tour mode", async ({ p
   }, { timeout: 15_000 }).toBe(true);
   const at = await page.evaluate(() => window.scrollY / (document.documentElement.scrollHeight - window.innerHeight));
   expect(Math.abs(at - stopCenter(2))).toBeLessThan(0.01);
+  await expectPageScrolls(page, isMobile);
+});
+
+test('the lift comes down from the damper to 5F, and leaving from there ends at the tower stop', async ({ page, isMobile }) => {
+  test.setTimeout(180_000);
+  // Straight to the damper by scrolling, so neither the street nor the mall has been loaded yet.
+  await openTour(page);
+  await scrollToProgress(page, stopCenter(2));
+  const doors = await watchLiftDoors(page);
+  await page.getByTestId('lift-down-button').click();
+  await expect.poll(async () => {
+    const s = await getTour(page);
+    return s.mode === 'walking' && s.place === 'mall';
+  }, { timeout: 60_000 }).toBe(true);
+  expect(await doors()).toBe(true);
+  await page.waitForFunction(() => window.__tour!.probes.mall !== undefined);
+  expect(await page.evaluate(() => window.__tour!.probes.mall!.floor())).toBe('5F');
+  await expect(page.getByTestId('floor-5F')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('floor-lift')).toBeVisible();
+  // The walk's HUD arrives with the street chunk, which this route has to fetch for itself.
+  await expect(page.getByTestId('street-hint')).toBeVisible({ timeout: 30_000 });
+  await page.getByTestId('back-to-street-button').click();
+  await expect.poll(async () => {
+    const s = await getTour(page);
+    return s.mode === 'walking' && s.place === 'street';
+  }, { timeout: 60_000 }).toBe(true);
+  await page.getByTestId('back-to-tour-button').click();
+  await waitMode(page, 'tour', 20_000);
+  const s = await getTour(page);
+  expect(s.segment).toMatchObject({ kind: 'stop', chapterIndex: 1 });
+  const at = await page.evaluate(() => window.scrollY / (document.documentElement.scrollHeight - window.innerHeight));
+  expect(Math.abs(at - stopCenter(1))).toBeLessThan(0.01);
   await expectPageScrolls(page, isMobile);
 });
 

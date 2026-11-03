@@ -102,10 +102,11 @@ export default function MallScene() {
         clearInput();
       },
       eye: () => sim.eye(),
-      // The street's south door is the only way in, and it opens on MALL_ENTRY. Still in the crossing's black, the
-      // signs in view are drawn and every mall material compiled, so the fade-in never stalls on either.
-      arrive: async () => {
-        sim.reset();
+      // The street's south door opens on MALL_ENTRY, the lift down on the 5F lobby. Still behind the crossing's cover,
+      // the signs in view are drawn and every mall material compiled, so the reveal never stalls on either.
+      arrive: async (from) => {
+        if (from === 'damper') sim.arriveByLift();
+        else sim.reset();
         clearInput();
         signs.show(visibleFloors(sim.floor()));
         await gl.compileAsync(mall.current!, camera, scene);
