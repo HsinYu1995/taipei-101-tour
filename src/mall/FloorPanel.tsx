@@ -13,7 +13,7 @@ const EXITS: readonly { id: string; floor: FloorId; label: string; to: PlaceId |
   { id: 'lift', floor: '5F', label: en.ui.lift, to: 'damper' },
 ];
 
-/** The floor panel: the only way between the mall's floors, and from 5F the lift up the tower. */
+/** The floor panel, a lift's button plate: the only way between the mall's floors, and from 5F the lift up the tower. */
 export function FloorPanel() {
   const shown = useTour((s) => s.mode === 'walking' && s.place === 'mall');
   const floor = useMall((s) => s.floor);
@@ -22,20 +22,30 @@ export function FloorPanel() {
   return (
     <nav className="floor-panel" data-testid="floor-panel" aria-label={en.ui.floors}>
       {BUTTONS.map((f) => (
-        <button key={f} data-testid={`floor-${f}`} aria-pressed={f === floor} onClick={() => useMall.getState().goTo(f)}>
-          {f}
-        </button>
+        <div key={f} className="floor-row">
+          <span className="floor-name" aria-hidden>
+            {en.ui.floorNames[f]}
+          </span>
+          <button data-testid={`floor-${f}`} aria-pressed={f === floor} onClick={() => useMall.getState().goTo(f)}>
+            {f}
+          </button>
+        </div>
       ))}
       {!changing &&
         EXITS.filter((e) => e.floor === floor).map((e) => (
-          <button
-            key={e.id}
-            className="floor-exit"
-            data-testid={`floor-${e.id}`}
-            onClick={() => useTour.getState().dispatch({ type: 'cross', to: e.to })}
-          >
-            {e.label}
-          </button>
+          <div key={e.id} className="floor-exit-row">
+            <hr className="floor-rule" />
+            <button
+              className="floor-exit"
+              data-testid={`floor-${e.id}`}
+              onClick={() => useTour.getState().dispatch({ type: 'cross', to: e.to })}
+            >
+              <span className="lift-lamp" aria-hidden>
+                ▲
+              </span>
+              {e.label}
+            </button>
+          </div>
         ))}
     </nav>
   );

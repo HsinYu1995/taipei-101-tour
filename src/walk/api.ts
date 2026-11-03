@@ -1,4 +1,4 @@
-import type { Mode, PlaceId } from '../tour/machine';
+import type { Mode, Origin, PlaceId } from '../tour/machine';
 import { useTour } from '../tour/store';
 import type { Pose } from '../tour/types';
 
@@ -28,7 +28,7 @@ export interface PlaceApi {
    * Put the visitor at this place's door from `from` and clear held input. A place that has more to ready before it
    * is seen (shaders to compile) returns a promise; the crossing holds black until it settles.
    */
-  arrive(from: PlaceId): void | Promise<void>;
+  arrive(from: Origin): void | Promise<void>;
 }
 
 /** Each half of a crossing's fade: to black, then back from it. */
@@ -45,7 +45,7 @@ export type Phase = 'paused' | 'still' | 'walking';
  * paused unless the walk is in `place`; still during the descent, ascent and a crossing out of it; walking when
  * the visitor has control.
  */
-export function phaseOf(state: { mode: Mode; place: PlaceId }, place: PlaceId): Phase {
+export function phaseOf(state: { mode: Mode; place: Origin }, place: PlaceId): Phase {
   if (!isWalkMode(state.mode) || state.place !== place) return 'paused';
   return state.mode === 'walking' ? 'walking' : 'still';
 }
@@ -66,7 +66,8 @@ export function eyePose(x: number, y: number, z: number, yaw: number, pitch: num
 
 /**
  * Withdraws a place that cannot be had and brings the visitor somewhere they can be: losing the street ends the walk
- * wherever it is (the mall is only reached through the street), the mall returns to the street outside its door.
+ * wherever it is (the mall's way out is through the street), the mall returns to the street outside its door, or to
+ * the damper's stop for a visitor still riding the lift down.
  */
 export function placeFailed(place: PlaceId) {
   const tour = useTour.getState();
@@ -76,5 +77,6 @@ export function placeFailed(place: PlaceId) {
     return;
   }
   tour.setMallFailed();
-  if (tour.crossingTo === 'mall' || (tour.mode === 'walking' && tour.place === 'mall')) tour.dispatch({ type: 'cross', to: 'street' });
+  if (tour.crossingTo === 'mall' || (tour.mode === 'walking' && tour.place === 'mall'))
+    tour.dispatch({ type: 'cross', to: tour.place === 'damper' ? 'damper' : 'street' });
 }

@@ -3,6 +3,7 @@ import { en } from '../content/en';
 import { STREET_CHAPTER } from '../street/api';
 import { canWalk, isWalkMode } from '../walk/api';
 import { CHAPTERS, STOP_WEIGHT, TRAVEL_WEIGHT } from '../tour/chapters';
+import { canTakeLiftDown } from '../tour/machine';
 import { useTour } from '../tour/store';
 import { HotspotButton } from './HotspotButton';
 import { HotspotPanel } from './HotspotPanel';
@@ -25,6 +26,7 @@ export function Overlay() {
   const streetWanted = useTour((s) => s.streetWanted);
   const mallWanted = useTour((s) => s.mallWanted);
   const streetLoading = useTour((s) => s.mode === 'descending' && s.places.street === undefined);
+  const liftDown = useTour((s) => canTakeLiftDown(s) && !s.mallFailed);
   // Re-render when the walk is withdrawn; canWalk() reads it from the store.
   useTour((s) => s.streetFailed);
   const copy = en.chapters[chapter.id];
@@ -59,7 +61,7 @@ export function Overlay() {
         <h2>{copy.title}</h2>
         <p>{copy.body}</p>
       </section>
-      <div className="controls">
+      <div className={walking ? 'controls walking' : 'controls'}>
         {atStop && mode === 'tour' && (
           <button data-testid="explore-button" onClick={() => dispatch({ type: 'exploreStart' })}>
             {en.ui.explore}
@@ -68,6 +70,11 @@ export function Overlay() {
         {mode === 'explore' && chapter.id === STREET_CHAPTER && canWalk() && (
           <button data-testid="walk-street-button" onClick={() => dispatch({ type: 'walkEnter' })}>
             {en.ui.walkStreet}
+          </button>
+        )}
+        {liftDown && canWalk() && (
+          <button data-testid="lift-down-button" onClick={() => dispatch({ type: 'cross', to: 'mall' })}>
+            {en.ui.liftDown}
           </button>
         )}
         {mode === 'explore' && (

@@ -1,3 +1,4 @@
+import type { FloorId } from '../mall/types';
 import type { ChapterId } from '../tour/types';
 
 export const en = {
@@ -33,15 +34,22 @@ export const en = {
     streetLoading: 'Loading the street...',
     backToStreet: 'Back to the street',
     mallLoading: 'Loading the mall...',
-    walkHintDesktop:
-      "WASD or arrow keys to walk, drag to look around, Shift to hurry. The mall's doors are on the south side of the tower. Scroll out or press Esc to leave.",
-    walkHintTouch:
-      "Use the stick to walk and drag to look around. The mall's doors are on the south side of the tower. Pinch or tap Back to tour to leave.",
-    mallHintDesktop: 'WASD or arrow keys to walk, drag to look around, Shift to hurry. Scroll out or press Esc to go back to the street.',
-    mallHintTouch: 'Use the stick to walk and drag to look around. Pinch or tap Back to the street to leave.',
+    // The walk hint, a line each: how to move, (on the street) where the mall's doors are, and how to leave.
+    walkHint: {
+      move: { desktop: 'WASD or arrow keys to walk, drag to look around, Shift to hurry.', touch: 'Use the stick to walk and drag to look around.' },
+      doors: "The mall's doors are on the south side of the tower.",
+      leave: { desktop: 'Scroll out or press Esc to leave.', touch: 'Pinch or tap Back to tour to leave.' },
+    },
+    mallHint: {
+      move: { desktop: 'WASD or arrow keys to walk, drag to look around, Shift to hurry.', touch: 'Use the stick to walk and drag to look around.' },
+      leave: { desktop: 'Scroll out or press Esc to go back to the street.', touch: 'Pinch or tap Back to the street to leave.' },
+    },
     walkStick: 'Walk',
     floors: 'Floors',
-    lift: 'Lift to 89F',
+    /** Beside each floor's button on the mall's panel, as a lift's directory reads. */
+    floorNames: { B1: 'Food hall', '1F': 'Lobby', '2F': 'Gallery', '3F': 'Lounge', '4F': 'Terrace', '5F': 'Observatory tickets' } satisfies Record<FloorId, string>,
+    lift: 'Elevator to 89F',
+    liftDown: 'Elevator to 5F',
     close: 'Close',
   },
   credits: {

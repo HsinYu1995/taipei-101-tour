@@ -130,7 +130,8 @@ export function CameraRig() {
     const c = controls.current;
     if (!c) return;
     const { mode, progress, place, places, dispatch, setCamera } = useTour.getState();
-    const walk = places[place];
+    // On the lift down there is no place yet, so a crossing holds the damper's view until the hand-over.
+    const walk = place === 'damper' ? undefined : places[place];
 
     const near = isWalkMode(mode) ? NEAR.walk : NEAR.default;
     if (camera.near !== near) {

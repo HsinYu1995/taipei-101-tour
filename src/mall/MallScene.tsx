@@ -1,11 +1,12 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import { AmbientLight, DirectionalLight, Group, Mesh, PlaneGeometry, ShaderMaterial } from 'three';
+import { Color, DirectionalLight, Group, HemisphereLight, Mesh, PlaneGeometry, SRGBColorSpace, ShaderMaterial, Vector3 } from 'three';
 import { registerProbe } from '../debug/testHook';
 import { useHeightField } from '../scene/terrain/Terrain';
 import { groundAt } from '../street/groundAt';
 import { useTour } from '../tour/store';
 import { phaseOf, type PlaceApi } from '../walk/api';
+import { DOORS } from '../walk/doors';
 import { clearInput, inputFor } from '../walk/input';
 import { useMallTenants } from './data';
 import { Floor } from './FloorScene';
@@ -24,18 +25,47 @@ const KEY_FROM: [number, number, number] = [30, 80, 45];
 // Same module as the scene's lazy import, so the panel arrives with the mall.
 export { FloorPanel } from './FloorPanel';
 
-/** A floor change's black, drawn over everything in clip space. */
-function makeFadeMaterial() {
+/** A hex colour's sRGB channels: the doors' shader writes them straight out, as the page draws the same doors. */
+function srgb(hex: string) {
+  const c = { r: 0, g: 0, b: 0 };
+  new Color(hex).getRGB(c, SRGBColorSpace);
+  return new Vector3(c.r, c.g, c.b);
+}
+
+/**
+ * A floor change's lift doors (src/walk/doors.ts), drawn over everything in clip space: `closed` 0 is open, 1 shut.
+ * Transparent only so it draws after the mall's transparent signs and pools; every pixel it keeps is opaque.
+ */
+function makeDoorMaterial() {
   return new ShaderMaterial({
     transparent: true,
     depthTest: false,
     depthWrite: false,
     fog: false,
-    uniforms: { opacity: { value: 0 } },
-    vertexShader: /* glsl */ `void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    uniforms: {
+      closed: { value: 0 },
+      seam: { value: 0 },
+      steel: { value: srgb(DOORS.steel) },
+      edge: { value: srgb(DOORS.edge) },
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 clip;
+      void main() {
+        clip = position.xy;
+        gl_Position = vec4(position.xy, 0.0, 1.0);
+      }`,
     fragmentShader: /* glsl */ `
-      uniform float opacity;
-      void main() { gl_FragColor = vec4(0.0, 0.0, 0.0, opacity); }`,
+      uniform float closed;
+      uniform float seam;
+      uniform vec3 steel;
+      uniform vec3 edge;
+      varying vec2 clip;
+      void main() {
+        if (clip.x > -1.0 + closed && clip.x < 1.0 - closed) discard;
+        vec3 colour = mix(edge, steel, (clip.y + 1.0) * 0.5);
+        if (closed > 0.999 && abs(clip.x) < seam) colour = edge;
+        gl_FragColor = vec4(colour, 1.0);
+      }`,
   });
 }
 
@@ -51,10 +81,10 @@ export default function MallScene() {
   const floors = useRef<Partial<Record<FloorId, Group>>>({});
   const signs = useMemo(() => new MallSigns(sim.plans, base, (f) => floors.current[f]!, gl), [sim, base, gl]);
   useEffect(() => () => signs.show([]), [signs]);
-  const ambient = useRef<AmbientLight>(null);
+  const hemi = useRef<HemisphereLight>(null);
   const key = useRef<DirectionalLight>(null);
   const fade = useRef<Mesh>(null);
-  const fadeMaterial = useMemo(makeFadeMaterial, []);
+  const fadeMaterial = useMemo(makeDoorMaterial, []);
   const fadeGeometry = useMemo(() => new PlaneGeometry(2, 2), []);
   useEffect(
     () => () => {
@@ -72,10 +102,11 @@ export default function MallScene() {
         clearInput();
       },
       eye: () => sim.eye(),
-      // The street's south door is the only way in, and it opens on MALL_ENTRY. Still in the crossing's black, the
-      // signs in view are drawn and every mall material compiled, so the fade-in never stalls on either.
-      arrive: async () => {
-        sim.reset();
+      // The street's south door opens on MALL_ENTRY, the lift down on the 5F lobby. Still behind the crossing's cover,
+      // the signs in view are drawn and every mall material compiled, so the reveal never stalls on either.
+      arrive: async (from) => {
+        if (from === 'damper') sim.arriveByLift();
+        else sim.reset();
         clearInput();
         signs.show(visibleFloors(sim.floor()));
         await gl.compileAsync(mall.current!, camera, scene);
@@ -105,18 +136,21 @@ export default function MallScene() {
     if (panel.floor !== floor || panel.changing !== changing) useMall.setState({ floor, changing });
     const shown = visibleFloors(floor);
     for (const f of FLOOR_IDS) floors.current[f]!.visible = shown.includes(f);
-    // Signs only for the floors in view, swapped in the frame a floor change reaches black, and freed once the walk
+    // Signs only for the floors in view, swapped in the frame a floor change's doors shut, and freed once the walk
     // is out of the mall (kept while a crossing in waits, which arrive built them for).
     const tour = useTour.getState();
     if (phase !== 'paused') signs.show(shown);
     else if (tour.mode !== 'crossing' || tour.crossingTo !== 'mall') signs.show([]);
     const light = CHARACTER[floor].light;
     const on = phase !== 'paused';
-    ambient.current!.color.set(light.ambient);
-    ambient.current!.intensity = on ? light.ambientIntensity : 0;
+    hemi.current!.color.set(light.sky);
+    hemi.current!.groundColor.set(light.ground);
+    hemi.current!.intensity = on ? light.hemiIntensity : 0;
     key.current!.color.set(light.key);
     key.current!.intensity = on ? light.keyIntensity : 0;
-    fadeMaterial.uniforms.opacity.value = sim.fade();
+    fadeMaterial.uniforms.closed.value = sim.fade();
+    // Half the seam either side of the middle, in clip units (the drawing buffer is 2 clip units wide).
+    fadeMaterial.uniforms.seam.value = DOORS.seamPx / gl.domElement.width;
     fade.current!.visible = sim.fade() > 0;
   }, -1);
 
@@ -147,7 +181,7 @@ export default function MallScene() {
 
   return (
     <>
-      <ambientLight ref={ambient} intensity={0} />
+      <hemisphereLight ref={hemi} intensity={0} />
       <directionalLight ref={key} intensity={0} position={KEY_FROM} />
       <group ref={mall} visible={inside}>
         {FLOOR_IDS.map((f) => (

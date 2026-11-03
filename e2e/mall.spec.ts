@@ -21,6 +21,7 @@ import {
   nextFrames,
   openTour,
   place,
+  scrollToProgress,
   stopCenter,
   stickPush,
   touchDrag,
@@ -34,6 +35,23 @@ const tenants: MallTenants = JSON.parse(readFileSync('src/mall/tenants.json', 'u
 const eyeY = (page: Page) => page.evaluate(() => window.__tour!.probes.mall!.eyeY());
 const castRay = (page: Page, origin: Vec3, dir: Vec3) =>
   page.evaluate(([o, d]) => window.__tour!.probes.castRay!(o, d), [origin, dir] as const);
+
+/**
+ * Watches from now for the lift's doors appearing (a lift crossing is over in well under a second, too quick to poll
+ * for); the returned function says whether they did.
+ */
+async function watchLiftDoors(page: Page) {
+  await page.evaluate(() => {
+    const w = window as unknown as { __liftDoors: boolean; __liftWatch?: MutationObserver };
+    w.__liftDoors = false;
+    w.__liftWatch?.disconnect();
+    w.__liftWatch = new MutationObserver(() => {
+      if (document.querySelector('[data-testid="lift-doors"]')) w.__liftDoors = true;
+    });
+    w.__liftWatch.observe(document.body, { childList: true, subtree: true });
+  });
+  return () => page.evaluate(() => (window as unknown as { __liftDoors: boolean }).__liftDoors);
+}
 
 /** Where the place is now: mode and place together, so a crossing in between never matches. */
 const whereNow = async (page: Page) => {
@@ -121,10 +139,13 @@ test('walking into the south entrance fades into the 1F hall', async ({ page }) 
   await place(page, { x: 0, z: 46, yaw: 0, pitch: 0 });
   const programs = await watchPrograms(page);
   const fade = page.getByTestId('walk-fade');
+  const doors = await watchLiftDoors(page);
   await page.keyboard.down('w');
   await expect(fade).toBeVisible({ timeout: 15_000 });
   await page.keyboard.up('w');
   await expect.poll(() => whereNow(page), { timeout: 45_000 }).toBe('walking mall');
+  // A door off the street is no lift: it fades, with no lift doors.
+  expect(await doors()).toBe(false);
   await page.waitForFunction(() => window.__tour!.probes.mall !== undefined);
   expect(await page.evaluate(() => window.__tour!.probes.mall!.floor())).toBe('1F');
   const v = await mallVisitor(page);
@@ -322,6 +343,40 @@ test('each floor looks different', async ({ page }, info) => {
   await info.attach('floor-distances.txt', { body: distances.join('\n'), contentType: 'text/plain' });
 });
 
+test("no floor's ceiling renders black", async ({ page }, info) => {
+  test.setTimeout(240_000);
+  await enterMall(page);
+  const dark: string[] = [];
+  for (const floor of FLOOR_IDS) {
+    await goToFloor(page, floor);
+    // From the lobby, turned away from the atrium (1F's is open to the floors above) and looking up at the ceiling.
+    const lobby = await mallVisitor(page);
+    await mallPlace(page, { x: lobby.x, z: lobby.z, yaw: lobby.yaw + Math.PI, pitch: 1.1 });
+    const png = await page.screenshot({ style: '*:not(canvas):not(:has(canvas)) { visibility: hidden !important; }' });
+    await info.attach(`ceiling-${floor}.png`, { body: png, contentType: 'image/png' });
+    // The 25th percentile of the top half's relative luminance: lit lamp panels would lift a mean over a black ceiling.
+    const p25 = await page.evaluate(async (b64) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${b64}`;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const g = canvas.getContext('2d')!;
+      g.drawImage(img, 0, 0);
+      const { data } = g.getImageData(0, 0, img.width, Math.floor(img.height / 2));
+      const lin = (c: number) => ((c /= 255) <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+      const lum: number[] = [];
+      for (let i = 0; i < data.length; i += 4) lum.push(0.2126 * lin(data[i]) + 0.7152 * lin(data[i + 1]) + 0.0722 * lin(data[i + 2]));
+      lum.sort((a, b) => a - b);
+      return lum[Math.floor(lum.length / 4)];
+    }, png.toString('base64'));
+    // 0.01 is about sRGB 25 of 255: black renders near 0.001, and 2F's dusk ceiling, fully lit, about 0.024.
+    if (p25 < 0.01) dark.push(`${floor} ${p25.toFixed(3)}`);
+  }
+  expect(dark, 'floors whose ceiling renders black').toEqual([]);
+});
+
 test('a failed mall download returns to the street and withdraws the mall', async ({ page }) => {
   test.setTimeout(90_000);
   // Hold the download until the visitor is waiting in the black, then let it die.
@@ -514,9 +569,12 @@ test("the lift hands over to the damper chapter's stop in tour mode", async ({ p
   test.setTimeout(120_000);
   await enterMall(page);
   await pressFloor(page, '5F');
+  const doors = await watchLiftDoors(page);
   await page.getByTestId('floor-lift').click();
-  await expect(page.getByTestId('walk-fade')).toBeVisible();
   await waitMode(page, 'tour', 20_000);
+  // The lift's doors closed on the mall, and are gone once they have opened on the damper.
+  expect(await doors()).toBe(true);
+  await expect(page.getByTestId('lift-doors')).toHaveCount(0);
   const s = await getTour(page);
   expect(s.segment).toMatchObject({ kind: 'stop', chapterIndex: 2 });
   await expect(page.getByTestId('floor-panel')).toHaveCount(0);
@@ -530,6 +588,38 @@ test("the lift hands over to the damper chapter's stop in tour mode", async ({ p
   }, { timeout: 15_000 }).toBe(true);
   const at = await page.evaluate(() => window.scrollY / (document.documentElement.scrollHeight - window.innerHeight));
   expect(Math.abs(at - stopCenter(2))).toBeLessThan(0.01);
+  await expectPageScrolls(page, isMobile);
+});
+
+test('the lift comes down from the damper to 5F, and leaving from there ends at the tower stop', async ({ page, isMobile }) => {
+  test.setTimeout(180_000);
+  // Straight to the damper by scrolling, so neither the street nor the mall has been loaded yet.
+  await openTour(page);
+  await scrollToProgress(page, stopCenter(2));
+  const doors = await watchLiftDoors(page);
+  await page.getByTestId('lift-down-button').click();
+  await expect.poll(async () => {
+    const s = await getTour(page);
+    return s.mode === 'walking' && s.place === 'mall';
+  }, { timeout: 60_000 }).toBe(true);
+  expect(await doors()).toBe(true);
+  await page.waitForFunction(() => window.__tour!.probes.mall !== undefined);
+  expect(await page.evaluate(() => window.__tour!.probes.mall!.floor())).toBe('5F');
+  await expect(page.getByTestId('floor-5F')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('floor-lift')).toBeVisible();
+  // The walk's HUD arrives with the street chunk, which this route has to fetch for itself.
+  await expect(page.getByTestId('street-hint')).toBeVisible({ timeout: 30_000 });
+  await page.getByTestId('back-to-street-button').click();
+  await expect.poll(async () => {
+    const s = await getTour(page);
+    return s.mode === 'walking' && s.place === 'street';
+  }, { timeout: 60_000 }).toBe(true);
+  await page.getByTestId('back-to-tour-button').click();
+  await waitMode(page, 'tour', 20_000);
+  const s = await getTour(page);
+  expect(s.segment).toMatchObject({ kind: 'stop', chapterIndex: 1 });
+  const at = await page.evaluate(() => window.scrollY / (document.documentElement.scrollHeight - window.innerHeight));
+  expect(Math.abs(at - stopCenter(1))).toBeLessThan(0.01);
   await expectPageScrolls(page, isMobile);
 });
 

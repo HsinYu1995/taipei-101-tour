@@ -13,47 +13,67 @@ export const ATRIUM_FLOORS: readonly FloorId[] = ['1F', '2F', '3F', '4F'];
 export interface Character {
   centrepiece: 'food-hall' | 'islands' | 'stage' | 'lounge' | 'terrace' | 'tickets';
   palette: { floor: string; wall: string; shopfront: string; ceiling: string; accent: string };
-  light: { ambient: string; ambientIntensity: number; key: string; keyIntensity: number };
+  /**
+   * A hemisphere light (sky from above, ground bounced up onto the ceilings, so no ceiling is ever black) and a
+   * directional key for shape.
+   */
+  light: { sky: string; ground: string; hemiIntensity: number; key: string; keyIntensity: number };
   /** Walkers and standers, before the seated and the queue. */
   crowd: number;
 }
 
-// Palettes from the owner's mockup (.superpowers/brainstorm/1344-1793181136/content/floor-characters-v2.html).
+/** Trim shared by every floor, so the building reads as one family: the damper's gold and the tower's glass. */
+export const TRIM = { gold: '#C8A44D', glass: '#5E8C86' } as const;
+
+/**
+ * Every floor's hemisphere intensity. three divides indirect light by pi and ACES darkens the lows, so a dark ceiling
+ * needs this much of its ground colour to read as lit; each floor's sky colour is scaled down to match, keeping its
+ * floor as bright as the old ambient left it. Floors with light ceilings (1F, 4F, 5F) bounce a darker ground, so
+ * their ceilings stay below their lamps and laylights.
+ */
+const HEMI = 8;
+
+/** No palette entry is darker than this sRGB HSL lightness (spec: dark is fine, black is not). */
+export const MIN_LIGHTNESS = 0.18;
+
+// Hues from the owner's mockup (.superpowers/brainstorm/1344-1793181136/content/floor-characters-v2.html), the darks
+// lifted to MIN_LIGHTNESS and above (spec 2026-11-01-interior-look-and-walk-ui-design.md). 2F left that mockup's dark
+// violet for a muted dove-mauve: near-black beside saturated lilac read as stressful (owner, 2026-11-03).
 export const CHARACTER: Record<FloorId, Character> = {
   B1: {
     centrepiece: 'food-hall',
-    palette: { floor: '#5a3b22', wall: '#c9b48a', shopfront: '#e0a24a', ceiling: '#2d1d10', accent: '#f6c66e' },
-    light: { ambient: '#ffd9a8', ambientIntensity: 0.9, key: '#ffb35c', keyIntensity: 1.4 },
+    palette: { floor: '#7a5233', wall: '#c9b48a', shopfront: '#e0a24a', ceiling: '#6b4a2e', accent: '#f6c66e' },
+    light: { sky: '#5e4f3b', ground: '#d8b58d', hemiIntensity: HEMI, key: '#ffb35c', keyIntensity: 1.4 },
     crowd: 70,
   },
   '1F': {
     centrepiece: 'islands',
-    palette: { floor: '#f4f1ea', wall: '#cfd6dc', shopfront: '#8d99a3', ceiling: '#fbfaf7', accent: '#d4af37' },
-    light: { ambient: '#ffffff', ambientIntensity: 1.4, key: '#fff6e5', keyIntensity: 2 },
+    palette: { floor: '#f4f1ea', wall: '#cfd6dc', shopfront: '#a7aeb3', ceiling: '#fbfaf7', accent: '#d4af37' },
+    light: { sky: '#747474', ground: '#8a8988', hemiIntensity: HEMI, key: '#fff6e5', keyIntensity: 2 },
     crowd: 45,
   },
   '2F': {
     centrepiece: 'stage',
-    palette: { floor: '#3a3550', wall: '#1c1a28', shopfront: '#b8a3d6', ceiling: '#141220', accent: '#e8dcff' },
-    light: { ambient: '#6a5f8f', ambientIntensity: 0.35, key: '#d8ccff', keyIntensity: 1.1 },
+    palette: { floor: '#9a95a3', wall: '#aaa5b2', shopfront: '#d9d4de', ceiling: '#e4e1e8', accent: '#a9a3b8' },
+    light: { sky: '#64606a', ground: '#827e88', hemiIntensity: HEMI, key: '#f4f0f8', keyIntensity: 1.2 },
     crowd: 6,
   },
   '3F': {
     centrepiece: 'lounge',
-    palette: { floor: '#2f2a24', wall: '#15120f', shopfront: '#d9b56c', ceiling: '#201b16', accent: '#f3e2b0' },
-    light: { ambient: '#c9a46a', ambientIntensity: 0.6, key: '#ffd88a', keyIntensity: 1.2 },
+    palette: { floor: '#5a4c3c', wall: '#3d3328', shopfront: '#d9b56c', ceiling: '#4a3e30', accent: '#f3e2b0' },
+    light: { sky: '#3b2e1b', ground: '#cab79b', hemiIntensity: HEMI, key: '#ffd88a', keyIntensity: 1.2 },
     crowd: 14,
   },
   '4F': {
     centrepiece: 'terrace',
     palette: { floor: '#e9d6cf', wall: '#b98f84', shopfront: '#fff7ef', ceiling: '#f6e9e4', accent: '#d98b8b' },
-    light: { ambient: '#ffe8e4', ambientIntensity: 1.1, key: '#fff3e8', keyIntensity: 1.4 },
+    light: { sky: '#685e5c', ground: '#887c79', hemiIntensity: HEMI, key: '#fff3e8', keyIntensity: 1.4 },
     crowd: 30,
   },
   '5F': {
     centrepiece: 'tickets',
-    palette: { floor: '#1f3b4d', wall: '#0e1d27', shopfront: '#7fb3c9', ceiling: '#cfe8f2', accent: '#a9d8ea' },
-    light: { ambient: '#a8d4ff', ambientIntensity: 0.9, key: '#e6f6ff', keyIntensity: 1.6 },
+    palette: { floor: '#2f5266', wall: '#2a4a5e', shopfront: '#7fb3c9', ceiling: '#cfe8f2', accent: '#a9d8ea' },
+    light: { sky: '#3b4d5e', ground: '#647e96', hemiIntensity: HEMI, key: '#e6f6ff', keyIntensity: 1.6 },
     crowd: 24,
   },
 };

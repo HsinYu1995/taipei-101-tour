@@ -4,10 +4,13 @@ import type { Segment } from './types';
 
 /** Where the walk is: the Xinyi street or the mall inside 101. */
 export type PlaceId = 'street' | 'mall';
+/** Where a crossing can start: a place of the walk, or the damper chapter's stop, where the lift comes back down. */
+export type Origin = PlaceId | 'damper';
 
 /**
- * `descending`, `walking`, `crossing` and `ascending` are the walk, entered from the tower chapter's explore mode.
- * `crossing` moves the visitor to another place, or from the mall to the damper chapter, behind a fade.
+ * `descending`, `walking`, `crossing` and `ascending` are the walk, entered from the tower chapter's explore mode or
+ * by the lift down from the damper chapter's stop.
+ * `crossing` moves the visitor to another place, or between the mall and the damper chapter, behind a fade.
  */
 export type Mode = 'tour' | 'explore' | 'returning' | 'descending' | 'walking' | 'crossing' | 'ascending';
 
@@ -16,8 +19,11 @@ export interface TourState {
   segment: Segment;
   mode: Mode;
   activeHotspot: string | null;
-  /** The walk's place; kept while not walking, so it only means something in the walk modes. */
-  place: PlaceId;
+  /**
+   * The walk's place; kept while not walking, so it only means something in the walk modes. `damper` only during the
+   * lift down, which belongs to no place of the walk: the camera and the world stay as they are until the hand-over.
+   */
+  place: Origin;
   /** Where a crossing is going; null outside `crossing`. */
   crossingTo: PlaceId | 'damper' | null;
 }
@@ -62,9 +68,10 @@ export function tourReducer(s: TourState, e: TourEvent): TourState {
         return e.to === s.crossingTo ? s : { ...s, crossingTo: e.to };
       case 'crossed':
         return crossed(s);
-      // Turning back from the mall's door (while it loads, say) leaves the visitor on the street outside it.
+      // Turning back from the mall (while it loads, say) leaves the visitor where they set out: on the street outside
+      // its door, or at the damper's stop if they were riding the lift down.
       case 'walkExit':
-        return s.crossingTo === 'mall' ? { ...s, crossingTo: 'street' } : s;
+        return s.crossingTo === 'mall' ? { ...s, crossingTo: s.place === 'damper' ? 'damper' : 'street' } : s;
       case 'walkAbort':
         return abort(s);
       default:
@@ -118,14 +125,22 @@ export function tourReducer(s: TourState, e: TourEvent): TourState {
       return s.mode === 'explore' && s.segment.kind === 'stop' && s.segment.chapterIndex === STREET_CHAPTER
         ? { ...s, mode: 'descending', activeHotspot: null, place: 'street' }
         : s;
+    case 'cross':
+      return e.to === 'mall' && canTakeLiftDown(s)
+        ? { ...s, mode: 'crossing', place: 'damper', crossingTo: 'mall', activeHotspot: null }
+        : s;
     case 'landed':
     case 'walkExit':
     case 'walkAbort':
     case 'ascended':
-    case 'cross':
     case 'crossed':
       return s;
   }
+}
+
+/** The lift comes back down from the damper chapter's stop, whether the visitor came up in it or scrolled here. */
+export function canTakeLiftDown(s: Pick<TourState, 'mode' | 'segment'>) {
+  return (s.mode === 'tour' || s.mode === 'explore') && s.segment.kind === 'stop' && s.segment.chapterIndex === DAMPER_CHAPTER;
 }
 
 /** A place became unusable mid-walk: rise straight back to the tour from wherever the walk is. */
@@ -139,5 +154,9 @@ function crossed(s: TourState): TourState {
     const progress = stopProgress(DAMPER_CHAPTER);
     return { ...s, mode: 'tour', place: 'street', progress, segment: segmentAt(progress), activeHotspot: null, crossingTo: null };
   }
-  return { ...s, mode: 'walking', place: s.crossingTo ?? s.place, crossingTo: null };
+  const place = s.crossingTo ?? 'street';
+  if (s.place !== 'damper') return { ...s, mode: 'walking', place, crossingTo: null };
+  // Off the lift the walk ends as any walk does, by rising from the street to the tower chapter, so the tour waits there.
+  const progress = stopProgress(STREET_CHAPTER);
+  return { ...s, mode: 'walking', place, progress, segment: segmentAt(progress), crossingTo: null };
 }

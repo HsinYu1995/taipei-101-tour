@@ -39,7 +39,7 @@ type Probes = {
     goTo(floor: FloorId): void;
     /** Whether a floor change's fade is still running. */
     changing(): boolean;
-    /** The floor change's black overlay opacity, 1 when the screen is black. */
+    /** How far the floor change's lift doors are shut, 1 when they cover the screen. */
     fade(): number;
     /** The floors whose sign atlases are built. */
     signs(): FloorId[];
