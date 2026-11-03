@@ -59,7 +59,7 @@ The hue of each entry stays; lightness is lifted where it was too dark. Target v
 |---|---|
 | B1 | ceiling `#2d1d10` -> warm timber `#6b4a2e` with lit coves; floor `#5a3b22` -> `#7a5233`; pools under the hall's lights |
 | 1F | already bright; atrium underside gets cove light; shopfronts warm up from `#8d99a3` toward `#a7aeb3` |
-| 2F | wall `#1c1a28` -> `#3a3550`, ceiling `#141220` -> `#2c2840`, floor `#3a3550` -> `#4a4466`; spotlit vitrines carry pools; coves in `#e8dcff` |
+| 2F | Retuned after the owner's review on 2026-11-03 ("still too stressful"): wall `#aaa5b2`, ceiling `#e4e1e8`, floor `#9a95a3`, shopfront `#d9d4de`, accent `#a9a3b8`, a muted dove-mauve in place of `#3a3550` / `#2c2840` / `#4a4466`; spotlit vitrines carry pools |
 | 3F | floor `#2f2a24` -> marble-dark `#5a4c3c`, wall `#15120f` -> `#3d3328`, ceiling `#201b16` -> `#4a3e30` with gold coves; gold pools at the lounge |
 | 4F | already light; pools at the terrace |
 | 5F | wall `#0e1d27` -> `#2a4a5e`, floor `#1f3b4d` -> `#2f5266`; skylight pool over the queue |
@@ -107,7 +107,7 @@ A lift's button plate on the right, where the panel is today (same positions and
 - Brushed steel plate (`steel`, a subtle vertical gradient, `steel-edge` border, 6 px radius: a plate, not a pill).
 - One row per floor, top to bottom 5F to B1: a round button with the floor number, and beside it the floor's name in plain words: B1 Food hall, 1F Lobby, 2F Gallery, 3F Lounge, 4F Terrace, 5F Observatory tickets. (Names are designer's call; the owner may rename.) On phones the names hide and only the round buttons show.
 - The current floor's button has a lit `gold` ring and gold number, as a lift's pressed button.
-- "Lift to 89F" sits below a short `steel-edge` rule, as on a real panel, with a small up-arrow lamp, shown on 5F only (as now).
+- "Elevator to 89F" (the owner chose this word over "Lift" on 2026-11-03) sits below a short `steel-edge` rule, as on a real panel, with a small up-arrow lamp, shown on 5F only (as now).
 - Behaviour, test ids, aria labels and `aria-pressed` are unchanged.
 
 ### Walk hint

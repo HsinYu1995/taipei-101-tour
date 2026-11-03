@@ -37,7 +37,8 @@ const HEMI = 8;
 export const MIN_LIGHTNESS = 0.18;
 
 // Hues from the owner's mockup (.superpowers/brainstorm/1344-1793181136/content/floor-characters-v2.html), the darks
-// lifted to MIN_LIGHTNESS and above (spec 2026-11-01-interior-look-and-walk-ui-design.md).
+// lifted to MIN_LIGHTNESS and above (spec 2026-11-01-interior-look-and-walk-ui-design.md). 2F left that mockup's dark
+// violet for a muted dove-mauve: near-black beside saturated lilac read as stressful (owner, 2026-11-03).
 export const CHARACTER: Record<FloorId, Character> = {
   B1: {
     centrepiece: 'food-hall',
@@ -53,8 +54,8 @@ export const CHARACTER: Record<FloorId, Character> = {
   },
   '2F': {
     centrepiece: 'stage',
-    palette: { floor: '#4a4466', wall: '#3a3550', shopfront: '#b8a3d6', ceiling: '#2c2840', accent: '#e8dcff' },
-    light: { sky: '#13101d', ground: '#aaa3c2', hemiIntensity: HEMI, key: '#d8ccff', keyIntensity: 1.1 },
+    palette: { floor: '#9a95a3', wall: '#aaa5b2', shopfront: '#d9d4de', ceiling: '#e4e1e8', accent: '#a9a3b8' },
+    light: { sky: '#64606a', ground: '#827e88', hemiIntensity: HEMI, key: '#f4f0f8', keyIntensity: 1.2 },
     crowd: 6,
   },
   '3F': {
